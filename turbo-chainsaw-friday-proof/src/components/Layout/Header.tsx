@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Search, Settings } from 'lucide-react';
 import { Logo } from '../Shared/Logo';
 import ThemeToggle from '../Shared/ThemeToggle';
-import { Container } from '../Shared/Container';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import AccountModal from './AccountModal';
 
 export function Header() {

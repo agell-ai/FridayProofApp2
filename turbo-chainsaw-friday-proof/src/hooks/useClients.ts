@@ -558,6 +558,24 @@ const mockClients: Client[] = [
   }
 ];
 
+type ClientInput = Pick<Client, 'companyName' | 'location' | 'industry' | 'status'> &
+  Partial<Omit<Client, 'id' | 'createdAt' | 'updatedAt'>>;
+
+const defaultAnalytics: Client['analytics'] = {
+  totalRevenue: 0,
+  monthlyRevenue: 0,
+  projectsCompleted: 0,
+  averageProjectValue: 0,
+  clientSatisfaction: 0,
+  responseTime: 0,
+};
+
+const defaultFinancials: Client['financials'] = {
+  budget: 0,
+  revenue: 0,
+  cost: 0,
+};
+
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -570,23 +588,67 @@ export const useClients = () => {
     }, 1000);
   }, []);
 
-  const createClient = (clientData: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const createClient = (clientData: ClientInput) => {
+    const timestamp = new Date().toISOString();
     const newClient: Client = {
-      ...clientData,
       id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      companyName: clientData.companyName,
+      location: clientData.location,
+      industry: clientData.industry,
+      status: clientData.status,
+      website: clientData.website,
+      linkedinUrl: clientData.linkedinUrl,
+      contacts: clientData.contacts || [],
+      projectIds: clientData.projectIds || [],
+      teamMemberIds: clientData.teamMemberIds || [],
+      projects: clientData.projects || [],
+      tools: clientData.tools || [],
+      library: clientData.library || [],
+      templates: clientData.templates || [],
+      invoices: clientData.invoices || [],
+      proposals: clientData.proposals || [],
+      analytics: clientData.analytics
+        ? { ...defaultAnalytics, ...clientData.analytics }
+        : { ...defaultAnalytics },
+      financials: clientData.financials
+        ? { ...defaultFinancials, ...clientData.financials }
+        : { ...defaultFinancials },
+      createdAt: timestamp,
+      updatedAt: timestamp,
     };
     setClients(prev => [...prev, newClient]);
     return newClient;
   };
 
   const updateClient = (id: string, updates: Partial<Client>) => {
-    setClients(prev => prev.map(client => 
-      client.id === id 
-        ? { ...client, ...updates, updatedAt: new Date().toISOString() }
-        : client
-    ));
+    setClients(prev => prev.map(client => {
+      if (client.id !== id) {
+        return client;
+      }
+
+      const nextClient: Client = {
+        ...client,
+        ...updates,
+        contacts: updates.contacts ?? client.contacts,
+        projectIds: updates.projectIds ?? client.projectIds,
+        teamMemberIds: updates.teamMemberIds ?? client.teamMemberIds,
+        projects: updates.projects ?? client.projects,
+        tools: updates.tools ?? client.tools,
+        library: updates.library ?? client.library,
+        templates: updates.templates ?? client.templates,
+        invoices: updates.invoices ?? client.invoices,
+        proposals: updates.proposals ?? client.proposals,
+        analytics: updates.analytics
+          ? { ...client.analytics, ...updates.analytics }
+          : client.analytics,
+        financials: updates.financials
+          ? { ...client.financials, ...updates.financials }
+          : client.financials,
+        updatedAt: new Date().toISOString(),
+      };
+
+      return nextClient;
+    }));
   };
 
   const deleteClient = (id: string) => {

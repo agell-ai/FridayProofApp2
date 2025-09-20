@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Building2, Mail, Phone, MapPin, Save, Edit3 } from 'lucide-react';
+import { X, User, Building2, Save, Edit3 } from 'lucide-react';
 import { User as UserType, Account } from '../../types';
 
 interface AccountModalProps {

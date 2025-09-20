@@ -1,6 +1,6 @@
 import React from 'react';
-import { LayoutDashboard, BarChart3, Users, FolderOpen, UserCheck, Wrench, Archive, BookTemplate as FileTemplate, ShoppingBag, LogOut, Zap, Activity } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { LayoutDashboard, BarChart3, Users, Archive, LogOut, Activity } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import { getAvailablePages } from '../../utils/permissions';
 import { Logo } from '../Shared/Logo';
 
@@ -19,14 +19,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
   const allMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'company', label: 'Company', icon: BarChart3 },
-    { id: 'clients', label: 'Clients', icon: Users },
-    { id: 'projects', label: 'Projects', icon: FolderOpen },
-    { id: 'team', label: 'Team', icon: UserCheck },
-    { id: 'tools', label: 'Tools', icon: Wrench },
-    { id: 'systems', label: 'Systems', icon: Activity },
+    { id: 'workspaces', label: 'Workspaces', icon: Users },
+    { id: 'solutions', label: 'Solutions', icon: Activity },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'templates', label: 'Templates', icon: FileTemplate },
-    { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
     { id: 'archive', label: 'Archive', icon: Archive },
   ];
 
@@ -35,6 +30,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
   return (
     <div className="w-64 bg-[var(--bg-start)] border-r border-[var(--border)] flex flex-col">
       <nav className="flex-1 p-4">
+        <div className="flex items-center justify-between px-2 pb-6">
+          <Logo className="h-10 w-auto" showText />
+        </div>
         <ul className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;

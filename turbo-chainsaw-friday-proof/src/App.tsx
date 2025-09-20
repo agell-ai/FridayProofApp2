@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './contexts/ThemeContext';
 import LoginForm from './components/Auth/LoginForm';
 import Header from './components/Layout/Header';
@@ -7,11 +8,8 @@ import Sidebar from './components/Layout/Sidebar';
 import { Footer } from './components/Shared/Footer';
 import Dashboard from './views/Dashboard';
 import Company from './views/Company';
-import Clients from './views/Clients';
-import Projects from './views/Projects';
-import Team from './views/Team';
-import Tools from './views/Tools';
-import Systems from './views/Systems';
+import Workspaces from './views/Workspaces';
+import Solutions from './views/Solutions';
 import Analytics from './views/Analytics';
 
 const AppContent: React.FC = () => {
@@ -38,32 +36,14 @@ const AppContent: React.FC = () => {
         return <Company />;
       case 'analytics':
         return <Analytics />;
-      case 'clients':
-        return <Clients />;
-      case 'projects':
-        return <Projects />;
-      case 'team':
-        return <Team />;
-      case 'tools':
-        return <Tools />;
-      case 'systems':
-        return <Systems />;
-      case 'templates':
-        return (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-400 text-lg">Templates page coming soon</p>
-          </div>
-        );
-      case 'marketplace':
-        return (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-400 text-lg">Marketplace page coming soon</p>
-          </div>
-        );
+      case 'workspaces':
+        return <Workspaces />;
+      case 'solutions':
+        return <Solutions />;
       case 'archive':
         return (
           <div className="flex items-center justify-center h-64">
-            <p className="text-gray-400 text-lg">Archive page coming soon</p>
+            <p className="text-lg text-[var(--fg-muted)]">Archive page coming soon</p>
           </div>
         );
       default:

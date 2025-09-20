@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Building2, FolderOpen, Users, Activity, TrendingUp, Zap, Brain, GitBranch, Target, Database, Play, Calendar, Clock, BarChart3, Settings, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Building2, FolderOpen, Users, Activity, Zap, Brain, GitBranch, Target, Play, Calendar, Clock, BarChart3, Settings, ExternalLink } from 'lucide-react';
 import { Tool } from '../../types/tools';
 import { useTeam } from '../../hooks/useTeam';
 import { useClients } from '../../hooks/useClients';

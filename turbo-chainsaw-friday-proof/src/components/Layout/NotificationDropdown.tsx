@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, X, Check, ExternalLink, CheckCheck } from 'lucide-react';
+import { Bell, X, ExternalLink, CheckCheck } from 'lucide-react';
 import { useNotifications, Notification } from '../../hooks/useNotifications';
 
 interface NotificationDropdownProps {
@@ -61,26 +61,26 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onNavigate 
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
+        className="relative rounded-lg p-2 text-[var(--fg-muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--fg)]"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-sunset-pink rounded-full flex items-center justify-center text-xs font-bold text-white">
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent-pink)] text-xs font-bold text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 max-h-96 overflow-hidden">
+        <div className="absolute right-0 z-50 mt-2 max-h-96 w-96 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-2xl">
           {/* Header */}
-          <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Notifications</h3>
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
+            <h3 className="text-lg font-semibold text-[var(--fg)]">Notifications</h3>
             <div className="flex items-center space-x-2">
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-xs text-sunset-purple hover:text-sunset-pink transition-colors flex items-center space-x-1"
+                  className="flex items-center space-x-1 text-xs text-[var(--accent-purple)] transition-colors hover:text-[var(--accent-pink)]"
                 >
                   <CheckCheck className="w-3 h-3" />
                   <span>Mark all read</span>
@@ -88,7 +88,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onNavigate 
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -98,17 +98,17 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onNavigate 
           {/* Notifications List */}
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-6 text-center text-gray-400">
-                <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <div className="p-6 text-center text-[var(--fg-muted)]">
+                <Bell className="mx-auto mb-2 h-8 w-8 opacity-50" />
                 <p>No notifications</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-700">
+              <div className="divide-y divide-[var(--border)]">
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-4 hover:bg-gray-700 transition-colors cursor-pointer ${
-                      !notification.read ? 'bg-gray-750' : ''
+                    className={`cursor-pointer px-4 py-3 transition-colors hover:bg-[var(--surface)] ${
+                      !notification.read ? 'bg-[var(--surface)]/80' : ''
                     }`}
                     onClick={() => handleNotificationClick(notification)}
                   >
@@ -119,20 +119,22 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onNavigate 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <p className={`text-sm font-medium ${
-                              !notification.read ? 'text-white' : 'text-gray-300'
-                            }`}>
+                            <p
+                              className={`text-sm font-medium ${
+                                !notification.read ? 'text-[var(--fg)]' : 'text-[var(--fg-muted)]'
+                              }`}
+                            >
                               {notification.title}
                             </p>
-                            <p className="text-sm text-gray-400 mt-1 line-clamp-2">
+                            <p className="mt-1 line-clamp-2 text-sm text-[var(--fg-muted)]">
                               {notification.message}
                             </p>
                             <div className="flex items-center justify-between mt-2">
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-[var(--fg-muted)]">
                                 {getTimeAgo(notification.timestamp)}
                               </span>
                               {notification.actionUrl && (
-                                <div className="flex items-center space-x-1 text-xs text-sunset-purple">
+                                <div className="flex items-center space-x-1 text-xs text-[var(--accent-purple)]">
                                   <span>{notification.actionLabel}</span>
                                   <ExternalLink className="w-3 h-3" />
                                 </div>
@@ -141,14 +143,14 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onNavigate 
                           </div>
                           <div className="flex items-center space-x-2 ml-2">
                             {!notification.read && (
-                              <div className="w-2 h-2 bg-sunset-pink rounded-full"></div>
+                              <div className="h-2 w-2 rounded-full bg-[var(--accent-pink)]"></div>
                             )}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteNotification(notification.id);
                               }}
-                              className="text-gray-500 hover:text-gray-300 transition-colors"
+                              className="text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]"
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -164,13 +166,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onNavigate 
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-700 bg-gray-750">
+            <div className="border-t border-[var(--border)] bg-[var(--surface)] px-4 py-3">
               <button
                 onClick={() => {
                   onNavigate('notifications');
                   setIsOpen(false);
                 }}
-                className="w-full text-center text-sm text-sunset-purple hover:text-sunset-pink transition-colors"
+                className="w-full text-center text-sm text-[var(--accent-purple)] transition-colors hover:text-[var(--accent-pink)]"
               >
                 View all notifications
               </button>

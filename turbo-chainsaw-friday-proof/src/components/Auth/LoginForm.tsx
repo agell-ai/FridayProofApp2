@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Zap } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 const demoAccounts = [
   { email: 'agency-owner@demo.com', label: 'Agency Owner', description: 'Full access to all agency features' },
@@ -31,7 +31,8 @@ const LoginForm: React.FC = () => {
     
     try {
       await login(email, password);
-    } catch (err) {
+    } catch (error) {
+      console.error('Login failed', error);
       setError('Invalid credentials. Please try again.');
     }
   };

@@ -1,9 +1,9 @@
 import React from 'react';
-import { X, FolderOpen, Calendar, Users, Activity, BarChart3, Building2, Wrench, CheckCircle, Clock, AlertCircle, TrendingUp } from 'lucide-react';
+import { X, FolderOpen, Calendar, Users, Building2, Wrench, Clock } from 'lucide-react';
 import { Project } from '../../types';
 import { useClients } from '../../hooks/useClients';
 import { useTeam } from '../../hooks/useTeam';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import TeamMemberModal from '../Clients/TeamMemberModal';
 import ClientModal from './ClientModal';
 

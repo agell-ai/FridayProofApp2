@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Plus, Users, Mail, Phone, MapPin, BarChart3, User } from 'lucide-react';
 import { useTeam } from '../hooks/useTeam';
-import { useAuth } from '../contexts/AuthContext';
 import TeamMemberModal from '../components/Clients/TeamMemberModal';
 import { Card } from '../components/Shared/Card';
 
 const Team: React.FC = () => {
   const { teamMembers, isLoading } = useTeam();
-  const { user } = useAuth();
   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
 
   if (isLoading) {
@@ -20,8 +18,7 @@ const Team: React.FC = () => {
 
   // Calculate team statistics
   const activeMembers = teamMembers.filter(member => member.status === 'active').length;
-  const totalProjects = [...new Set(teamMembers.flatMap(member => member.projectIds))].length;
-  const avgProductivity = teamMembers.length > 0 
+  const avgProductivity = teamMembers.length > 0
     ? Math.round(teamMembers.reduce((sum, member) => sum + member.analytics.monthlyProductivity, 0) / teamMembers.length)
     : 0;
   const totalHours = teamMembers.reduce((sum, member) => sum + member.analytics.hoursWorked, 0);

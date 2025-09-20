@@ -1,7 +1,7 @@
 import React from 'react';
-import { X, Building2, MapPin, Globe, Linkedin, Mail, Phone, User, ExternalLink, Calendar, Users, FolderOpen, Wrench, BookOpen, BookTemplate as FileTemplate, FileText, Presentation as PresentationChart, BarChart3, DollarSign } from 'lucide-react';
+import { X, Building2, MapPin, Globe, Linkedin, Mail, Phone, User, ExternalLink, Calendar, Users, FolderOpen, Wrench, BarChart3, DollarSign } from 'lucide-react';
 import { Client } from '../../types';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ClientModalProps {
   client: Client;

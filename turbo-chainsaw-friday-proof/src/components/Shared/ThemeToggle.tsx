@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sun, Moon, Monitor, ChevronDown } from 'lucide-react';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../hooks/useTheme';
 
 const ThemeToggle: React.FC = () => {
   const { mode, setMode, resolvedTheme } = useTheme();
@@ -31,7 +31,7 @@ const ThemeToggle: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 p-2 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700"
+        className="flex items-center gap-2 rounded-lg p-2 text-[var(--fg-muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--fg)]"
         aria-label="Toggle theme"
       >
         <CurrentIcon className="w-5 h-5" />
@@ -39,12 +39,12 @@ const ThemeToggle: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
+        <div className="absolute right-0 z-50 mt-2 w-40 rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-lg">
           <div className="py-1">
             {themeOptions.map((option) => {
               const Icon = option.icon;
               const isSelected = mode === option.value;
-              
+
               return (
                 <button
                   key={option.value}
@@ -52,16 +52,16 @@ const ThemeToggle: React.FC = () => {
                     setMode(option.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center space-x-3 px-4 py-2 text-sm transition-colors ${
+                  className={`flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors ${
                     isSelected
-                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-[var(--surface)] text-[var(--fg)]'
+                      : 'text-[var(--fg-muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)]'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span>{option.label}</span>
                   {option.value === 'system' && (
-                    <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
+                    <span className="ml-auto text-xs text-[var(--fg-muted)]">
                       ({resolvedTheme})
                     </span>
                   )}

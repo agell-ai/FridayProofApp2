@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, FolderOpen, Users, Activity, TrendingUp, Zap, Brain, GitBranch, Target, Database, Play } from 'lucide-react';
+import { Building2, FolderOpen, Users, Activity, Zap, Brain, GitBranch, Target, Play } from 'lucide-react';
 import { Tool } from '../../types/tools';
 import { Card } from '../Shared/Card';
 
