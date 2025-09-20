@@ -1,0 +1,100 @@
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import LoginForm from './components/Auth/LoginForm';
+import Header from './components/Layout/Header';
+import Sidebar from './components/Layout/Sidebar';
+import { Footer } from './components/Shared/Footer';
+import Dashboard from './views/Dashboard';
+import Company from './views/Company';
+import Clients from './views/Clients';
+import Projects from './views/Projects';
+import Team from './views/Team';
+import Tools from './views/Tools';
+import Systems from './views/Systems';
+import Analytics from './views/Analytics';
+
+const AppContent: React.FC = () => {
+  const { user, account, isLoading } = useAuth();
+  const [activeView, setActiveView] = useState('dashboard');
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-start)] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sunset-purple"></div>
+      </div>
+    );
+  }
+
+  if (!user || !account) {
+    return <LoginForm />;
+  }
+
+  const renderContent = () => {
+    switch (activeView) {
+      case 'dashboard':
+        return <Dashboard />;
+      case 'company':
+        return <Company />;
+      case 'analytics':
+        return <Analytics />;
+      case 'clients':
+        return <Clients />;
+      case 'projects':
+        return <Projects />;
+      case 'team':
+        return <Team />;
+      case 'tools':
+        return <Tools />;
+      case 'systems':
+        return <Systems />;
+      case 'templates':
+        return (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-400 text-lg">Templates page coming soon</p>
+          </div>
+        );
+      case 'marketplace':
+        return (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-400 text-lg">Marketplace page coming soon</p>
+          </div>
+        );
+      case 'archive':
+        return (
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-400 text-lg">Archive page coming soon</p>
+          </div>
+        );
+      default:
+        return <Dashboard />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[var(--bg-start)]">
+      <Header />
+      <div className="flex-1 flex">
+        <Sidebar activeView={activeView} onViewChange={setActiveView} />
+        <div className="flex-1 flex flex-col">
+          <main className="flex-1 p-6 overflow-auto">
+            {renderContent()}
+          </main>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
+  );
+};
+
+export default App;

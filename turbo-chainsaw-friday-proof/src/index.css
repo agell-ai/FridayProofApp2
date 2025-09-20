@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-[var(--bg-start)];
+  }
+  
+  body {
+    @apply text-[var(--fg)] bg-gradient-to-br from-[var(--bg-start)] to-[var(--bg-end)];
+  }
+}
