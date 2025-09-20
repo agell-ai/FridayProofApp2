@@ -7,15 +7,22 @@ interface StatsCardProps {
   value: string | number;
   change?: string;
   icon: LucideIcon;
-  gradient?: boolean;
+  changeTone?: 'positive' | 'neutral' | 'warning' | 'critical';
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({ 
-  title, 
-  value, 
-  change, 
-  icon: Icon, 
-  gradient = false
+const toneStyles = {
+  positive: 'text-emerald-600 dark:text-emerald-300',
+  neutral: 'text-[var(--fg-muted)]',
+  warning: 'text-amber-600 dark:text-amber-300',
+  critical: 'text-rose-600 dark:text-rose-300',
+};
+
+const StatsCard: React.FC<StatsCardProps> = ({
+  title,
+  value,
+  change,
+  icon: Icon,
+  changeTone = 'positive'
 }) => {
   return (
     <Card
@@ -31,7 +38,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
             {value}
           </p>
           {change && (
-            <p className="text-sm mt-1 text-green-600">
+            <p className={`text-sm mt-1 ${toneStyles[changeTone]}`}>
               {change}
             </p>
           )}

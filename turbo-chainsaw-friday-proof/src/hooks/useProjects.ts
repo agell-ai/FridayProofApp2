@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Project, System, Component } from '../types';
-import { useAuth } from '../contexts/AuthContext';
+import { Project } from '../types';
+import { useAuth } from './useAuth';
 
 // Mock data for demonstration
 const mockProjects: Project[] = [

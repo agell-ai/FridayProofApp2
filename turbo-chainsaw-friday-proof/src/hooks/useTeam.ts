@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { TeamMember } from '../types';
-import { useAuth } from '../contexts/AuthContext';
+import { TeamMember, TeamMemberAnalytics } from '../types';
+import { useAuth } from './useAuth';
 
 // Mock team data (same as in Team.tsx but centralized)
 const mockTeamMembers: TeamMember[] = [
@@ -306,10 +306,38 @@ const mockTeamMembers: TeamMember[] = [
   }
 ];
 
+type TeamMemberInput = Pick<TeamMember, 'name' | 'email' | 'role' | 'status'> & {
+  phone?: string;
+  city?: string;
+  state?: string;
+  linkedinUrl?: string;
+  managerId?: string;
+  skills?: string[];
+  projectIds?: string[];
+  clientIds?: string[];
+  teamMemberIds?: string[];
+  toolIds?: string[];
+  libraryItemIds?: string[];
+  templateIds?: string[];
+  marketplaceItemIds?: string[];
+  analytics?: Partial<TeamMemberAnalytics>;
+};
+
+const defaultTeamAnalytics: TeamMemberAnalytics = {
+  projectsCompleted: 0,
+  hoursWorked: 0,
+  clientSatisfactionScore: 0,
+  toolsCreated: 0,
+  templatesCreated: 0,
+  libraryContributions: 0,
+  marketplaceItems: 0,
+  monthlyProductivity: 0,
+};
+
 export const useTeam = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, account } = useAuth();
 
   useEffect(() => {
     // Simulate API call
@@ -338,10 +366,73 @@ export const useTeam = () => {
     return teamMembers.find(member => member.id === id);
   };
 
+  const createTeamMember = (memberData: TeamMemberInput) => {
+    const newMember: TeamMember = {
+      id: Date.now().toString(),
+      name: memberData.name,
+      email: memberData.email,
+      role: memberData.role,
+      status: memberData.status,
+      phone: memberData.phone,
+      linkedinUrl: memberData.linkedinUrl,
+      city: memberData.city,
+      state: memberData.state,
+      companyName: account?.name || 'Internal Team',
+      skills: memberData.skills || [],
+      projectIds: memberData.projectIds || [],
+      managerId: memberData.managerId,
+      analytics: memberData.analytics
+        ? { ...defaultTeamAnalytics, ...memberData.analytics }
+        : { ...defaultTeamAnalytics },
+      clientIds: memberData.clientIds || [],
+      teamMemberIds: memberData.teamMemberIds || [],
+      toolIds: memberData.toolIds || [],
+      libraryItemIds: memberData.libraryItemIds || [],
+      templateIds: memberData.templateIds || [],
+      marketplaceItemIds: memberData.marketplaceItemIds || [],
+    };
+    setTeamMembers(prev => [...prev, newMember]);
+    return newMember;
+  };
+
+  const updateTeamMember = (id: string, updates: Partial<TeamMemberInput>) => {
+    setTeamMembers(prev => prev.map(member => {
+      if (member.id !== id) {
+        return member;
+      }
+
+      return {
+        ...member,
+        ...updates,
+        phone: updates.phone ?? member.phone,
+        city: updates.city ?? member.city,
+        state: updates.state ?? member.state,
+        skills: updates.skills ?? member.skills,
+        projectIds: updates.projectIds ?? member.projectIds,
+        clientIds: updates.clientIds ?? member.clientIds,
+        teamMemberIds: updates.teamMemberIds ?? member.teamMemberIds,
+        toolIds: updates.toolIds ?? member.toolIds,
+        libraryItemIds: updates.libraryItemIds ?? member.libraryItemIds,
+        templateIds: updates.templateIds ?? member.templateIds,
+        marketplaceItemIds: updates.marketplaceItemIds ?? member.marketplaceItemIds,
+        analytics: updates.analytics
+          ? { ...member.analytics, ...updates.analytics }
+          : member.analytics,
+      };
+    }));
+  };
+
+  const deleteTeamMember = (id: string) => {
+    setTeamMembers(prev => prev.filter(member => member.id !== id));
+  };
+
   return {
     teamMembers,
     isLoading,
     getTeamMembersByIds,
     getTeamMemberById,
+    createTeamMember,
+    updateTeamMember,
+    deleteTeamMember,
   };
 };

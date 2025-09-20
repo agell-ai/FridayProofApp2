@@ -1,10 +1,9 @@
 import React from 'react';
 import { useState } from 'react';
-import { ArrowLeft, Building2, MapPin, Globe, Linkedin, Mail, Phone, User, ExternalLink, Calendar, Users, FolderOpen, Wrench, BookOpen, BookTemplate as FileTemplate, FileText, Presentation as PresentationChart, BarChart3, DollarSign, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
+import { ArrowLeft, Building2, MapPin, Globe, Linkedin, Mail, Phone, User, ExternalLink, Calendar, Users, FolderOpen, Wrench, BookOpen, BookTemplate as FileTemplate, FileText, Presentation as PresentationChart, BarChart3, DollarSign, Clock, X } from 'lucide-react';
 import { Client } from '../../types';
 import TeamMemberModal from './TeamMemberModal';
 import ProjectModal from '../Projects/ProjectModal';
-import ToolDetails from '../Tools/ToolDetails';
 
 import { useTeam } from '../../hooks/useTeam';
 import { useProjects } from '../../hooks/useProjects';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { BarChart3, TrendingUp, Users, DollarSign, Activity, Clock, FolderOpen, Wrench, Building2, Target, Calendar, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { Users, FolderOpen, Wrench, Building2, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 import { useClients } from '../hooks/useClients';
 import { useProjects } from '../hooks/useProjects';
 import { useTeam } from '../hooks/useTeam';
@@ -82,7 +82,7 @@ const Analytics = () => {
     switch (trend) {
       case 'up': return <ArrowUpRight className="w-4 h-4 text-green-400" />;
       case 'down': return <ArrowDownRight className="w-4 h-4 text-red-400" />;
-      default: return <Minus className="w-4 h-4 text-gray-400" />;
+      default: return <Minus className="w-4 h-4 text-[var(--fg-muted)]" />;
     }
   };
 
@@ -102,7 +102,7 @@ const Analytics = () => {
         <select
           value={selectedTimeframe}
           onChange={(e) => setSelectedTimeframe(e.target.value)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-sunset-purple"
+          className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] focus:border-transparent"
         >
           <option value="week">This Week</option>
           <option value="month">This Month</option>
@@ -114,37 +114,37 @@ const Analytics = () => {
       {/* Key Metrics */}
       <div className="bg-glass-gradient-light dark:bg-glass-gradient-dark border border-glass-border-light dark:border-glass-border-dark rounded-xl p-6 backdrop-blur-md shadow-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-700 dark:text-gray-300">Revenue</span>
+              <span className="text-sm text-[var(--fg-muted)]">Revenue</span>
               {getTrendIcon(dashboardAnalytics.revenue.trend)}
             </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(dashboardAnalytics.revenue.value)}</div>
+            <div className="text-2xl font-bold text-[var(--fg)]">{formatCurrency(dashboardAnalytics.revenue.value)}</div>
             <div className="text-sm text-green-600 dark:text-green-400">+{dashboardAnalytics.revenue.change}% from last month</div>
           </div>
-          <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-700 dark:text-gray-300">New Clients</span>
+              <span className="text-sm text-[var(--fg-muted)]">New Clients</span>
               {getTrendIcon(dashboardAnalytics.newClients.trend)}
             </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{dashboardAnalytics.newClients.value}</div>
+            <div className="text-2xl font-bold text-[var(--fg)]">{dashboardAnalytics.newClients.value}</div>
             <div className="text-sm text-green-600 dark:text-green-400">+{dashboardAnalytics.newClients.change} from last month</div>
           </div>
-          <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-700 dark:text-gray-300">Active Projects</span>
+              <span className="text-sm text-[var(--fg-muted)]">Active Projects</span>
               {getTrendIcon(dashboardAnalytics.activeProjects.trend)}
             </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{dashboardAnalytics.activeProjects.value}</div>
+            <div className="text-2xl font-bold text-[var(--fg)]">{dashboardAnalytics.activeProjects.value}</div>
             <div className="text-sm text-green-600 dark:text-green-400">+{dashboardAnalytics.activeProjects.change} this week</div>
           </div>
-          <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">4.8</div>
-            <div className="text-sm text-gray-700 dark:text-gray-300">Overall Satisfaction</div>
+            <div className="text-sm text-[var(--fg-muted)]">Overall Satisfaction</div>
           </div>
-          <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
             <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">92%</div>
-            <div className="text-sm text-gray-700 dark:text-gray-300">Team Utilization</div>
+            <div className="text-sm text-[var(--fg-muted)]">Team Utilization</div>
           </div>
         </div>
       </div>
@@ -153,7 +153,7 @@ const Analytics = () => {
       {user?.accountType !== 'business' && (
         <div className="bg-glass-gradient-light dark:bg-glass-gradient-dark border border-glass-border-light dark:border-glass-border-dark rounded-xl p-6 backdrop-blur-md shadow-lg">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
+            <h2 className="flex items-center space-x-2 text-xl font-semibold text-[var(--fg)]">
               <Building2 className="w-5 h-5" />
               <span>Client Analytics</span>
             </h2>
@@ -161,34 +161,34 @@ const Analytics = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4 max-w-sm">
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{clientAnalytics.totalClients}</div>
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
+                  <div className="text-2xl font-bold text-[var(--fg)]">{clientAnalytics.totalClients}</div>
                   <div className="text-sm text-[var(--fg-muted)]">Total Clients</div>
                 </div>
-                <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">{clientAnalytics.activeClients}</div>
                   <div className="text-sm text-[var(--fg-muted)]">Active</div>
                 </div>
-                <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
                   <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{clientAnalytics.prospectClients}</div>
                   <div className="text-sm text-[var(--fg-muted)]">Prospects</div>
                 </div>
               </div>
             </div>
             <div className="space-y-4 max-w-sm">
-              <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 backdrop-blur-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--fg-muted)]">Total Revenue</span>
                   <span className="text-lg font-bold text-[var(--fg)]">{formatCurrency(clientAnalytics.totalRevenue)}</span>
                 </div>
               </div>
-              <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 backdrop-blur-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--fg-muted)]">Avg Satisfaction</span>
                   <span className="text-lg font-bold text-[var(--fg)]">{clientAnalytics.avgSatisfaction.toFixed(1)}/5</span>
                 </div>
               </div>
-              <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 backdrop-blur-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--fg-muted)]">Avg Response Time</span>
                   <span className="text-lg font-bold text-[var(--fg)]">{clientAnalytics.avgResponseTime.toFixed(1)}h</span>
@@ -202,14 +202,14 @@ const Analytics = () => {
       {/* Project Analytics */}
       <div className="bg-glass-gradient-light dark:bg-glass-gradient-dark border border-glass-border-light dark:border-glass-border-dark rounded-xl p-6 backdrop-blur-md shadow-lg">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
+          <h2 className="flex items-center space-x-2 text-xl font-semibold text-[var(--fg)]">
             <FolderOpen className="w-5 h-5" />
             <span>Project Analytics</span>
           </h2>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-4 max-w-sm">
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 backdrop-blur-sm">
               <h4 className="text-sm font-medium text-[var(--fg)] mb-3">Project Status Distribution</h4>
               <div className="space-y-2">
                 {Object.entries(projectAnalytics.byStatus).map(([status, count]) => (
@@ -231,15 +231,15 @@ const Analytics = () => {
             </div>
           </div>
           <div className="space-y-4 max-w-sm">
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-[var(--fg)]">{projectAnalytics.totalProjects}</div>
               <div className="text-sm text-[var(--fg-muted)]">Total Projects</div>
             </div>
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{projectAnalytics.totalSystems}</div>
               <div className="text-sm text-[var(--fg-muted)]">Total Systems</div>
             </div>
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">{projectAnalytics.activeSystems}</div>
               <div className="text-sm text-[var(--fg-muted)]">Active Systems</div>
             </div>
@@ -250,14 +250,14 @@ const Analytics = () => {
       {/* Team Analytics */}
       <div className="bg-glass-gradient-light dark:bg-glass-gradient-dark border border-glass-border-light dark:border-glass-border-dark rounded-xl p-6 backdrop-blur-md shadow-lg">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
+          <h2 className="flex items-center space-x-2 text-xl font-semibold text-[var(--fg)]">
             <Users className="w-5 h-5" />
             <span>Team Analytics</span>
           </h2>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-4 max-w-sm">
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 backdrop-blur-sm">
               <h4 className="text-sm font-medium text-[var(--fg)] mb-3">Team Composition</h4>
               <div className="space-y-2">
                 {Object.entries(teamAnalytics.byRole).map(([role, count]) => (
@@ -270,19 +270,19 @@ const Analytics = () => {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4 max-w-sm">
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-[var(--fg)]">{teamAnalytics.totalMembers}</div>
               <div className="text-sm text-[var(--fg-muted)]">Total Members</div>
             </div>
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">{teamAnalytics.activeMembers}</div>
               <div className="text-sm text-[var(--fg-muted)]">Active</div>
             </div>
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{Math.round(teamAnalytics.avgProductivity)}%</div>
               <div className="text-sm text-[var(--fg-muted)]">Avg Productivity</div>
             </div>
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{teamAnalytics.avgSatisfaction.toFixed(1)}</div>
               <div className="text-sm text-[var(--fg-muted)]">Avg Satisfaction</div>
             </div>
@@ -293,14 +293,14 @@ const Analytics = () => {
       {/* Tool Analytics */}
       <div className="bg-glass-gradient-light dark:bg-glass-gradient-dark border border-glass-border-light dark:border-glass-border-dark rounded-xl p-6 backdrop-blur-md shadow-lg">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
+          <h2 className="flex items-center space-x-2 text-xl font-semibold text-[var(--fg)]">
             <Wrench className="w-5 h-5" />
             <span>Tool Analytics</span>
           </h2>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-4 max-w-sm">
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 backdrop-blur-sm">
               <h4 className="text-sm font-medium text-[var(--fg)] mb-3">Tool Categories</h4>
               <div className="space-y-2">
                 {Object.entries(toolAnalytics.byCategory).map(([category, count]) => (
@@ -315,7 +315,7 @@ const Analytics = () => {
             </div>
           </div>
           <div className="space-y-4 max-w-sm">
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 backdrop-blur-sm">
               <h4 className="text-sm font-medium text-[var(--fg)] mb-3">Tool Status</h4>
               <div className="space-y-2">
                 {Object.entries(toolAnalytics.byStatus).map(([status, count]) => (
@@ -339,19 +339,19 @@ const Analytics = () => {
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 max-w-sm">
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-[var(--fg)]">{toolAnalytics.totalTools}</div>
               <div className="text-sm text-[var(--fg-muted)]">Total Tools</div>
             </div>
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{Math.round(toolAnalytics.avgUsage)}%</div>
               <div className="text-sm text-[var(--fg-muted)]">Avg Usage</div>
             </div>
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">{Math.round(toolAnalytics.avgEfficiency)}%</div>
               <div className="text-sm text-[var(--fg-muted)]">Avg Efficiency</div>
             </div>
-            <div className="bg-gray-100/80 dark:bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-4 text-center backdrop-blur-sm">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{formatCurrency(toolAnalytics.totalCostSavings)}</div>
               <div className="text-sm text-[var(--fg-muted)]">Cost Savings</div>
             </div>

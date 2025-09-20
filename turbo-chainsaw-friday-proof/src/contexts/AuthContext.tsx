@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import { User, Account } from '../types';
 
 interface AuthContextType {
@@ -9,15 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Mock accounts data
 const mockAccounts: Account[] = [
@@ -80,7 +72,7 @@ const mockUsers = {
     role: 'manager' as const,
     accountType: 'agency' as const,
     accountId: 'acc-1',
-    enabledPages: ['dashboard', 'company', 'analytics', 'clients', 'projects', 'team', 'tools', 'systems', 'templates', 'marketplace', 'archive'],
+    enabledPages: ['dashboard', 'company', 'analytics', 'workspaces', 'solutions', 'archive'],
     createdAt: '2024-01-01T00:00:00Z',
   },
   'employee@demo.com': {
@@ -137,7 +129,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!mockUser) {
         throw new Error('User not found');
       }
-      
+
+      if (password !== 'demo123') {
+        throw new Error('Invalid password');
+      }
+
       // Find associated account
       const mockAccount = mockAccounts.find(acc => acc.id === mockUser.accountId);
       if (!mockAccount) {
@@ -149,6 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('user', JSON.stringify(mockUser));
       localStorage.setItem('account', JSON.stringify(mockAccount));
     } catch (error) {
+      console.error('Login failed', error);
       throw new Error('Login failed');
     } finally {
       setIsLoading(false);
