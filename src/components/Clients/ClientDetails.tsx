@@ -131,7 +131,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onClose }) => {
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Project Value</p>
                     <p className="text-2xl font-bold text-blue-600">${client.projects.reduce((sum, p) => sum + p.budget, 0).toLocaleString()}</p>
-                  <p className="text-gray-900 dark:text-white">{client.location}</p>
+                  </div>
                 </div>
               </div>
 
