@@ -5,6 +5,15 @@ import { useClients } from './useClients';
 import { useProjects } from './useProjects';
 import { useAuth } from './useAuth';
 
+const deterministicNumber = (seed: string, min: number, max: number) => {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) % 1000;
+  }
+  const ratio = hash / 1000;
+  return Math.round(min + ratio * (max - min));
+};
+
 type ToolFormPayload = {
   name: string;
   description: string;
