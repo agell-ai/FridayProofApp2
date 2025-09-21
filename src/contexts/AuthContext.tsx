@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { User, Account } from '../types';
+import type { ViewId } from '../types/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +11,18 @@ interface AuthContextType {
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const managerDefaultPages: ViewId[] = [
+  'dashboard',
+  'analytics',
+  'company',
+  'clients',
+  'projects',
+  'team',
+  'workspaces',
+  'tools',
+  'solutions',
+];
 
 // Mock accounts data
 const mockAccounts: Account[] = [
@@ -72,7 +85,7 @@ const mockUsers = {
     role: 'manager' as const,
     accountType: 'agency' as const,
     accountId: 'acc-1',
-    enabledPages: ['dashboard', 'company', 'analytics', 'workspaces', 'systemsHub'],
+    enabledPages: managerDefaultPages,
     createdAt: '2024-01-01T00:00:00Z',
   },
   'employee@demo.com': {

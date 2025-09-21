@@ -1,30 +1,23 @@
 import React from 'react';
-import { LayoutDashboard, BarChart3, Users, LogOut, Activity } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+
 import { useAuth } from '../../hooks/useAuth';
-import { getAvailablePages } from '../../utils/permissions';
+import { NAVIGATION_ITEMS } from '../../lib/navigation';
+import type { ViewId } from '../../types/navigation';
 import { Logo } from '../Shared/Logo';
 
 interface SidebarProps {
-  activeView: string;
-  onViewChange: (view: string) => void;
+  activeView: ViewId;
+  availablePages: ViewId[];
+  onViewChange: (view: ViewId) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeView, availablePages, onViewChange }) => {
   const { user, account, logout } = useAuth();
 
   if (!user || !account) return null;
 
-  const availablePages = getAvailablePages(user);
-
-  const allMenuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'company', label: 'Company', icon: BarChart3 },
-    { id: 'workspaces', label: 'Workspaces', icon: Users },
-    { id: 'systemsHub', label: 'Systems Hub', icon: Activity },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  ];
-
-  const menuItems = allMenuItems.filter(item => availablePages.includes(item.id));
+  const menuItems = NAVIGATION_ITEMS.filter((item) => availablePages.includes(item.id));
 
   return (
     <div className="w-64 bg-[var(--bg-start)] border-r border-[var(--border)] flex flex-col">
@@ -38,7 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
             const isActive = activeView === item.id;
             return (
               <li key={item.id} className="relative group">
-                <div 
+                <div
                   className={`absolute -inset-0.5 bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] rounded-lg transition-opacity duration-300 z-0 ${
                     isActive ? 'opacity-75' : 'opacity-0 group-hover:opacity-75'
                   }`}
