@@ -10,7 +10,7 @@ const Clients: React.FC = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   if (selectedClient) {
-    return <ClientDetails client={selectedClient} onBack={() => setSelectedClient(null)} />;
+    return <ClientDetails client={selectedClient} onClose={() => setSelectedClient(null)} />;
   }
 
   if (isLoading) {

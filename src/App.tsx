@@ -13,7 +13,6 @@ import { Workspaces } from './views/Workspaces';
 import { Analytics } from './views/Analytics';
 import { Company } from './views/Company';
 import { ProjectDetailsPage } from './views/ProjectDetailsPage';
-import { ClientDetailsPage } from './views/ClientDetailsPage';
 
 type View = 'dashboard' | 'clients' | 'projects' | 'team' | 'tools' | 'solutions' | 'workspaces' | 'analytics' | 'company';
 
