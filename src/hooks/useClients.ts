@@ -247,8 +247,6 @@ export const useClients = () => {
     }
   };
 
-  const createInvoice = async (invoiceData: Omit<Invoice, 'id' | 'createdAt'>) => {
-  }
   const createInvoice = async (invoiceData: Omit<ClientInvoice, 'id'>) => {
     setLoading(true);
     try {
@@ -263,8 +261,6 @@ export const useClients = () => {
     }
   };
 
-  const createProposal = async (proposalData: Omit<Proposal, 'id' | 'createdAt'>) => {
-  }
   const createProposal = async (proposalData: Omit<ClientProposal, 'id'>) => {
     setLoading(true);
     try {
