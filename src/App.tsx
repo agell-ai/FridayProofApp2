@@ -3,7 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
-import { Dashboard } from './views/Dashboard';
+import Dashboard from './views/Dashboard';
 import Clients from './views/Clients';
 import { Projects } from './views/Projects';
 import { Team } from './views/Team';
