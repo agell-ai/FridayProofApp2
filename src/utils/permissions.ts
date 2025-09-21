@@ -1,41 +1,61 @@
+import { NAVIGATION_ITEMS } from '../lib/navigation';
 import { User } from '../types';
+import type { ViewId } from '../types/navigation';
 
-export const getAvailablePages = (user: User): string[] => {
+const ALL_PAGES: ViewId[] = NAVIGATION_ITEMS.map((item) => item.id);
+
+const BUSINESS_RESTRICTED_PAGES: ViewId[] = ALL_PAGES.filter((page) => page !== 'clients');
+
+const CONTRACTOR_ALLOWED_PAGES: ViewId[] = [
+  'dashboard',
+  'analytics',
+  'projects',
+  'team',
+  'workspaces',
+  'tools',
+  'solutions',
+];
+
+const CLIENT_ALLOWED_PAGES: ViewId[] = [
+  'dashboard',
+  'company',
+  'projects',
+  'workspaces',
+  'tools',
+  'solutions',
+];
+
+const filterPages = (pages: ViewId[], allowed: ViewId[]): ViewId[] =>
+  pages.filter((page): page is ViewId => allowed.includes(page));
+
+export const getAvailablePages = (user: User): ViewId[] => {
   const { accountType, role, enabledPages } = user;
 
-  const allPages = ['dashboard', 'company', 'workspaces', 'systemsHub', 'analytics'];
-  
-  // Define pages by account type
-  const accountTypePages = {
-    agency: allPages,
-    consultant: allPages,
-    business: allPages
+  const accountTypePages: Record<User['accountType'], ViewId[]> = {
+    agency: ALL_PAGES,
+    consultant: ALL_PAGES,
+    business: BUSINESS_RESTRICTED_PAGES,
   };
 
-  // Define pages by role
-  const rolePages = {
-    owner: accountTypePages[accountType],
-    manager: (enabledPages || accountTypePages[accountType]).filter(page => allPages.includes(page)),
-    employee: accountTypePages[accountType],
-    contractor: accountTypePages[accountType],
-    client: ['dashboard', 'company', 'workspaces', 'systemsHub']
+  const basePages = accountTypePages[accountType];
+
+  const rolePages: Record<User['role'], ViewId[]> = {
+    owner: basePages,
+    manager: (enabledPages ?? basePages).filter((page): page is ViewId => basePages.includes(page)),
+    employee: basePages,
+    contractor: filterPages(basePages, CONTRACTOR_ALLOWED_PAGES),
+    client: filterPages(basePages, CLIENT_ALLOWED_PAGES),
   };
 
   return rolePages[role];
 };
 
-export const canAccessPage = (user: User, page: string): boolean => {
+export const canAccessPage = (user: User, page: ViewId): boolean => {
   const availablePages = getAvailablePages(user);
   return availablePages.includes(page);
 };
 
-export const getPageTitle = (page: string): string => {
-  const titles = {
-    dashboard: 'Dashboard',
-    company: 'Company',
-    workspaces: 'Workspaces',
-    systemsHub: 'Systems Hub',
-    analytics: 'Analytics'
-  };
-  return titles[page as keyof typeof titles] || 'Dashboard';
+export const getPageTitle = (page: ViewId): string => {
+  const match = NAVIGATION_ITEMS.find((item) => item.id === page);
+  return match?.label ?? 'Dashboard';
 };

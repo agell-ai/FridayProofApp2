@@ -1,3 +1,5 @@
+import type { ViewId } from './navigation';
+
 export interface User {
   id: string;
   email: string;
@@ -6,7 +8,7 @@ export interface User {
   accountType: 'agency' | 'consultant' | 'business';
   accountId: string;
   managerId?: string; // For employees/contractors assigned to managers
-  enabledPages?: string[]; // For managers - pages enabled by owner
+  enabledPages?: ViewId[]; // For managers - pages enabled by owner
   createdAt: string;
 }
 
