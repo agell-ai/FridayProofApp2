@@ -7,7 +7,7 @@ import Dashboard from './views/Dashboard';
 import Clients from './views/Clients';
 import Projects from './views/Projects';
 import Team from './views/Team';
-import { Tools } from './views/Tools';
+import Tools from './views/Tools';
 import Solutions from './views/Solutions';
 import { Workspaces } from './views/Workspaces';
 import Analytics from './views/Analytics';
