@@ -14,15 +14,17 @@ export function Header() {
     <>
       <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--header)] backdrop-blur-md supports-[backdrop-filter]:bg-[var(--header)]">
         <div className="flex h-20 items-center justify-between px-2">
-          <div className="flex items-center gap-8">
-            <Logo className="h-36 w-auto" />
-            {account && (
+          <Logo className="h-36 w-auto" />
+          
+          {account && (
+            <div className="flex-1 flex justify-center">
               <div className="text-2xl font-bold text-[var(--fg)]">
                 {account.name}
               </div>
-            )}
-          </div>
-          <div className="flex items-center gap-4 ml-auto">
+            </div>
+          )}
+          
+          <div className="flex items-center gap-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--fg-muted)]" />
