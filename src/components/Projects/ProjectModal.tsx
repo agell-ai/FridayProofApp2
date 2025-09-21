@@ -6,6 +6,7 @@ import { useTeam } from '../../hooks/useTeam';
 import { useAuth } from '../../hooks/useAuth';
 import TeamMemberModal from '../Clients/TeamMemberModal';
 import ClientModal from './ClientModal';
+import { Button } from '../Shared/Button';
 
 interface ProjectModalProps {
   project: Project;
@@ -165,15 +166,27 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) => {
               <div className="bg-white/20 dark:bg-white/10 border border-white/20 dark:border-white/10 rounded-xl p-6 backdrop-blur-sm">
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h4>
                 <div className="space-y-3">
-                  <button className="w-full bg-gradient-primary text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
+                  <Button
+                    className="w-full"
+                    glowOnHover
+                    innerClassName="justify-center font-semibold"
+                  >
                     Add System
-                  </button>
-                  <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm">
+                  </Button>
+                  <Button
+                    className="w-full"
+                    appearance="solid"
+                    innerClassName="justify-center font-semibold"
+                  >
                     Edit Project
-                  </button>
-                  <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm">
+                  </Button>
+                  <Button
+                    className="w-full"
+                    appearance="outline"
+                    innerClassName="justify-center font-semibold"
+                  >
                     View Analytics
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -233,22 +246,27 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) => {
               </h4>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {projectManager && user?.accountType === 'agency' && (
-                  <div 
+                  <Button
                     key={projectManager.id}
                     onClick={() => setSelectedTeamMember(projectManager)}
-                    className="flex items-center space-x-3 p-3 bg-gradient-primary rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                    className="w-full"
+                    appearance="solid"
+                    glowOnHover
+                    innerClassName="w-full justify-start px-3 py-3 text-left"
                   >
-                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-white">
-                        {projectManager.name.split(' ').map(n => n[0]).join('')}
-                      </span>
+                    <div className="flex items-center space-x-3 w-full">
+                      <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-white">
+                          {projectManager.name.split(' ').map(n => n[0]).join('')}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-[var(--fg)]">{projectManager.name}</p>
+                        <p className="text-xs text-[var(--fg-muted)]">Project Manager</p>
+                      </div>
+                      <div className="w-2 h-2 rounded-full bg-[var(--accent-orange)]" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-white">{projectManager.name}</p>
-                      <p className="text-xs text-white/80">Project Manager</p>
-                    </div>
-                    <div className="w-2 h-2 rounded-full bg-white" />
-                  </div>
+                  </Button>
                 )}
                 {assignedTeamMembers.map((member) => (
                   <div 

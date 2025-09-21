@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { X, Building2, FolderOpen, Users, Wrench, Save, Sparkles } from 'lucide-react';
+import { Button } from './Button';
 import { Client, Project, TeamMember } from '../../types';
 import { Tool } from '../../types/tools';
 
@@ -229,13 +230,10 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode, initialData, onSubmit, on
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
-        >
+        <Button type="submit" glowOnHover innerClassName="font-semibold">
           <Save className="w-4 h-4" />
           {mode === 'create' ? 'Add Client' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -351,13 +349,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ mode, initialData, clients, t
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
-        >
+        <Button type="submit" glowOnHover innerClassName="font-semibold">
           <Save className="w-4 h-4" />
           {mode === 'create' ? 'Add Project' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -496,13 +491,10 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, initialData, onSubmit, onCanc
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
-        >
+        <Button type="submit" glowOnHover innerClassName="font-semibold">
           <Save className="w-4 h-4" />
           {mode === 'create' ? 'Add Team Member' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -786,13 +778,10 @@ const ToolForm: React.FC<ToolFormProps> = ({ mode, initialData, clients, project
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
-        >
+        <Button type="submit" glowOnHover innerClassName="font-semibold">
           <Sparkles className="w-4 h-4" />
           {mode === 'create' ? 'Create Tool' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </form>
   );

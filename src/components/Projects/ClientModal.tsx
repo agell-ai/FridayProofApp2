@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Building2, MapPin, Globe, Linkedin, Mail, Phone, User, ExternalLink, Calendar, Users, FolderOpen, Wrench, BarChart3, DollarSign } from 'lucide-react';
 import { Client } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
+import { Button } from '../Shared/Button';
 
 interface ClientModalProps {
   client: Client;

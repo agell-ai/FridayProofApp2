@@ -6,6 +6,7 @@ import { useClients } from '../hooks/useClients';
 import { useTeam } from '../hooks/useTeam';
 import SolutionCard, { SolutionCardData } from '../components/Solutions/SolutionCard';
 import { EntityFormModal, ToolFormValues } from '../components/Shared/EntityFormModal';
+import { Button } from '../components/Shared/Button';
 import { Tool } from '../types/tools';
 
 const solutionTypes = ['tool', 'system', 'template', 'marketplace'] as const;
@@ -506,18 +507,16 @@ const Solutions: React.FC = () => {
               {solutionTypes.map((type) => {
                 const isActive = activeTypes.includes(type);
                 return (
-                  <button
+                  <Button
                     key={type}
-                    type="button"
+                    size="sm"
+                    glowOnHover
+                    activeGlow={isActive}
                     onClick={() => toggleType(type)}
-                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
-                      isActive
-                        ? 'border-transparent bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white'
-                        : 'border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] hover:text-[var(--fg)]'
-                    }`}
+                    innerClassName={`px-3 py-2 text-sm font-medium ${isActive ? 'text-[var(--fg)]' : 'text-[var(--fg-muted)]'}`}
                   >
                     {typeLabels[type]}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -539,14 +538,14 @@ const Solutions: React.FC = () => {
                 </select>
               </div>
 
-              <button
-                type="button"
+              <Button
                 onClick={() => setToolFormState({ mode: 'create' })}
-                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                glowOnHover
+                innerClassName="font-semibold"
               >
                 <PlusCircle className="h-4 w-4" />
                 Add Tool
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -655,12 +654,9 @@ const Solutions: React.FC = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white"
-            >
+            <Button type="submit" glowOnHover innerClassName="font-semibold">
               Save Metrics
-            </button>
+            </Button>
           </form>
         </div>
 

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Edit, Users, FolderOpen, Wrench, TrendingUp, Activity, DollarSign, Clock, CheckCircle2, ArrowUp, ArrowDown, X } from 'lucide-react';
 import StatsCard from '../components/Dashboard/StatsCard';
 import { Card } from '../components/Shared/Card';
+import { Button } from '../components/Shared/Button';
 import { useAuth } from '../hooks/useAuth';
 
 const availableWidgets = [
@@ -125,13 +126,10 @@ const Dashboard: React.FC = () => {
             {account ? `${account.name} · Performance snapshot` : 'Performance snapshot'}
           </p>
         </div>
-        <button
-          onClick={openCustomize}
-          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm"
-        >
+        <Button onClick={openCustomize} glowOnHover innerClassName="font-semibold">
           <Edit className="w-4 h-4" />
           Customize
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -294,14 +292,15 @@ const Dashboard: React.FC = () => {
                 >
                   Cancel
                 </button>
-                <button
+                <Button
                   type="button"
                   onClick={saveCustomization}
                   disabled={disableSave}
-                  className="rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  glowOnHover
+                  innerClassName="font-semibold"
                 >
                   Save layout
-                </button>
+                </Button>
               </div>
             </div>
           </div>

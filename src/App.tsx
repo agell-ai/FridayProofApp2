@@ -54,13 +54,11 @@ const AppContent: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-start)]">
       <Header />
-      <div className="flex-1 flex">
+      <div className="flex flex-1 min-h-0">
         <Sidebar activeView={activeView} onViewChange={setActiveView} />
-        <div className="flex-1 flex flex-col">
-          <main className="flex-1 p-6 overflow-auto">
-            {renderContent()}
-          </main>
-        </div>
+        <main className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6">
+          {renderContent()}
+        </main>
       </div>
       <Footer />
     </div>

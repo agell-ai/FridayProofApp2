@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { Button } from '../Shared/Button';
 
 const demoAccounts = [
   { email: 'agency-owner@demo.com', label: 'Agency Owner', description: 'Full access to all agency features' },
@@ -104,13 +105,15 @@ const LoginForm: React.FC = () => {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-primary text-white font-semibold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-sunset-purple focus:ring-offset-2 focus:ring-offset-[var(--bg-start)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              glowOnHover
+              className="w-full"
+              innerClassName="justify-center py-3 font-semibold"
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
-            </button>
+            </Button>
           </form>
 
           <div className="mt-8 space-y-4">

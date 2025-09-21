@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, User, Building2, Save, Edit3 } from 'lucide-react';
+import { Button } from '../Shared/Button';
 import { User as UserType, Account } from '../../types';
 
 interface AccountModalProps {
@@ -178,13 +179,10 @@ const AccountModal: React.FC<AccountModalProps> = ({ user, account, onClose }) =
               >
                 Cancel
               </button>
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 bg-gradient-primary text-white rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-2"
-              >
+              <Button onClick={handleSave} glowOnHover innerClassName="font-semibold">
                 <Save className="w-4 h-4" />
                 <span>Save Changes</span>
-              </button>
+              </Button>
             </div>
           )}
         </div>
