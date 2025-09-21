@@ -13,6 +13,7 @@ import Workspaces from './views/Workspaces';
 import Analytics from './views/Analytics';
 import Company from './views/Company';
 import { ProjectDetailsPage } from './views/ProjectDetailsPage';
+import { ClientDetails } from './components/Clients/ClientDetails';
 
 type View = 'dashboard' | 'clients' | 'projects' | 'team' | 'tools' | 'solutions' | 'workspaces' | 'analytics' | 'company';
 
@@ -33,7 +34,7 @@ const AppContent: React.FC = () => {
 
     if (selectedClient) {
       return (
-        <ClientDetailsPage
+        <ClientDetails
           client={selectedClient}
           onClose={() => setSelectedClient(null)}
         />
