@@ -25,10 +25,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-sunset-orange transition-colors">
+          <h3
+            className="text-lg font-semibold leading-snug text-gray-900 dark:text-white mb-2 text-balance transition-colors duration-200 sm:text-xl group-hover:text-sunset-orange"
+          >
             {project.name}
           </h3>
-          <p className="text-[var(--fg-muted)] text-sm line-clamp-2">
+          <p className="text-[var(--fg-muted)] text-sm leading-relaxed text-pretty break-words line-clamp-3 sm:line-clamp-2">
             {project.description}
           </p>
         </div>
