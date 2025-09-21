@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Mail, Phone, MapPin, Building, Calendar, DollarSign, FileText, Plus, Edit } from 'lucide-react';
 import { Client } from '../../types';
 import { useClients } from '../../hooks/useClients';
+import { useProjects } from '../../hooks/useProjects';
 import { InvoiceFormModal } from './InvoiceFormModal';
 import { ProposalFormModal } from './ProposalFormModal';
 import { EntityFormModal } from '../Shared/EntityFormModal';
@@ -12,7 +13,8 @@ interface ClientDetailsProps {
 }
 
 const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onClose }) => {
-  const { projects, invoices, proposals } = useClients();
+  const { invoices, proposals } = useClients();
+  const { projects } = useProjects();
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showProposalModal, setShowProposalModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
