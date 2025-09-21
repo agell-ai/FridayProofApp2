@@ -10,7 +10,7 @@ import { Team } from './views/Team';
 import { Tools } from './views/Tools';
 import { Solutions } from './views/Solutions';
 import { Workspaces } from './views/Workspaces';
-import { Analytics } from './views/Analytics';
+import Analytics from './views/Analytics';
 import { Company } from './views/Company';
 import { ProjectDetailsPage } from './views/ProjectDetailsPage';
 
