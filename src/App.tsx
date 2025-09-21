@@ -13,7 +13,7 @@ import Workspaces from './views/Workspaces';
 import Analytics from './views/Analytics';
 import Company from './views/Company';
 import { ProjectDetailsPage } from './views/ProjectDetailsPage';
-import { ClientDetails } from './components/Clients/ClientDetails';
+import ClientDetails from './components/Clients/ClientDetails';
 
 type View = 'dashboard' | 'clients' | 'projects' | 'team' | 'tools' | 'solutions' | 'workspaces' | 'analytics' | 'company';
 
