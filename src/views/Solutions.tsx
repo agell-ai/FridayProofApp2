@@ -8,6 +8,18 @@ import SolutionCard, { SolutionCardData } from '../components/Solutions/Solution
 import { EntityFormModal, ToolFormValues, TemplateFormValues, MarketplaceFormValues } from '../components/Shared/EntityFormModal';
 import { Tool } from '../types/tools';
 
+// Utility function for generating consistent pseudo-random numbers
+const deterministicNumber = (seed: string, min: number, max: number): number => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  const normalized = Math.abs(hash) / 2147483647; // Normalize to 0-1
+  return Math.floor(normalized * (max - min + 1)) + min;
+};
+
 const solutionTypes = ['active', 'library', 'marketplace'] as const;
 
 type SolutionType = (typeof solutionTypes)[number];
