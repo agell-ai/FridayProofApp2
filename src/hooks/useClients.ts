@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { Client } from '../types';
+import { Client, ClientProposal } from '../types';
 
 // Mock clients data
 const mockClients: Client[] = [
@@ -562,6 +562,8 @@ const mockClients: Client[] = [
 type ClientInput = Pick<Client, 'companyName' | 'location' | 'industry' | 'status'> &
   Partial<Omit<Client, 'id' | 'createdAt' | 'updatedAt'>>;
 
+type ProposalInput = Omit<ClientProposal, 'id'>;
+
 const defaultAnalytics: Client['analytics'] = {
   totalRevenue: 0,
   monthlyRevenue: 0,
@@ -673,6 +675,98 @@ export const useClients = () => {
     }));
   };
 
+  const createProposal = (clientId: string, proposalData: ProposalInput): ClientProposal | null => {
+    if (user?.accountType === 'business') {
+      return null;
+    }
+
+    let createdProposal: ClientProposal | null = null;
+    const timestamp = new Date().toISOString();
+
+    setClients(prev => prev.map(client => {
+      if (client.id !== clientId) {
+        return client;
+      }
+
+      const sentDate = proposalData.sentDate?.trim();
+      const responseDate = proposalData.responseDate?.trim();
+
+      const newProposal: ClientProposal = {
+        id: `proposal-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        title: proposalData.title.trim(),
+        value: proposalData.value,
+        status: proposalData.status,
+        ...(sentDate ? { sentDate } : {}),
+        ...(responseDate ? { responseDate } : {}),
+      };
+
+      createdProposal = newProposal;
+
+      return {
+        ...client,
+        proposals: [...client.proposals, newProposal],
+        updatedAt: timestamp,
+      };
+    }));
+
+    return createdProposal;
+  };
+
+  const updateProposal = (
+    clientId: string,
+    proposalId: string,
+    updates: Partial<ProposalInput>,
+  ): ClientProposal | null => {
+    if (user?.accountType === 'business') {
+      return null;
+    }
+
+    let updatedProposal: ClientProposal | null = null;
+    const timestamp = new Date().toISOString();
+
+    setClients(prev => prev.map(client => {
+      if (client.id !== clientId) {
+        return client;
+      }
+
+      let proposalUpdated = false;
+
+      const nextProposals = client.proposals.map(proposal => {
+        if (proposal.id !== proposalId) {
+          return proposal;
+        }
+
+        proposalUpdated = true;
+
+        const sentDate = updates.sentDate !== undefined ? updates.sentDate?.trim() || undefined : undefined;
+        const responseDate = updates.responseDate !== undefined ? updates.responseDate?.trim() || undefined : undefined;
+
+        updatedProposal = {
+          ...proposal,
+          ...(updates.title !== undefined ? { title: updates.title.trim() } : {}),
+          ...(updates.value !== undefined ? { value: updates.value } : {}),
+          ...(updates.status !== undefined ? { status: updates.status } : {}),
+          ...(updates.sentDate !== undefined ? { sentDate } : {}),
+          ...(updates.responseDate !== undefined ? { responseDate } : {}),
+        };
+
+        return updatedProposal;
+      });
+
+      if (!proposalUpdated) {
+        return client;
+      }
+
+      return {
+        ...client,
+        proposals: nextProposals,
+        updatedAt: timestamp,
+      };
+    }));
+
+    return updatedProposal;
+  };
+
   const deleteClient = (id: string) => {
     if (user?.accountType === 'business') {
       return;
@@ -686,6 +780,8 @@ export const useClients = () => {
     isLoading,
     createClient,
     updateClient,
+    createProposal,
+    updateProposal,
     deleteClient,
   };
 };

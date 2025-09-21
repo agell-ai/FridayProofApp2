@@ -3,14 +3,24 @@ import { Plus } from 'lucide-react';
 import ClientCard from '../components/Clients/ClientCard';
 import ClientDetails from '../components/Clients/ClientDetails';
 import { useClients } from '../hooks/useClients';
-import { Client } from '../types';
 
 const Clients: React.FC = () => {
-  const { clients, isLoading } = useClients();
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const { clients, isLoading, createProposal, updateProposal } = useClients();
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
-  if (selectedClient) {
-    return <ClientDetails client={selectedClient} onBack={() => setSelectedClient(null)} />;
+  const activeClient = selectedClientId
+    ? clients.find(client => client.id === selectedClientId) ?? null
+    : null;
+
+  if (selectedClientId && activeClient) {
+    return (
+      <ClientDetails
+        client={activeClient}
+        onBack={() => setSelectedClientId(null)}
+        onCreateProposal={(proposal) => createProposal(activeClient.id, proposal)}
+        onUpdateProposal={(proposalId, updates) => updateProposal(activeClient.id, proposalId, updates)}
+      />
+    );
   }
 
   if (isLoading) {
@@ -37,7 +47,7 @@ const Clients: React.FC = () => {
           <ClientCard
             key={client.id}
             client={client}
-            onClick={() => setSelectedClient(client)}
+            onClick={() => setSelectedClientId(client.id)}
           />
         ))}
       </div>
