@@ -14,7 +14,6 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const managerDefaultPages: ViewId[] = [
   'dashboard',
-  'analytics',
   'company',
   'clients',
   'projects',

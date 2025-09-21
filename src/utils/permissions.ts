@@ -8,7 +8,6 @@ const BUSINESS_RESTRICTED_PAGES: ViewId[] = ALL_PAGES.filter((page) => page !== 
 
 const CONTRACTOR_ALLOWED_PAGES: ViewId[] = [
   'dashboard',
-  'analytics',
   'projects',
   'team',
   'workspaces',
