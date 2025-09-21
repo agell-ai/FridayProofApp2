@@ -2,7 +2,6 @@ import type { LucideIcon } from 'lucide-react';
 
 export type ViewId =
   | 'dashboard'
-  | 'analytics'
   | 'company'
   | 'clients'
   | 'projects'
