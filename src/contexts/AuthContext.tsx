@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { User, Account } from '../types';
 import type { ViewId } from '../types/navigation';
+import { NAVIGATION_ITEMS } from '../lib/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -12,16 +13,7 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const managerDefaultPages: ViewId[] = [
-  'dashboard',
-  'company',
-  'clients',
-  'projects',
-  'team',
-  'workspaces',
-  'tools',
-  'solutions',
-];
+const managerDefaultPages: ViewId[] = NAVIGATION_ITEMS.map((item) => item.id);
 
 // Mock accounts data
 const mockAccounts: Account[] = [
