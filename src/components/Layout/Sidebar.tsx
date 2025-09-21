@@ -18,7 +18,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
 
   const allMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'company', label: 'Company', icon: BarChart3 },
     { id: 'workspaces', label: 'Workspaces', icon: Users },
     { id: 'solutions', label: 'Solutions', icon: Activity },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },

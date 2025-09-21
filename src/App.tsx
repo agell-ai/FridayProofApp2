@@ -11,11 +11,10 @@ import Tools from './views/Tools';
 import Solutions from './views/Solutions';
 import Workspaces from './views/Workspaces';
 import Analytics from './views/Analytics';
-import Company from './views/Company';
 import { ProjectDetailsPage } from './views/ProjectDetailsPage';
 import ClientDetails from './components/Clients/ClientDetails';
 
-type View = 'dashboard' | 'clients' | 'projects' | 'team' | 'tools' | 'solutions' | 'workspaces' | 'analytics' | 'company';
+type View = 'dashboard' | 'clients' | 'projects' | 'team' | 'tools' | 'solutions' | 'workspaces' | 'analytics';
 
 const AppContent: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('dashboard');
@@ -63,8 +62,6 @@ const AppContent: React.FC = () => {
         );
       case 'analytics':
         return <Analytics />;
-      case 'company':
-        return <Company />;
       default:
         return <Dashboard />;
     }
