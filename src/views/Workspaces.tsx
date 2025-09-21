@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useProjects } from '../hooks/useProjects';
 import { useClients } from '../hooks/useClients';
 import { useTeam } from '../hooks/useTeam';
-import WorkspaceCard from '../components/Workspaces/WorkspaceCard';
+import { WorkspaceCard } from '../components/Workspaces/WorkspaceCard';
 import { EntityFormModal } from '../components/Shared/EntityFormModal';
 import { EntityType } from '../types';
 
