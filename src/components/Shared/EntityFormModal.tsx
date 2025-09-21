@@ -63,6 +63,7 @@ interface EntityFormModalProps {
   teamMembers?: TeamMember[];
   onClose: () => void;
   onSubmit: (values: EntityFormValues) => void;
+  defaultClientId?: string;
 }
 
 type ClientFormProps = {
@@ -79,6 +80,7 @@ type ProjectFormProps = {
   teamMembers: TeamMember[];
   onSubmit: (values: ProjectFormValues) => void;
   onCancel: () => void;
+  defaultClientId?: string;
 };
 
 type TeamFormProps = {
@@ -241,12 +243,12 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode, initialData, onSubmit, on
   );
 };
 
-const ProjectForm: React.FC<ProjectFormProps> = ({ mode, initialData, clients, teamMembers, onSubmit, onCancel }) => {
+const ProjectForm: React.FC<ProjectFormProps> = ({ mode, initialData, clients, teamMembers, onSubmit, onCancel, defaultClientId }) => {
   const [formValues, setFormValues] = useState<ProjectFormValues>({
     name: initialData?.name || '',
     description: initialData?.description || '',
     status: initialData?.status || 'planning',
-    clientId: initialData?.clientId || (clients[0]?.id ?? ''),
+    clientId: initialData?.clientId || defaultClientId || (clients[0]?.id ?? ''),
     assignedUsers: initialData?.assignedUsers || [],
   });
 
@@ -255,10 +257,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ mode, initialData, clients, t
       name: initialData?.name || '',
       description: initialData?.description || '',
       status: initialData?.status || 'planning',
-      clientId: initialData?.clientId || (clients[0]?.id ?? ''),
+      clientId: initialData?.clientId || defaultClientId || (clients[0]?.id ?? ''),
       assignedUsers: initialData?.assignedUsers || [],
     });
-  }, [initialData, clients]);
+  }, [initialData, clients, defaultClientId]);
 
   const toggleUser = (userId: string) => {
     setFormValues((prev) => ({
@@ -826,6 +828,7 @@ export const EntityFormModal: React.FC<EntityFormModalProps> = ({
   teamMembers = [],
   onClose,
   onSubmit,
+  defaultClientId,
 }) => {
   if (!isOpen) return null;
 
@@ -873,6 +876,7 @@ export const EntityFormModal: React.FC<EntityFormModalProps> = ({
               initialData={initialData as Project | null}
               clients={clients}
               teamMembers={teamMembers}
+              defaultClientId={defaultClientId}
               onSubmit={onSubmit as (values: ProjectFormValues) => void}
               onCancel={onClose}
             />

@@ -1,14 +1,24 @@
 import React from 'react';
 import { useState } from 'react';
 import { ArrowLeft, Building2, MapPin, Globe, Linkedin, Mail, Phone, User, ExternalLink, Calendar, Users, FolderOpen, Wrench, BookOpen, BookTemplate as FileTemplate, FileText, Presentation as PresentationChart, BarChart3, DollarSign, Clock, X } from 'lucide-react';
-import { Client } from '../../types';
+import { Client, Project } from '../../types';
 import TeamMemberModal from './TeamMemberModal';
 import ProjectModal from '../Projects/ProjectModal';
 
 import { useTeam } from '../../hooks/useTeam';
 import { useProjects } from '../../hooks/useProjects';
 import { useTools } from '../../hooks/useTools';
+import { useClients } from '../../hooks/useClients';
+import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../Shared/Button';
+import {
+  EntityFormModal,
+  EntityFormValues,
+  ClientFormValues,
+  ProjectFormValues,
+  EntityType,
+  FormMode,
+} from '../Shared/EntityFormModal';
 
 interface ClientDetailsProps {
   client: Client;
@@ -21,18 +31,25 @@ const statusColors = {
   prospect: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
 };
 
+type ClientEntityModalState =
+  | { type: Extract<EntityType, 'client'>; mode: FormMode; initialData?: Client | null }
+  | { type: Extract<EntityType, 'project'>; mode: FormMode; initialData?: Project | null };
+
 const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
-  const { getTeamMembersByIds } = useTeam();
-  const { projects } = useProjects();
+  const { getTeamMembersByIds, teamMembers } = useTeam();
+  const { projects, createProject } = useProjects();
   const { tools } = useTools();
+  const { clients: allClients, updateClient } = useClients();
+  const { user } = useAuth();
   const assignedTeamMembers = getTeamMembersByIds(client.teamMemberIds);
   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedTool, setSelectedTool] = useState(null);
   const [selectedLibraryItem, setSelectedLibraryItem] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectedProposal, setSelectedProposal] = useState(null);
+  const [formState, setFormState] = useState<ClientEntityModalState | null>(null);
 
   // Get actual project data for client projects
   const clientProjects = projects.filter(project => project.clientId === client.id);
@@ -98,6 +115,55 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
       allClientTools.push(mockTool);
     }
   });
+
+
+
+
+  const handleEntitySubmit = (values: EntityFormValues) => {
+    if (!formState) return;
+
+    switch (formState.type) {
+      case 'client': {
+        const payload = values as ClientFormValues;
+        updateClient(client.id, {
+          companyName: payload.companyName,
+          industry: payload.industry,
+          location: payload.location,
+          status: payload.status,
+          website: payload.website,
+          linkedinUrl: payload.linkedinUrl,
+        });
+        break;
+      }
+      case 'project': {
+        const payload = values as ProjectFormValues;
+        createProject({
+          name: payload.name,
+          description: payload.description,
+          status: payload.status,
+          clientId: payload.clientId || client.id,
+          accountId: user?.accountId || 'acc-1',
+          assignedUsers: payload.assignedUsers,
+        });
+        break;
+      }
+      default:
+        break;
+    }
+
+    setFormState(null);
+  };
+
+  const handleOpenModal = (type: EntityType, mode: FormMode, initialData?: Client | Project | null) => {
+    if (type === 'client') {
+      setFormState({ type, mode, initialData: (initialData as Client | null) ?? client });
+      return;
+    }
+
+    if (type === 'project') {
+      setFormState({ type, mode, initialData: (initialData as Project | null) ?? null });
+    }
+  };
 
 
   return (
@@ -273,6 +339,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
                 glowOnHover
                 wrapperClassName="w-full"
                 className="w-full justify-center font-semibold text-white group-hover:text-white group-focus-within:text-white"
+                onClick={() => handleOpenModal('project', 'create')}
               >
                 New Project
               </Button>
@@ -281,6 +348,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
                 appearance="solid"
                 wrapperClassName="w-full"
                 className="w-full justify-center font-semibold border-transparent bg-white/30 text-gray-900 hover:bg-white/40 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 backdrop-blur-sm"
+                onClick={() => handleOpenModal('client', 'edit', client)}
               >
                 Edit Client
               </Button>
@@ -634,6 +702,19 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
           </div>
         </div>
       </div>
+
+      <EntityFormModal
+        isOpen={Boolean(formState)}
+        type={formState?.type || 'client'}
+        mode={formState?.mode || 'create'}
+        initialData={formState?.initialData ?? null}
+        clients={allClients}
+        projects={projects}
+        teamMembers={teamMembers}
+        onClose={() => setFormState(null)}
+        onSubmit={handleEntitySubmit}
+        defaultClientId={formState?.type === 'project' ? client.id : undefined}
+      />
 
       {/* Team Member Modal */}
       {selectedTeamMember && (

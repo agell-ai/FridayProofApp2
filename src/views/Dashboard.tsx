@@ -1,9 +1,21 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Edit, Users, FolderOpen, Wrench, TrendingUp, Activity, DollarSign, Clock, CheckCircle2, ArrowUp, ArrowDown, X } from 'lucide-react';
 import StatsCard from '../components/Dashboard/StatsCard';
 import { Card } from '../components/Shared/Card';
 import { Button } from '../components/Shared/Button';
 import { useAuth } from '../hooks/useAuth';
+import { useClients } from '../hooks/useClients';
+import { useProjects } from '../hooks/useProjects';
+import { useTeam } from '../hooks/useTeam';
+import { useTools } from '../hooks/useTools';
+import {
+  EntityFormModal,
+  EntityFormValues,
+  ProjectFormValues,
+  TeamFormValues,
+  ToolFormValues,
+  FormMode,
+} from '../components/Shared/EntityFormModal';
 
 const availableWidgets = [
   {
@@ -65,10 +77,26 @@ const availableWidgets = [
 const defaultWidgetOrder = ['revenue', 'automationSavings', 'projects', 'clients'];
 
 const Dashboard: React.FC = () => {
-  const { account } = useAuth();
+  const { account, user } = useAuth();
+  const { clients } = useClients();
+  const { projects, createProject } = useProjects();
+  const { teamMembers, createTeamMember } = useTeam();
+  const { createTool } = useTools();
+  const [entityModal, setEntityModal] = useState<{ type: 'project' | 'team' | 'tool'; mode: FormMode } | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ clientId: '', date: '', notes: '' });
   const [activeWidgetIds, setActiveWidgetIds] = useState<string[]>(defaultWidgetOrder);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [draftWidgets, setDraftWidgets] = useState<string[]>(defaultWidgetOrder);
+
+  useEffect(() => {
+    if (clients.length > 0) {
+      setReviewForm((prev) => ({
+        ...prev,
+        clientId: prev.clientId || clients[0].id,
+      }));
+    }
+  }, [clients]);
 
   const activeWidgets = useMemo(
     () =>
@@ -116,6 +144,101 @@ const Dashboard: React.FC = () => {
   };
 
   const disableSave = draftWidgets.length === 0;
+
+  const handleEntitySubmit = (values: EntityFormValues) => {
+    if (!entityModal) return;
+
+    switch (entityModal.type) {
+      case 'project': {
+        const payload = values as ProjectFormValues;
+        createProject({
+          name: payload.name,
+          description: payload.description,
+          status: payload.status,
+          clientId: payload.clientId || (clients[0]?.id ?? ''),
+          accountId: user?.accountId || 'acc-1',
+          assignedUsers: payload.assignedUsers,
+        });
+        break;
+      }
+      case 'team': {
+        const payload = values as TeamFormValues;
+        createTeamMember({
+          name: payload.name,
+          email: payload.email,
+          role: payload.role,
+          status: payload.status,
+          phone: payload.phone,
+          city: payload.city,
+          state: payload.state,
+          skills: payload.skills,
+        });
+        break;
+      }
+      case 'tool': {
+        const payload = values as ToolFormValues;
+        createTool({
+          name: payload.name,
+          description: payload.description,
+          category: payload.category,
+          status: payload.status,
+          clientId: payload.clientId || undefined,
+          projectId: payload.projectId || undefined,
+          teamMembers: payload.teamMembers,
+          businessImpact: payload.businessImpact,
+          stats: payload.stats,
+        });
+        break;
+      }
+      default:
+        break;
+    }
+
+    setEntityModal(null);
+  };
+
+  const handleReviewChange = (field: 'clientId' | 'date' | 'notes', value: string) => {
+    setReviewForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleReviewSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsReviewModalOpen(false);
+  };
+
+  const quickActions = [
+    {
+      title: 'New Project',
+      description: 'Kick off a fresh automation initiative.',
+      icon: FolderOpen,
+      accent: 'text-sky-600 dark:text-sky-300',
+      onClick: () => setEntityModal({ type: 'project', mode: 'create' }),
+    },
+    {
+      title: 'Add Team Member',
+      description: 'Invite a collaborator or contractor.',
+      icon: Users,
+      accent: 'text-emerald-600 dark:text-emerald-300',
+      onClick: () => setEntityModal({ type: 'team', mode: 'create' }),
+    },
+    {
+      title: 'Deploy Tool',
+      description: 'Launch a new agent or workflow.',
+      icon: Wrench,
+      accent: 'text-purple-600 dark:text-purple-300',
+      onClick: () => setEntityModal({ type: 'tool', mode: 'create' }),
+    },
+    {
+      title: 'Schedule Review',
+      description: 'Book a client strategy session.',
+      icon: CheckCircle2,
+      accent: 'text-orange-600 dark:text-orange-300',
+      onClick: () => {
+        setReviewForm({ clientId: clients[0]?.id ?? '', date: '', notes: '' });
+        setIsReviewModalOpen(true);
+      },
+    },
+  ] as const;
 
   return (
     <div className="space-y-6">
@@ -198,13 +321,14 @@ const Dashboard: React.FC = () => {
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-[var(--fg)] mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[{ title: 'New Project', description: 'Kick off a fresh automation initiative.', icon: FolderOpen, accent: 'text-sky-600 dark:text-sky-300' }, { title: 'Add Team Member', description: 'Invite a collaborator or contractor.', icon: Users, accent: 'text-emerald-600 dark:text-emerald-300' }, { title: 'Deploy Tool', description: 'Launch a new agent or workflow.', icon: Wrench, accent: 'text-purple-600 dark:text-purple-300' }, { title: 'Schedule Review', description: 'Book a client strategy session.', icon: CheckCircle2, accent: 'text-orange-600 dark:text-orange-300' }].map((action) => (
+          {quickActions.map((action) => (
             <Button
               key={action.title}
               appearance="solid"
               wrapperClassName="w-full"
               className="w-full flex-col items-start px-4 py-3 text-left transition-transform hover:-translate-y-0.5 hover:shadow-sm"
               glowOnHover
+              onClick={action.onClick}
             >
               <action.icon className={`mb-2 h-5 w-5 ${action.accent}`} />
               <p className="text-sm font-semibold text-[var(--fg)]">{action.title}</p>
@@ -310,6 +434,97 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      <EntityFormModal
+        isOpen={Boolean(entityModal)}
+        type={entityModal?.type || 'project'}
+        mode={entityModal?.mode || 'create'}
+        clients={clients}
+        projects={projects}
+        teamMembers={teamMembers}
+        onClose={() => setEntityModal(null)}
+        onSubmit={handleEntitySubmit}
+        defaultClientId={entityModal?.type === 'project' ? clients[0]?.id : undefined}
+      />
+
+      {isReviewModalOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-[var(--fg)]/10 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-xl">
+            <form className="space-y-4 p-6" onSubmit={handleReviewSubmit}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-[var(--fg)]">Schedule review</h2>
+                  <p className="text-sm text-[var(--fg-muted)]">Pick a client and time for the next strategic checkpoint.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsReviewModalOpen(false)}
+                  className="rounded-full p-2 text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface)]"
+                  aria-label="Close review scheduling"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-[var(--fg-muted)]" htmlFor="review-client">Client</label>
+                  <select
+                    id="review-client"
+                    className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
+                    value={reviewForm.clientId}
+                    onChange={(event) => handleReviewChange('clientId', event.target.value)}
+                    disabled={clients.length === 0}
+                  >
+                    {clients.length === 0 ? (
+                      <option value="">No clients available</option>
+                    ) : (
+                      clients.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {client.companyName}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-[var(--fg-muted)]" htmlFor="review-date">Review time</label>
+                  <input
+                    id="review-date"
+                    type="datetime-local"
+                    className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
+                    value={reviewForm.date}
+                    onChange={(event) => handleReviewChange('date', event.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-[var(--fg-muted)]" htmlFor="review-notes">Talking points</label>
+                  <textarea
+                    id="review-notes"
+                    className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] min-h-[96px]"
+                    placeholder="What outcomes should we highlight or unblock?"
+                    value={reviewForm.notes}
+                    onChange={(event) => handleReviewChange('notes', event.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <Button type="button" appearance="outline" size="sm" onClick={() => setIsReviewModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" glowOnHover className="font-semibold">
+                  Send Invite
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

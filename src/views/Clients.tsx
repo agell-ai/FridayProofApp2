@@ -5,10 +5,31 @@ import ClientDetails from '../components/Clients/ClientDetails';
 import { useClients } from '../hooks/useClients';
 import { Client } from '../types';
 import { Button } from '../components/Shared/Button';
+import {
+  EntityFormModal,
+  EntityFormValues,
+  ClientFormValues,
+} from '../components/Shared/EntityFormModal';
 
 const Clients: React.FC = () => {
-  const { clients, isLoading } = useClients();
+  const { clients, isLoading, createClient } = useClients();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+
+  const handleClientSubmit = (values: EntityFormValues) => {
+    const payload = values as ClientFormValues;
+
+    createClient({
+      companyName: payload.companyName,
+      industry: payload.industry,
+      location: payload.location,
+      status: payload.status,
+      website: payload.website,
+      linkedinUrl: payload.linkedinUrl,
+    });
+
+    setIsClientModalOpen(false);
+  };
 
   if (selectedClient) {
     return <ClientDetails client={selectedClient} onBack={() => setSelectedClient(null)} />;
@@ -27,7 +48,11 @@ const Clients: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
         </div>
-        <Button glowOnHover className="font-semibold text-white group-hover:text-white group-focus-within:text-white">
+        <Button
+          glowOnHover
+          className="font-semibold text-white group-hover:text-white group-focus-within:text-white"
+          onClick={() => setIsClientModalOpen(true)}
+        >
           <Plus className="w-5 h-5" />
           <span>New Client</span>
         </Button>
@@ -50,12 +75,22 @@ const Clients: React.FC = () => {
             glowOnHover
             wrapperClassName="mx-auto w-full max-w-xs"
             className="w-full justify-center font-semibold"
+            onClick={() => setIsClientModalOpen(true)}
           >
             <Plus className="w-5 h-5" />
             <span>Add Your First Client</span>
           </Button>
         </div>
       )}
+
+      <EntityFormModal
+        isOpen={isClientModalOpen}
+        type="client"
+        mode="create"
+        onClose={() => setIsClientModalOpen(false)}
+        onSubmit={handleClientSubmit}
+        clients={clients}
+      />
     </div>
   );
 };
