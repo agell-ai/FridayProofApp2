@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Filter, PlusCircle } from 'lucide-react';
 import { useClients } from '../hooks/useClients';
 import { useProjects } from '../hooks/useProjects';
@@ -34,7 +34,19 @@ const Workspaces: React.FC = () => {
   const [activeTypes, setActiveTypes] = useState<WorkspaceType[]>([...typeOrder]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [formState, setFormState] = useState<FormState | null>(null);
-  const [createType, setCreateType] = useState<WorkspaceType>('client');
+  const creationTypeOptions = useMemo<WorkspaceType[]>(
+    () => (user?.accountType === 'business' ? ['project', 'team'] : [...typeOrder]),
+    [user?.accountType]
+  );
+  const [createType, setCreateType] = useState<WorkspaceType>(() =>
+    user?.accountType === 'business' ? 'project' : 'client'
+  );
+
+  useEffect(() => {
+    if (creationTypeOptions.length > 0 && !creationTypeOptions.includes(createType)) {
+      setCreateType(creationTypeOptions[0]);
+    }
+  }, [createType, creationTypeOptions]);
 
   const isLoading = loadingClients || loadingProjects || loadingTeam;
 
@@ -282,7 +294,7 @@ const Workspaces: React.FC = () => {
                   value={createType}
                   onChange={(event) => setCreateType(event.target.value as WorkspaceType)}
                 >
-                  {typeOrder.map((type) => (
+                  {creationTypeOptions.map((type) => (
                     <option key={`create-${type}`} value={type}>
                       {typeLabels[type]}
                     </option>
