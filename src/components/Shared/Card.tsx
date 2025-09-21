@@ -8,7 +8,7 @@ interface CardProps {
   onClick?: () => void;
 }
 
-export function Card({ 
+export function Card({
   children, 
   className = "", 
   glowOnHover = false, 
