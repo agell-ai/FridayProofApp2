@@ -223,14 +223,16 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode, initialData, onSubmit, on
       </Section>
 
       <div className="flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+          appearance="outline"
+          size="sm"
+          className="text-[var(--fg)]"
         >
           Cancel
-        </button>
-        <Button type="submit" glowOnHover innerClassName="font-semibold">
+        </Button>
+        <Button type="submit" glowOnHover className="font-semibold">
           <Save className="w-4 h-4" />
           {mode === 'create' ? 'Add Client' : 'Save Changes'}
         </Button>
@@ -342,14 +344,16 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ mode, initialData, clients, t
       </Section>
 
       <div className="flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+          appearance="outline"
+          size="sm"
+          className="text-[var(--fg)]"
         >
           Cancel
-        </button>
-        <Button type="submit" glowOnHover innerClassName="font-semibold">
+        </Button>
+        <Button type="submit" glowOnHover className="font-semibold">
           <Save className="w-4 h-4" />
           {mode === 'create' ? 'Add Project' : 'Save Changes'}
         </Button>
@@ -484,14 +488,16 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, initialData, onSubmit, onCanc
       </Section>
 
       <div className="flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+          appearance="outline"
+          size="sm"
+          className="text-[var(--fg)]"
         >
           Cancel
-        </button>
-        <Button type="submit" glowOnHover innerClassName="font-semibold">
+        </Button>
+        <Button type="submit" glowOnHover className="font-semibold">
           <Save className="w-4 h-4" />
           {mode === 'create' ? 'Add Team Member' : 'Save Changes'}
         </Button>
@@ -771,14 +777,16 @@ const ToolForm: React.FC<ToolFormProps> = ({ mode, initialData, clients, project
       </Section>
 
       <div className="flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+          appearance="outline"
+          size="sm"
+          className="text-[var(--fg)]"
         >
           Cancel
-        </button>
-        <Button type="submit" glowOnHover innerClassName="font-semibold">
+        </Button>
+        <Button type="submit" glowOnHover className="font-semibold">
           <Sparkles className="w-4 h-4" />
           {mode === 'create' ? 'Create Tool' : 'Save Changes'}
         </Button>

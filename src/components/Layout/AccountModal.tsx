@@ -173,13 +173,15 @@ const AccountModal: React.FC<AccountModalProps> = ({ user, account, onClose }) =
           {/* Actions */}
           {isEditing && (
             <div className="flex justify-end space-x-3">
-              <button
+              <Button
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-lg transition-colors"
+                appearance="outline"
+                size="sm"
+                className="text-gray-600 dark:text-gray-300"
               >
                 Cancel
-              </button>
-              <Button onClick={handleSave} glowOnHover innerClassName="font-semibold">
+              </Button>
+              <Button onClick={handleSave} glowOnHover className="font-semibold">
                 <Save className="w-4 h-4" />
                 <span>Save Changes</span>
               </Button>

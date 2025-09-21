@@ -13,9 +13,9 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--header)] backdrop-blur-md supports-[backdrop-filter]:bg-[var(--header)]">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-6">
-            <Logo className="h-20 w-auto" />
+        <div className="flex items-center justify-between px-4 py-2.5">
+          <div className="flex items-center gap-4">
+            <Logo className="h-12 w-auto" />
             {account && (
               <div className="text-2xl font-bold text-[var(--fg)]">
                 {account.name}

@@ -8,6 +8,7 @@ import ProjectModal from '../Projects/ProjectModal';
 import { useTeam } from '../../hooks/useTeam';
 import { useProjects } from '../../hooks/useProjects';
 import { useTools } from '../../hooks/useTools';
+import { Button } from '../Shared/Button';
 
 interface ClientDetailsProps {
   client: Client;
@@ -268,15 +269,29 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
           <div className="bg-glass-gradient-light dark:bg-glass-gradient-dark border border-glass-border-light dark:border-glass-border-dark rounded-xl p-6 backdrop-blur-md shadow-lg">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Actions</h3>
             <div className="space-y-3">
-              <button className="w-full bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
+              <Button
+                glowOnHover
+                wrapperClassName="w-full"
+                className="w-full justify-center font-semibold text-white group-hover:text-white group-focus-within:text-white"
+              >
                 New Project
-              </button>
-              <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm">
+              </Button>
+              <Button
+                variant="secondary"
+                appearance="solid"
+                wrapperClassName="w-full"
+                className="w-full justify-center font-semibold border-transparent bg-white/30 text-gray-900 hover:bg-white/40 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 backdrop-blur-sm"
+              >
                 Edit Client
-              </button>
-              <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm">
+              </Button>
+              <Button
+                variant="secondary"
+                appearance="solid"
+                wrapperClassName="w-full"
+                className="w-full justify-center font-semibold border-transparent bg-white/30 text-gray-900 hover:bg-white/40 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 backdrop-blur-sm"
+              >
                 Add Contact
-              </button>
+              </Button>
             </div>
           </div>
         </div>

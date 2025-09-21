@@ -4,6 +4,7 @@ import ToolCard from '../components/Tools/ToolCard';
 import ToolDetails from '../components/Tools/ToolDetails';
 import { useTools } from '../hooks/useTools';
 import { Tool } from '../types/tools';
+import { Button } from '../components/Shared/Button';
 
 const Tools: React.FC = () => {
   const { tools, isLoading } = useTools();
@@ -26,10 +27,10 @@ const Tools: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
         </div>
-        <button className="bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-2">
+        <Button glowOnHover className="font-semibold text-white group-hover:text-white group-focus-within:text-white">
           <Plus className="w-5 h-5" />
           <span>New Tool</span>
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -45,10 +46,14 @@ const Tools: React.FC = () => {
       {tools.length === 0 && (
         <div className="text-center py-12">
           <div className="text-gray-400 mb-4">No tools found</div>
-          <button className="bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-2 mx-auto">
+          <Button
+            glowOnHover
+            wrapperClassName="mx-auto w-full max-w-xs"
+            className="w-full justify-center font-semibold"
+          >
             <Plus className="w-5 h-5" />
             <span>Create Your First Tool</span>
-          </button>
+          </Button>
         </div>
       )}
     </div>

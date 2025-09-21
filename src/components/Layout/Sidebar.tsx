@@ -28,7 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
   const menuItems = allMenuItems.filter(item => availablePages.includes(item.id));
 
   return (
-    <div className="w-64 flex-shrink-0 bg-[var(--bg-start)] border-r border-[var(--border)] flex flex-col">
+    <div className="w-64 flex-shrink-0 bg-[var(--bg-start)] border-r border-[var(--border)] flex flex-col min-h-screen">
       <nav className="flex-1 p-4">
         <div className="flex items-center justify-between px-2 pb-6">
           <Logo className="h-10 w-auto" showText />

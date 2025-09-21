@@ -126,7 +126,7 @@ const Dashboard: React.FC = () => {
             {account ? `${account.name} · Performance snapshot` : 'Performance snapshot'}
           </p>
         </div>
-        <Button onClick={openCustomize} glowOnHover innerClassName="font-semibold">
+        <Button onClick={openCustomize} glowOnHover className="font-semibold">
           <Edit className="w-4 h-4" />
           Customize
         </Button>
@@ -199,15 +199,17 @@ const Dashboard: React.FC = () => {
         <h3 className="text-lg font-semibold text-[var(--fg)] mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[{ title: 'New Project', description: 'Kick off a fresh automation initiative.', icon: FolderOpen, accent: 'text-sky-600 dark:text-sky-300' }, { title: 'Add Team Member', description: 'Invite a collaborator or contractor.', icon: Users, accent: 'text-emerald-600 dark:text-emerald-300' }, { title: 'Deploy Tool', description: 'Launch a new agent or workflow.', icon: Wrench, accent: 'text-purple-600 dark:text-purple-300' }, { title: 'Schedule Review', description: 'Book a client strategy session.', icon: CheckCircle2, accent: 'text-orange-600 dark:text-orange-300' }].map((action) => (
-            <button
+            <Button
               key={action.title}
-              type="button"
-              className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/60 px-4 py-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm"
+              appearance="solid"
+              wrapperClassName="w-full"
+              className="w-full flex-col items-start px-4 py-3 text-left transition-transform hover:-translate-y-0.5 hover:shadow-sm"
+              glowOnHover
             >
               <action.icon className={`mb-2 h-5 w-5 ${action.accent}`} />
               <p className="text-sm font-semibold text-[var(--fg)]">{action.title}</p>
               <p className="text-xs text-[var(--fg-muted)]">{action.description}</p>
-            </button>
+            </Button>
           ))}
         </div>
       </Card>
@@ -285,19 +287,21 @@ const Dashboard: React.FC = () => {
                 Reset to default
               </button>
               <div className="flex items-center gap-3">
-                <button
+                <Button
                   type="button"
                   onClick={() => setIsCustomizeOpen(false)}
-                  className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm text-[var(--fg)] hover:bg-[var(--surface)]"
+                  appearance="outline"
+                  size="sm"
+                  className="text-sm"
                 >
                   Cancel
-                </button>
+                </Button>
                 <Button
                   type="button"
                   onClick={saveCustomization}
                   disabled={disableSave}
                   glowOnHover
-                  innerClassName="font-semibold"
+                  className="font-semibold"
                 >
                   Save layout
                 </Button>

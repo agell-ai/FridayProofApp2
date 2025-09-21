@@ -513,7 +513,7 @@ const Solutions: React.FC = () => {
                     glowOnHover
                     activeGlow={isActive}
                     onClick={() => toggleType(type)}
-                    innerClassName={`px-3 py-2 text-sm font-medium ${isActive ? 'text-[var(--fg)]' : 'text-[var(--fg-muted)]'}`}
+                    className={`px-3 py-2 text-sm font-medium ${isActive ? 'text-[var(--fg)]' : 'text-[var(--fg-muted)]'}`}
                   >
                     {typeLabels[type]}
                   </Button>
@@ -541,7 +541,7 @@ const Solutions: React.FC = () => {
               <Button
                 onClick={() => setToolFormState({ mode: 'create' })}
                 glowOnHover
-                innerClassName="font-semibold"
+                className="font-semibold"
               >
                 <PlusCircle className="h-4 w-4" />
                 Add Tool
@@ -654,7 +654,7 @@ const Solutions: React.FC = () => {
               </div>
             </div>
 
-            <Button type="submit" glowOnHover innerClassName="font-semibold">
+            <Button type="submit" glowOnHover className="font-semibold">
               Save Metrics
             </Button>
           </form>

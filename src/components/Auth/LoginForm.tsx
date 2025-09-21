@@ -109,8 +109,8 @@ const LoginForm: React.FC = () => {
               type="submit"
               disabled={isLoading}
               glowOnHover
-              className="w-full"
-              innerClassName="justify-center py-3 font-semibold"
+              wrapperClassName="w-full"
+              className="w-full justify-center py-3 font-semibold"
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>

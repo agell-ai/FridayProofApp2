@@ -262,7 +262,7 @@ const Workspaces: React.FC = () => {
                     glowOnHover
                     activeGlow={isActive}
                     onClick={() => toggleType(type)}
-                    innerClassName={`px-3 py-2 text-sm font-medium ${isActive ? 'text-[var(--fg)]' : 'text-[var(--fg-muted)]'}`}
+                    className={`px-3 py-2 text-sm font-medium ${isActive ? 'text-[var(--fg)]' : 'text-[var(--fg-muted)]'}`}
                   >
                     {typeLabels[type]}
                   </Button>
@@ -302,7 +302,7 @@ const Workspaces: React.FC = () => {
                 <Button
                   onClick={() => setFormState({ type: createType, mode: 'create' })}
                   glowOnHover
-                  innerClassName="font-semibold"
+                  className="font-semibold"
                 >
                   <PlusCircle className="h-4 w-4" />
                   Add {typeLabels[createType]}

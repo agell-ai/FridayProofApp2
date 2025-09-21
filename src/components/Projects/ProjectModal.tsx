@@ -167,23 +167,23 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) => {
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h4>
                 <div className="space-y-3">
                   <Button
-                    className="w-full"
                     glowOnHover
-                    innerClassName="justify-center font-semibold"
+                    wrapperClassName="w-full"
+                    className="w-full justify-center font-semibold text-white group-hover:text-white group-focus-within:text-white"
                   >
                     Add System
                   </Button>
                   <Button
-                    className="w-full"
                     appearance="solid"
-                    innerClassName="justify-center font-semibold"
+                    wrapperClassName="w-full"
+                    className="w-full justify-center font-semibold"
                   >
                     Edit Project
                   </Button>
                   <Button
-                    className="w-full"
                     appearance="outline"
-                    innerClassName="justify-center font-semibold"
+                    wrapperClassName="w-full"
+                    className="w-full justify-center font-semibold"
                   >
                     View Analytics
                   </Button>
@@ -249,10 +249,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) => {
                   <Button
                     key={projectManager.id}
                     onClick={() => setSelectedTeamMember(projectManager)}
-                    className="w-full"
                     appearance="solid"
                     glowOnHover
-                    innerClassName="w-full justify-start px-3 py-3 text-left"
+                    wrapperClassName="w-full"
+                    className="w-full justify-start px-3 py-3 text-left"
                   >
                     <div className="flex items-center space-x-3 w-full">
                       <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">

@@ -37,7 +37,7 @@ interface ButtonProps {
   appearance?: ButtonAppearance;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
-  innerClassName?: string;
+  wrapperClassName?: string;
   onClick?: () => void;
   href?: string;
   disabled?: boolean;
@@ -52,7 +52,7 @@ export function Button({
   appearance,
   size = 'md',
   className = '',
-  innerClassName = '',
+  wrapperClassName = '',
   onClick,
   href,
   disabled = false,
@@ -72,7 +72,7 @@ export function Button({
     variantClasses[variant],
     appearanceClasses[resolvedAppearance],
     variant === 'ghost' ? 'border border-transparent bg-transparent hover:bg-[var(--surface)] focus-visible:ring-2 focus-visible:ring-[var(--accent-purple)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-start)]' : undefined,
-    innerClassName,
+    className,
   );
 
   const overlayClasses = cx(
@@ -80,39 +80,38 @@ export function Button({
     activeGlow ? 'opacity-80' : resolvedGlowOnHover ? 'opacity-0 group-hover:opacity-80 group-focus-within:opacity-80' : 'opacity-0',
   );
 
-  if (useGlowWrapper) {
-    if (href) {
-      return (
-        <div className={cx('relative inline-flex group', disabled ? 'pointer-events-none' : undefined, className)}>
-          <div className={overlayClasses} style={{ filter: 'blur(2px)' }} aria-hidden="true" />
-          <a href={href} onClick={onClick} className={buttonClasses}>
-            {children}
-          </a>
-        </div>
-      );
-    }
+  const content = href ? (
+    <a
+      href={href}
+      onClick={
+        disabled
+          ? (event: React.MouseEvent<HTMLAnchorElement>) => event.preventDefault()
+          : onClick
+      }
+      className={cx(buttonClasses, disabled ? 'pointer-events-none' : undefined)}
+      aria-disabled={disabled ? 'true' : undefined}
+      tabIndex={disabled ? -1 : undefined}
+    >
+      {children}
+    </a>
+  ) : (
+    <button type={type} onClick={onClick} disabled={disabled} className={buttonClasses}>
+      {children}
+    </button>
+  );
 
+  if (useGlowWrapper) {
     return (
-      <div className={cx('relative inline-flex group', disabled ? 'pointer-events-none' : undefined, className)}>
+      <div className={cx('relative inline-flex group', disabled ? 'pointer-events-none' : undefined, wrapperClassName)}>
         <div className={overlayClasses} style={{ filter: 'blur(2px)' }} aria-hidden="true" />
-        <button type={type} onClick={onClick} disabled={disabled} className={buttonClasses}>
-          {children}
-        </button>
+        {content}
       </div>
     );
   }
 
-  if (href) {
-    return (
-      <a href={href} onClick={onClick} className={cx(buttonClasses, className)}>
-        {children}
-      </a>
-    );
+  if (wrapperClassName) {
+    return <div className={wrapperClassName}>{content}</div>;
   }
 
-  return (
-    <button type={type} onClick={onClick} disabled={disabled} className={cx(buttonClasses, className)}>
-      {children}
-    </button>
-  );
+  return content;
 }

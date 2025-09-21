@@ -7,6 +7,7 @@ import { useProjects } from '../../hooks/useProjects';
 import TeamMemberModal from '../Clients/TeamMemberModal';
 import ClientModal from '../Projects/ClientModal';
 import ProjectModal from '../Projects/ProjectModal';
+import { Button } from '../Shared/Button';
 
 interface ToolDetailsProps {
   tool: Tool;
@@ -192,18 +193,32 @@ const ToolDetails: React.FC<ToolDetailsProps> = ({ tool, onBack }) => {
           <div className="bg-glass-gradient-light dark:bg-glass-gradient-dark border border-glass-border-light dark:border-glass-border-dark rounded-xl p-6 backdrop-blur-md shadow-lg">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
             <div className="space-y-3">
-              <button className="w-full bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center space-x-2">
+              <Button
+                glowOnHover
+                wrapperClassName="w-full"
+                className="w-full justify-center font-semibold text-white group-hover:text-white group-focus-within:text-white"
+              >
                 <Settings className="w-4 h-4" />
                 <span>Configure Tool</span>
-              </button>
-              <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm flex items-center justify-center space-x-2">
+              </Button>
+              <Button
+                variant="secondary"
+                appearance="solid"
+                wrapperClassName="w-full"
+                className="w-full justify-center font-semibold border-transparent bg-white/30 text-gray-900 hover:bg-white/40 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 backdrop-blur-sm"
+              >
                 <ExternalLink className="w-4 h-4" />
                 <span>View Logs</span>
-              </button>
-              <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm flex items-center justify-center space-x-2">
+              </Button>
+              <Button
+                variant="secondary"
+                appearance="solid"
+                wrapperClassName="w-full"
+                className="w-full justify-center font-semibold border-transparent bg-white/30 text-gray-900 hover:bg-white/40 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 backdrop-blur-sm"
+              >
                 <BarChart3 className="w-4 h-4" />
                 <span>Analytics</span>
-              </button>
+              </Button>
             </div>
           </div>
 

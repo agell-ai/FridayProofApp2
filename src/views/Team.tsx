@@ -3,6 +3,7 @@ import { Plus, Users, Mail, Phone, MapPin, BarChart3, User } from 'lucide-react'
 import { useTeam } from '../hooks/useTeam';
 import TeamMemberModal from '../components/Clients/TeamMemberModal';
 import { Card } from '../components/Shared/Card';
+import { Button } from '../components/Shared/Button';
 
 const Team: React.FC = () => {
   const { teamMembers, isLoading } = useTeam();
@@ -30,10 +31,10 @@ const Team: React.FC = () => {
           <h1 className="text-2xl font-bold text-[var(--fg)]">Team</h1>
           <p className="text-[var(--fg-muted)]">Manage your team members and track their performance</p>
         </div>
-        <button className="bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-2">
+        <Button glowOnHover className="font-semibold text-white group-hover:text-white group-focus-within:text-white">
           <Plus className="w-5 h-5" />
           <span>Add Team Member</span>
-        </button>
+        </Button>
       </div>
 
       {/* Team Stats */}
@@ -175,10 +176,14 @@ const Team: React.FC = () => {
       {teamMembers.length === 0 && (
         <div className="text-center py-12">
           <div className="text-[var(--fg-muted)] mb-4">No team members found</div>
-          <button className="bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-2 mx-auto">
+          <Button
+            glowOnHover
+            wrapperClassName="mx-auto w-full max-w-xs"
+            className="w-full justify-center font-semibold"
+          >
             <Plus className="w-5 h-5" />
             <span>Add Your First Team Member</span>
-          </button>
+          </Button>
         </div>
       )}
 
