@@ -4,7 +4,7 @@ import { Tool } from '../../types/tools';
 import { useTeam } from '../../hooks/useTeam';
 import { useClients } from '../../hooks/useClients';
 import { useProjects } from '../../hooks/useProjects';
-import TeamMemberModal from '../Clients/TeamMemberModal';
+import { TeamMemberModal } from '../Clients/TeamMemberModal';
 import ClientModal from '../Projects/ClientModal';
 import ProjectModal from '../Projects/ProjectModal';
 

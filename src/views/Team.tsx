@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Users, Mail, Phone, MapPin, BarChart3, User } from 'lucide-react';
 import { useTeam } from '../hooks/useTeam';
-import TeamMemberModal from '../components/Clients/TeamMemberModal';
+import { TeamMemberModal } from '../components/Clients/TeamMemberModal';
 import { Card } from '../components/Shared/Card';
 
 const Team: React.FC = () => {
