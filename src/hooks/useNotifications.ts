@@ -60,8 +60,8 @@ const generateMockNotifications = (accountType: string): Notification[] => {
       type: 'info',
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
       read: true,
-      actionUrl: 'analytics',
-      actionLabel: 'View Analytics'
+      actionUrl: 'dashboard',
+      actionLabel: 'Open Dashboard'
     }
   ];
 

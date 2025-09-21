@@ -10,7 +10,6 @@ import Dashboard from './views/Dashboard';
 import Company from './views/Company';
 import Workspaces from './views/Workspaces';
 import Solutions from './views/Solutions';
-import Analytics from './views/Analytics';
 
 const AppContent: React.FC = () => {
   const { user, account, isLoading } = useAuth();
@@ -34,8 +33,6 @@ const AppContent: React.FC = () => {
         return <Dashboard />;
       case 'company':
         return <Company />;
-      case 'analytics':
-        return <Analytics />;
       case 'workspaces':
         return <Workspaces />;
       case 'solutions':

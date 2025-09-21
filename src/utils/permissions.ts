@@ -3,13 +3,13 @@ import { User } from '../types';
 export const getAvailablePages = (user: User): string[] => {
   const { accountType, role, enabledPages } = user;
 
-  const allPages = ['dashboard', 'company', 'workspaces', 'solutions', 'analytics', 'archive'];
+  const allPages = ['dashboard', 'company', 'workspaces', 'solutions', 'archive'];
   
   // Define pages by account type
   const accountTypePages = {
     agency: allPages,
-    consultant: ['dashboard', 'company', 'workspaces', 'solutions', 'analytics', 'archive'],
-    business: ['dashboard', 'company', 'workspaces', 'solutions', 'analytics', 'archive']
+    consultant: ['dashboard', 'company', 'workspaces', 'solutions', 'archive'],
+    business: ['dashboard', 'company', 'workspaces', 'solutions', 'archive']
   };
 
   // Define pages by role
@@ -35,7 +35,6 @@ export const getPageTitle = (page: string): string => {
     company: 'Company',
     workspaces: 'Workspaces',
     solutions: 'Solutions',
-    analytics: 'Analytics',
     archive: 'Archive'
   };
   return titles[page as keyof typeof titles] || 'Dashboard';
