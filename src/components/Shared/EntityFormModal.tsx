@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Building2, FolderOpen, Users, Wrench, Save, Sparkles } from 'lucide-react';
+import { X, Building2, FolderOpen, Users, Wrench, Save, Sparkles, FileText, ShoppingBag } from 'lucide-react';
 import { Client, Project, TeamMember } from '../../types';
 import { Tool } from '../../types/tools';
 
