@@ -1,9 +1,10 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Building2, MapPin, Globe, Linkedin, Mail, Phone, User, ExternalLink, Calendar, Users, FolderOpen, Wrench, BookOpen, BookTemplate as FileTemplate, FileText, Presentation as PresentationChart, BarChart3, DollarSign, Clock, X } from 'lucide-react';
-import { Client } from '../../types';
+import { Client, ClientProposal } from '../../types';
 import TeamMemberModal from './TeamMemberModal';
 import ProjectModal from '../Projects/ProjectModal';
+import { Button } from '../Shared/Button';
+import { EntityFormModal, ProposalFormValues, FormMode } from '../Shared/EntityFormModal';
 
 import { useTeam } from '../../hooks/useTeam';
 import { useProjects } from '../../hooks/useProjects';
@@ -12,6 +13,11 @@ import { useTools } from '../../hooks/useTools';
 interface ClientDetailsProps {
   client: Client;
   onBack: () => void;
+  onCreateProposal: (proposal: Omit<ClientProposal, 'id'>) => ClientProposal | null;
+  onUpdateProposal: (
+    proposalId: string,
+    updates: Partial<Omit<ClientProposal, 'id'>>,
+  ) => ClientProposal | null;
 }
 
 const statusColors = {
@@ -20,7 +26,12 @@ const statusColors = {
   prospect: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
 };
 
-const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
+const ClientDetails: React.FC<ClientDetailsProps> = ({
+  client,
+  onBack,
+  onCreateProposal,
+  onUpdateProposal,
+}) => {
   const { getTeamMembersByIds } = useTeam();
   const { projects } = useProjects();
   const { tools } = useTools();
@@ -31,7 +42,10 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
   const [selectedLibraryItem, setSelectedLibraryItem] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [selectedProposal, setSelectedProposal] = useState<ClientProposal | null>(null);
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
+  const [proposalFormMode, setProposalFormMode] = useState<FormMode>('create');
+  const [proposalFormInitial, setProposalFormInitial] = useState<ClientProposal | null>(null);
 
   // Get actual project data for client projects
   const clientProjects = projects.filter(project => project.clientId === client.id);
@@ -97,6 +111,66 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
       allClientTools.push(mockTool);
     }
   });
+
+  useEffect(() => {
+    if (!selectedProposal) {
+      return;
+    }
+
+    const latestProposal = client.proposals.find(proposal => proposal.id === selectedProposal.id);
+    if (latestProposal && latestProposal !== selectedProposal) {
+      setSelectedProposal(latestProposal);
+    }
+  }, [client.proposals, selectedProposal]);
+
+  const closeProposalModal = () => {
+    const editingProposal = proposalFormMode === 'edit' ? proposalFormInitial : null;
+
+    setIsProposalModalOpen(false);
+    setProposalFormInitial(null);
+
+    if (editingProposal) {
+      const latest = client.proposals.find(proposal => proposal.id === editingProposal.id);
+      if (latest) {
+        setSelectedProposal(latest);
+      }
+    }
+  };
+
+  const handleProposalFormSubmit = (values: ProposalFormValues) => {
+    if (proposalFormMode === 'create') {
+      const created = onCreateProposal(values);
+      if (!created) {
+        return;
+      }
+      setSelectedProposal(created);
+      closeProposalModal();
+      return;
+    }
+
+    if (proposalFormMode === 'edit' && proposalFormInitial) {
+      const updated = onUpdateProposal(proposalFormInitial.id, values);
+      if (!updated) {
+        return;
+      }
+      setSelectedProposal(updated);
+      closeProposalModal();
+      return;
+    }
+  };
+
+  const openCreateProposalModal = () => {
+    setProposalFormMode('create');
+    setProposalFormInitial(null);
+    setIsProposalModalOpen(true);
+  };
+
+  const openEditProposalModal = (proposal: ClientProposal) => {
+    setSelectedProposal(null);
+    setProposalFormMode('edit');
+    setProposalFormInitial(proposal);
+    setIsProposalModalOpen(true);
+  };
 
 
   return (
@@ -268,6 +342,16 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
           <div className="bg-glass-gradient-light dark:bg-glass-gradient-dark border border-glass-border-light dark:border-glass-border-dark rounded-xl p-6 backdrop-blur-md shadow-lg">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Actions</h3>
             <div className="space-y-3">
+              <Button
+                glowOnHover
+                className="w-full"
+                onClick={openCreateProposalModal}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <PresentationChart className="w-4 h-4" />
+                  <span>Create Proposal</span>
+                </div>
+              </Button>
               <button className="w-full bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
                 New Project
               </button>
@@ -620,6 +704,16 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
         </div>
       </div>
 
+      <EntityFormModal
+        isOpen={isProposalModalOpen}
+        type="proposal"
+        mode={proposalFormMode}
+        initialData={proposalFormInitial}
+        activeClient={client}
+        onClose={closeProposalModal}
+        onSubmit={handleProposalFormSubmit}
+      />
+
       {/* Team Member Modal */}
       {selectedTeamMember && (
         <TeamMemberModal
@@ -746,12 +840,20 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
           <div className="bg-glass-gradient-light dark:bg-glass-gradient-dark border border-glass-border-light dark:border-glass-border-dark rounded-xl max-w-2xl w-full p-6 backdrop-blur-md shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedProposal.title}</h2>
-              <button
-                onClick={() => setSelectedProposal(null)}
-                className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-white/20 dark:hover:bg-white/10"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => openEditProposalModal(selectedProposal)}
+                  className="px-3 py-1.5 rounded-lg bg-gradient-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setSelectedProposal(null)}
+                  className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-white/20 dark:hover:bg-white/10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">

@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Building2, FolderOpen, Users, Wrench, Save, Sparkles } from 'lucide-react';
-import { Client, Project, TeamMember } from '../../types';
+import { X, Building2, FolderOpen, Users, Wrench, Save, Sparkles, FileSignature } from 'lucide-react';
+import { Client, ClientProposal, Project, TeamMember } from '../../types';
 import { Tool } from '../../types/tools';
 
-export type EntityType = 'client' | 'project' | 'team' | 'tool';
+export type EntityType = 'client' | 'project' | 'team' | 'tool' | 'proposal';
 export type FormMode = 'create' | 'edit';
 
 export interface ClientFormValues {
@@ -46,20 +46,24 @@ export interface ToolFormValues {
   stats: Tool['stats'];
 }
 
+export type ProposalFormValues = Omit<ClientProposal, 'id'>;
+
 export type EntityFormValues =
   | ClientFormValues
   | ProjectFormValues
   | TeamFormValues
-  | ToolFormValues;
+  | ToolFormValues
+  | ProposalFormValues;
 
 interface EntityFormModalProps {
   isOpen: boolean;
   type: EntityType;
   mode: FormMode;
-  initialData?: Client | Project | TeamMember | Tool | null;
+  initialData?: Client | Project | TeamMember | Tool | ClientProposal | null;
   clients?: Client[];
   projects?: Project[];
   teamMembers?: TeamMember[];
+  activeClient?: Client | null;
   onClose: () => void;
   onSubmit: (values: EntityFormValues) => void;
 }
@@ -95,6 +99,14 @@ type ToolFormProps = {
   teamMembers: TeamMember[];
   onSubmit: (values: ToolFormValues) => void;
   onCancel: () => void;
+};
+
+type ProposalFormProps = {
+  mode: FormMode;
+  initialData?: ClientProposal | null;
+  onSubmit: (values: ProposalFormValues) => void;
+  onCancel: () => void;
+  clientName?: string;
 };
 
 const inputClassName =
@@ -798,11 +810,154 @@ const ToolForm: React.FC<ToolFormProps> = ({ mode, initialData, clients, project
   );
 };
 
+const ProposalForm: React.FC<ProposalFormProps> = ({ mode, initialData, onSubmit, onCancel, clientName }) => {
+  type ProposalFormState = {
+    title: string;
+    value: string;
+    status: ClientProposal['status'];
+    sentDate: string;
+    responseDate: string;
+  };
+
+  const [formValues, setFormValues] = useState<ProposalFormState>(() => ({
+    title: initialData?.title ?? '',
+    value: initialData?.value !== undefined ? String(initialData.value) : '',
+    status: initialData?.status ?? 'draft',
+    sentDate: initialData?.sentDate ?? '',
+    responseDate: initialData?.responseDate ?? '',
+  }));
+
+  useEffect(() => {
+    setFormValues({
+      title: initialData?.title ?? '',
+      value: initialData?.value !== undefined ? String(initialData.value) : '',
+      status: initialData?.status ?? 'draft',
+      sentDate: initialData?.sentDate ?? '',
+      responseDate: initialData?.responseDate ?? '',
+    });
+  }, [initialData]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const numericValue = Number(formValues.value);
+    const proposalValue = Number.isNaN(numericValue) ? 0 : Math.max(0, numericValue);
+
+    onSubmit({
+      title: formValues.title.trim(),
+      value: proposalValue,
+      status: formValues.status,
+      sentDate: formValues.sentDate ? formValues.sentDate : undefined,
+      responseDate: formValues.responseDate ? formValues.responseDate : undefined,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Section
+        title="Proposal Details"
+        description="Capture the essentials that define this opportunity."
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {clientName && (
+            <div className="md:col-span-2">
+              <label className={labelClassName}>Client</label>
+              <div className="mt-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--fg)]">
+                {clientName}
+              </div>
+            </div>
+          )}
+          <div>
+            <label className={labelClassName}>Title</label>
+            <input
+              className={inputClassName}
+              value={formValues.title}
+              onChange={(event) => setFormValues(prev => ({ ...prev, title: event.target.value }))}
+              placeholder="Executive Enablement Platform"
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Value ($)</label>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              className={inputClassName}
+              value={formValues.value}
+              onChange={(event) => setFormValues(prev => ({ ...prev, value: event.target.value }))}
+              placeholder="75000"
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Status</label>
+            <select
+              className={inputClassName}
+              value={formValues.status}
+              onChange={(event) => setFormValues(prev => ({ ...prev, status: event.target.value as ClientProposal['status'] }))}
+            >
+              <option value="draft">Draft</option>
+              <option value="sent">Sent</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+      </Section>
+
+      <Section
+        title="Timeline"
+        description="Track outreach and responses to forecast revenue with confidence."
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClassName}>Sent Date</label>
+            <input
+              type="date"
+              className={inputClassName}
+              value={formValues.sentDate}
+              onChange={(event) => setFormValues(prev => ({ ...prev, sentDate: event.target.value }))}
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Response Date</label>
+            <input
+              type="date"
+              className={inputClassName}
+              value={formValues.responseDate}
+              onChange={(event) => setFormValues(prev => ({ ...prev, responseDate: event.target.value }))}
+            />
+          </div>
+        </div>
+      </Section>
+
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+        >
+          <Save className="w-4 h-4" />
+          {mode === 'create' ? 'Create Proposal' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 const iconMap: Record<EntityType, React.ComponentType<{ className?: string }>> = {
   client: Building2,
   project: FolderOpen,
   team: Users,
   tool: Wrench,
+  proposal: FileSignature,
 };
 
 const titleMap: Record<EntityType, string> = {
@@ -810,6 +965,7 @@ const titleMap: Record<EntityType, string> = {
   project: 'Project',
   team: 'Team Member',
   tool: 'Tool',
+  proposal: 'Proposal',
 };
 
 const descriptionMap: Record<EntityType, string> = {
@@ -817,6 +973,7 @@ const descriptionMap: Record<EntityType, string> = {
   project: 'Organize initiatives, attach contributors, and capture context.',
   team: 'Invite collaborators and keep their skills current.',
   tool: 'Catalog automations, agents, and AI workflows across the business.',
+  proposal: 'Send polished proposals, monitor responses, and keep revenue momentum strong.',
 };
 
 export const EntityFormModal: React.FC<EntityFormModalProps> = ({
@@ -827,6 +984,7 @@ export const EntityFormModal: React.FC<EntityFormModalProps> = ({
   clients = [],
   projects = [],
   teamMembers = [],
+  activeClient = null,
   onClose,
   onSubmit,
 }) => {
@@ -899,6 +1057,16 @@ export const EntityFormModal: React.FC<EntityFormModalProps> = ({
               teamMembers={teamMembers}
               onSubmit={onSubmit as (values: ToolFormValues) => void}
               onCancel={onClose}
+            />
+          )}
+
+          {type === 'proposal' && (
+            <ProposalForm
+              mode={mode}
+              initialData={initialData as ClientProposal | null}
+              onSubmit={onSubmit as (values: ProposalFormValues) => void}
+              onCancel={onClose}
+              clientName={activeClient?.companyName}
             />
           )}
         </div>
