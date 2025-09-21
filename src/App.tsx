@@ -9,7 +9,7 @@ import { Footer } from './components/Shared/Footer';
 import Dashboard from './views/Dashboard';
 import Company from './views/Company';
 import Workspaces from './views/Workspaces';
-import Solutions from './views/Solutions';
+import SystemsHub from './views/SystemsHub';
 import Analytics from './views/Analytics';
 
 const AppContent: React.FC = () => {
@@ -39,7 +39,7 @@ const AppContent: React.FC = () => {
       case 'workspaces':
         return <Workspaces />;
       case 'solutions':
-        return <Solutions />;
+        return <SystemsHub />;
       case 'archive':
         return (
           <div className="flex items-center justify-center h-64">

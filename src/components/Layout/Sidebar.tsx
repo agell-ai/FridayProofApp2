@@ -20,7 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange }) => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'company', label: 'Company', icon: BarChart3 },
     { id: 'workspaces', label: 'Workspaces', icon: Users },
-    { id: 'solutions', label: 'Solutions', icon: Activity },
+    { id: 'solutions', label: 'Systems Hub', icon: Activity },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'archive', label: 'Archive', icon: Archive },
   ];

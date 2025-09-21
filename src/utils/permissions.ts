@@ -34,7 +34,7 @@ export const getPageTitle = (page: string): string => {
     dashboard: 'Dashboard',
     company: 'Company',
     workspaces: 'Workspaces',
-    solutions: 'Solutions',
+    solutions: 'Systems Hub',
     analytics: 'Analytics',
     archive: 'Archive'
   };

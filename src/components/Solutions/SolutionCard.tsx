@@ -37,6 +37,7 @@ export interface SolutionCardData {
 interface SolutionCardProps {
   data: SolutionCardData;
   onEdit?: (data: SolutionCardData) => void;
+  onClick?: (data: SolutionCardData) => void;
 }
 
 const typeConfig: Record<SolutionType, { label: string; icon: React.ComponentType<{ className?: string }>; badgeClass: string }> = {
@@ -82,13 +83,17 @@ const formatLabel = (value: string) =>
     .replace(/-/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
-export const SolutionCard: React.FC<SolutionCardProps> = ({ data, onEdit }) => {
+export const SolutionCard: React.FC<SolutionCardProps> = ({ data, onEdit, onClick }) => {
   const type = typeConfig[data.type];
   const StatusIcon = type.icon;
   const statusClass = data.status ? statusStyles[data.status] || 'border-[var(--border)] text-[var(--fg-muted)] bg-[var(--surface)]' : '';
 
   return (
-    <Card glowOnHover className="p-6 h-full flex flex-col gap-5">
+    <Card
+      glowOnHover
+      className="p-6 h-full flex flex-col gap-5"
+      onClick={onClick ? () => onClick(data) : undefined}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-[var(--surface)] flex items-center justify-center">
@@ -112,7 +117,10 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ data, onEdit }) => {
         {onEdit && (
           <button
             type="button"
-            onClick={() => onEdit(data)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit(data);
+            }}
             className="p-2 rounded-full text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface)] transition"
             aria-label={`Edit ${data.title}`}
           >

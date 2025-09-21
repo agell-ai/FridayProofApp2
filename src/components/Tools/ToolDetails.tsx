@@ -67,7 +67,7 @@ const ToolDetails: React.FC<ToolDetailsProps> = ({ tool, onBack }) => {
             className="flex items-center space-x-2 text-sunset-purple hover:text-sunset-pink transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Tools</span>
+            <span>Back to Systems Hub</span>
           </button>
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-gradient-primary rounded-xl flex items-center justify-center">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { Client } from '../types';
+import { Client, ClientTemplate, ClientLibraryItem } from '../types';
 
 // Mock clients data
 const mockClients: Client[] = [
@@ -673,6 +673,38 @@ export const useClients = () => {
     }));
   };
 
+  const updateTemplate = (clientId: string, templateId: string, updates: Partial<ClientTemplate>) => {
+    setClients(prev => prev.map(client => {
+      if (client.id !== clientId) {
+        return client;
+      }
+
+      return {
+        ...client,
+        templates: client.templates.map(template =>
+          template.id === templateId ? { ...template, ...updates } : template
+        ),
+        updatedAt: new Date().toISOString(),
+      };
+    }));
+  };
+
+  const updateLibraryItem = (clientId: string, itemId: string, updates: Partial<ClientLibraryItem>) => {
+    setClients(prev => prev.map(client => {
+      if (client.id !== clientId) {
+        return client;
+      }
+
+      return {
+        ...client,
+        library: client.library.map(item =>
+          item.id === itemId ? { ...item, ...updates } : item
+        ),
+        updatedAt: new Date().toISOString(),
+      };
+    }));
+  };
+
   const deleteClient = (id: string) => {
     if (user?.accountType === 'business') {
       return;
@@ -687,5 +719,7 @@ export const useClients = () => {
     createClient,
     updateClient,
     deleteClient,
+    updateTemplate,
+    updateLibraryItem,
   };
 };

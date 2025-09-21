@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Building2, FolderOpen, Users, Wrench, Save, Sparkles } from 'lucide-react';
-import { Client, Project, TeamMember } from '../../types';
+import { X, Building2, FolderOpen, Users, Wrench, Save, Sparkles, Activity, FileText, ShoppingBag } from 'lucide-react';
+import { Client, Project, TeamMember, System, ClientTemplate, ClientLibraryItem } from '../../types';
 import { Tool } from '../../types/tools';
 
-export type EntityType = 'client' | 'project' | 'team' | 'tool';
+export type EntityType = 'client' | 'project' | 'team' | 'tool' | 'system' | 'template' | 'asset';
 export type FormMode = 'create' | 'edit';
 
 export interface ClientFormValues {
@@ -46,17 +46,53 @@ export interface ToolFormValues {
   stats: Tool['stats'];
 }
 
+export interface SystemFormValues {
+  name: string;
+  description: string;
+  type: System['type'];
+  status: System['status'];
+  businessImpact: string;
+  projectId: string;
+}
+
+export interface TemplateFormValues {
+  name: string;
+  category: string;
+  usage: number;
+  lastModified: string;
+  clientId: string;
+}
+
+export interface AssetFormValues {
+  name: string;
+  type: ClientLibraryItem['type'];
+  category: string;
+  createdAt: string;
+  clientId: string;
+}
+
 export type EntityFormValues =
   | ClientFormValues
   | ProjectFormValues
   | TeamFormValues
-  | ToolFormValues;
+  | ToolFormValues
+  | SystemFormValues
+  | TemplateFormValues
+  | AssetFormValues;
 
 interface EntityFormModalProps {
   isOpen: boolean;
   type: EntityType;
   mode: FormMode;
-  initialData?: Client | Project | TeamMember | Tool | null;
+  initialData?:
+    | Client
+    | Project
+    | TeamMember
+    | Tool
+    | (System & { projectId?: string })
+    | (ClientTemplate & { clientId: string })
+    | (ClientLibraryItem & { clientId: string })
+    | null;
   clients?: Client[];
   projects?: Project[];
   teamMembers?: TeamMember[];
@@ -94,6 +130,30 @@ type ToolFormProps = {
   projects: Project[];
   teamMembers: TeamMember[];
   onSubmit: (values: ToolFormValues) => void;
+  onCancel: () => void;
+};
+
+type SystemFormProps = {
+  mode: FormMode;
+  initialData?: (System & { projectId?: string }) | null;
+  projects: Project[];
+  onSubmit: (values: SystemFormValues) => void;
+  onCancel: () => void;
+};
+
+type TemplateFormProps = {
+  mode: FormMode;
+  initialData?: (ClientTemplate & { clientId: string }) | null;
+  clients: Client[];
+  onSubmit: (values: TemplateFormValues) => void;
+  onCancel: () => void;
+};
+
+type AssetFormProps = {
+  mode: FormMode;
+  initialData?: (ClientLibraryItem & { clientId: string }) | null;
+  clients: Client[];
+  onSubmit: (values: AssetFormValues) => void;
   onCancel: () => void;
 };
 
@@ -798,11 +858,347 @@ const ToolForm: React.FC<ToolFormProps> = ({ mode, initialData, clients, project
   );
 };
 
+const SystemForm: React.FC<SystemFormProps> = ({ mode, initialData, projects, onSubmit, onCancel }) => {
+  const [formValues, setFormValues] = useState<SystemFormValues>({
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    type: initialData?.type || 'automation',
+    status: initialData?.status || 'design',
+    businessImpact: initialData?.businessImpact || '',
+    projectId: initialData?.projectId || projects[0]?.id || '',
+  });
+
+  useEffect(() => {
+    setFormValues({
+      name: initialData?.name || '',
+      description: initialData?.description || '',
+      type: initialData?.type || 'automation',
+      status: initialData?.status || 'design',
+      businessImpact: initialData?.businessImpact || '',
+      projectId: initialData?.projectId || projects[0]?.id || '',
+    });
+  }, [initialData, projects]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit(formValues);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Section title="System Overview">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClassName}>Name</label>
+            <input
+              className={inputClassName}
+              value={formValues.name}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, name: event.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Type</label>
+            <select
+              className={inputClassName}
+              value={formValues.type}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, type: event.target.value as System['type'] }))}
+            >
+              <option value="automation">Automation</option>
+              <option value="workflow">Workflow</option>
+              <option value="integration">Integration</option>
+              <option value="ai-model">AI Model</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClassName}>Status</label>
+            <select
+              className={inputClassName}
+              value={formValues.status}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, status: event.target.value as System['status'] }))}
+            >
+              <option value="design">Design</option>
+              <option value="development">Development</option>
+              <option value="testing">Testing</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClassName}>Description</label>
+            <textarea
+              className={`${inputClassName} min-h-[96px]`}
+              value={formValues.description}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, description: event.target.value }))}
+            />
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Context" description="Attach the system to the right program.">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClassName}>Project</label>
+            <select
+              className={inputClassName}
+              value={formValues.projectId}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, projectId: event.target.value }))}
+              disabled={mode === 'edit'}
+            >
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClassName}>Business Impact</label>
+            <textarea
+              className={`${inputClassName} min-h-[96px]`}
+              value={formValues.businessImpact}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, businessImpact: event.target.value }))}
+              placeholder="Summarize the measurable outcomes this system delivers."
+            />
+          </div>
+        </div>
+      </Section>
+
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+        >
+          <Save className="w-4 h-4" />
+          {mode === 'create' ? 'Create System' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const TemplateForm: React.FC<TemplateFormProps> = ({ mode, initialData, clients, onSubmit, onCancel }) => {
+  const [formValues, setFormValues] = useState<TemplateFormValues>({
+    name: initialData?.name || '',
+    category: initialData?.category || '',
+    usage: initialData?.usage || 0,
+    lastModified: initialData?.lastModified ? initialData.lastModified.slice(0, 10) : new Date().toISOString().slice(0, 10),
+    clientId: initialData?.clientId || clients[0]?.id || '',
+  });
+
+  useEffect(() => {
+    setFormValues({
+      name: initialData?.name || '',
+      category: initialData?.category || '',
+      usage: initialData?.usage || 0,
+      lastModified: initialData?.lastModified ? initialData.lastModified.slice(0, 10) : new Date().toISOString().slice(0, 10),
+      clientId: initialData?.clientId || clients[0]?.id || '',
+    });
+  }, [initialData, clients]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit({
+      ...formValues,
+      usage: Number(formValues.usage),
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Section title="Template Details">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClassName}>Template Name</label>
+            <input
+              className={inputClassName}
+              value={formValues.name}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, name: event.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Category</label>
+            <input
+              className={inputClassName}
+              value={formValues.category}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, category: event.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Launches</label>
+            <input
+              type="number"
+              min={0}
+              className={inputClassName}
+              value={formValues.usage}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, usage: Number(event.target.value) }))}
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Last Updated</label>
+            <input
+              type="date"
+              className={inputClassName}
+              value={formValues.lastModified}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, lastModified: event.target.value }))}
+            />
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Owner" description="Templates stay linked to their originating client.">
+        <div>
+          <label className={labelClassName}>Client</label>
+          <select className={inputClassName} value={formValues.clientId} disabled>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.companyName}
+              </option>
+            ))}
+          </select>
+        </div>
+      </Section>
+
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+        >
+          <Save className="w-4 h-4" />
+          {mode === 'create' ? 'Create Template' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const AssetForm: React.FC<AssetFormProps> = ({ mode, initialData, clients, onSubmit, onCancel }) => {
+  const [formValues, setFormValues] = useState<AssetFormValues>({
+    name: initialData?.name || '',
+    type: initialData?.type || 'component',
+    category: initialData?.category || '',
+    createdAt: initialData?.createdAt ? initialData.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10),
+    clientId: initialData?.clientId || clients[0]?.id || '',
+  });
+
+  useEffect(() => {
+    setFormValues({
+      name: initialData?.name || '',
+      type: initialData?.type || 'component',
+      category: initialData?.category || '',
+      createdAt: initialData?.createdAt ? initialData.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10),
+      clientId: initialData?.clientId || clients[0]?.id || '',
+    });
+  }, [initialData, clients]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit(formValues);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Section title="Asset Details">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClassName}>Asset Name</label>
+            <input
+              className={inputClassName}
+              value={formValues.name}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, name: event.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Type</label>
+            <select
+              className={inputClassName}
+              value={formValues.type}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, type: event.target.value as ClientLibraryItem['type'] }))}
+            >
+              <option value="component">Component</option>
+              <option value="template">Template</option>
+              <option value="workflow">Workflow</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClassName}>Category</label>
+            <input
+              className={inputClassName}
+              value={formValues.category}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, category: event.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Published</label>
+            <input
+              type="date"
+              className={inputClassName}
+              value={formValues.createdAt}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, createdAt: event.target.value }))}
+            />
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Contributor" description="Marketplace assets stay tied to their source client.">
+        <div>
+          <label className={labelClassName}>Client</label>
+          <select className={inputClassName} value={formValues.clientId} disabled>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.companyName}
+              </option>
+            ))}
+          </select>
+        </div>
+      </Section>
+
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+        >
+          <Save className="w-4 h-4" />
+          {mode === 'create' ? 'Create Asset' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 const iconMap: Record<EntityType, React.ComponentType<{ className?: string }>> = {
   client: Building2,
   project: FolderOpen,
   team: Users,
   tool: Wrench,
+  system: Activity,
+  template: FileText,
+  asset: ShoppingBag,
 };
 
 const titleMap: Record<EntityType, string> = {
@@ -810,6 +1206,9 @@ const titleMap: Record<EntityType, string> = {
   project: 'Project',
   team: 'Team Member',
   tool: 'Tool',
+  system: 'System',
+  template: 'Template',
+  asset: 'Marketplace Asset',
 };
 
 const descriptionMap: Record<EntityType, string> = {
@@ -817,6 +1216,9 @@ const descriptionMap: Record<EntityType, string> = {
   project: 'Organize initiatives, attach contributors, and capture context.',
   team: 'Invite collaborators and keep their skills current.',
   tool: 'Catalog automations, agents, and AI workflows across the business.',
+  system: 'Document the architecture, status, and impact for each deployed system.',
+  template: 'Maintain reusable playbooks and launch-ready templates.',
+  asset: 'Manage marketplace-ready components contributed by your ecosystem.',
 };
 
 export const EntityFormModal: React.FC<EntityFormModalProps> = ({
@@ -898,6 +1300,36 @@ export const EntityFormModal: React.FC<EntityFormModalProps> = ({
               projects={projects}
               teamMembers={teamMembers}
               onSubmit={onSubmit as (values: ToolFormValues) => void}
+              onCancel={onClose}
+            />
+          )}
+
+          {type === 'system' && (
+            <SystemForm
+              mode={mode}
+              initialData={initialData as (System & { projectId?: string }) | null}
+              projects={projects}
+              onSubmit={onSubmit as (values: SystemFormValues) => void}
+              onCancel={onClose}
+            />
+          )}
+
+          {type === 'template' && (
+            <TemplateForm
+              mode={mode}
+              initialData={initialData as (ClientTemplate & { clientId: string }) | null}
+              clients={clients}
+              onSubmit={onSubmit as (values: TemplateFormValues) => void}
+              onCancel={onClose}
+            />
+          )}
+
+          {type === 'asset' && (
+            <AssetForm
+              mode={mode}
+              initialData={initialData as (ClientLibraryItem & { clientId: string }) | null}
+              clients={clients}
+              onSubmit={onSubmit as (values: AssetFormValues) => void}
               onCancel={onClose}
             />
           )}

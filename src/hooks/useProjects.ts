@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Project } from '../types';
+import { Project, System } from '../types';
 import { useAuth } from './useAuth';
 
 // Mock data for demonstration
@@ -397,11 +397,29 @@ export const useProjects = () => {
   };
 
   const updateProject = (id: string, updates: Partial<Project>) => {
-    setProjects(prev => prev.map(project => 
-      project.id === id 
+    setProjects(prev => prev.map(project =>
+      project.id === id
         ? { ...project, ...updates, updatedAt: new Date().toISOString() }
         : project
     ));
+  };
+
+  const updateSystem = (projectId: string, systemId: string, updates: Partial<System>) => {
+    setProjects(prev => prev.map(project => {
+      if (project.id !== projectId) {
+        return project;
+      }
+
+      const nextSystems = project.systems.map((system) =>
+        system.id === systemId ? { ...system, ...updates } : system
+      );
+
+      return {
+        ...project,
+        systems: nextSystems,
+        updatedAt: new Date().toISOString(),
+      };
+    }));
   };
 
   const deleteProject = (id: string) => {
@@ -413,6 +431,7 @@ export const useProjects = () => {
     isLoading,
     createProject,
     updateProject,
+    updateSystem,
     deleteProject,
   };
 };
