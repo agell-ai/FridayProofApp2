@@ -3,6 +3,7 @@ import { CalendarRange, ChevronDown, Plus, Search } from 'lucide-react';
 import ClientCard from '../components/Clients/ClientCard';
 import ClientDetails from '../components/Clients/ClientDetails';
 import { useClients } from '../hooks/useClients';
+import { useAuth } from '../hooks/useAuth';
 import { Client } from '../types';
 import {
   DEFAULT_TIME_RANGE,
@@ -23,18 +24,35 @@ interface MetricDefinition {
 
 const Clients: React.FC = () => {
   const { clients, isLoading } = useClients();
+  const { user } = useAuth();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMetric, setSelectedMetric] = useState<MetricFilter>('total');
   const [timeRange, setTimeRange] = useState<TimeRangeKey>(DEFAULT_TIME_RANGE);
 
+  const isBusinessAccount = user?.accountType === 'business';
+  const canManageClients = !isBusinessAccount;
+
   const rangeStart = useMemo(() => getTimeRangeStart(timeRange), [timeRange]);
 
   const selectedRangeOption = useMemo(() => {
     return (
-      timeRangeOptions.find((option) => option.value === timeRange) ?? timeRangeOptions[0]
+      timeRangeOptions.find((option) => option.value === timeRange) ??
+      timeRangeOptions.find((option) => option.value === DEFAULT_TIME_RANGE) ??
+      timeRangeOptions[0]
     );
   }, [timeRange]);
+
+  const newMetricDescription = useMemo(() => {
+    switch (selectedRangeOption.value) {
+      case 'all':
+        return 'Created all time';
+      case 'ytd':
+        return 'Created year to date';
+      default:
+        return `Created ${selectedRangeOption.label.toLowerCase()}`;
+    }
+  }, [selectedRangeOption]);
 
   const metricCounts = useMemo(() => {
     let active = 0;
@@ -86,11 +104,11 @@ const Clients: React.FC = () => {
       {
         key: 'new',
         label: 'New',
-        description: selectedRangeOption.label,
+        description: newMetricDescription,
         value: metricCounts.new
       }
     ];
-  }, [metricCounts, selectedRangeOption]);
+  }, [metricCounts, newMetricDescription]);
 
   const filteredClients = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -107,7 +125,13 @@ const Clients: React.FC = () => {
           client.linkedinUrl ?? ''
         ].some((value) => value.toLowerCase().includes(normalizedSearch)) ||
         client.contacts.some((contact) =>
-          [contact.name, contact.title, contact.email ?? '']
+          [
+            contact.name,
+            contact.title,
+            contact.email ?? '',
+            contact.phone ?? '',
+            contact.linkedinUrl ?? ''
+          ]
             .map((value) => value.toLowerCase())
             .some((value) => value.includes(normalizedSearch))
         );
@@ -163,10 +187,11 @@ const Clients: React.FC = () => {
             <div className="relative max-w-md">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
               <input
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] disabled:cursor-not-allowed disabled:opacity-60"
                 placeholder="Search clients by name, industry, or location"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
+                disabled={!canManageClients}
               />
             </div>
           </div>
@@ -175,9 +200,10 @@ const Clients: React.FC = () => {
             <div className="relative w-full sm:w-auto">
               <CalendarRange className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
               <select
-                className="w-full appearance-none rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-10 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
+                className="w-full appearance-none rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-10 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] disabled:cursor-not-allowed disabled:opacity-60"
                 value={timeRange}
                 onChange={(event) => setTimeRange(event.target.value as TimeRangeKey)}
+                disabled={!canManageClients}
               >
                 {timeRangeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -190,7 +216,10 @@ const Clients: React.FC = () => {
 
             <button
               type="button"
-              className="flex items-center justify-center gap-2 rounded-lg bg-sunset-orange px-4 py-2 font-semibold text-white transition-opacity hover:opacity-90"
+              className="flex items-center justify-center gap-2 rounded-lg bg-sunset-orange px-4 py-2 font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={!canManageClients}
+              aria-disabled={!canManageClients}
+              title={!canManageClients ? 'Client management is unavailable for business accounts' : undefined}
             >
               <Plus className="h-5 w-5" />
               <span>New Client</span>
@@ -207,10 +236,13 @@ const Clients: React.FC = () => {
                 type="button"
                 onClick={() => setSelectedMetric(metric.key)}
                 aria-pressed={isActive}
+                disabled={!canManageClients}
                 className={`rounded-xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] ${
                   isActive
                     ? 'border-transparent bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white shadow'
                     : 'border-[var(--border)] bg-[var(--surface)] text-[var(--fg)] hover:border-[var(--accent-orange)]'
+                } ${
+                  !canManageClients ? 'cursor-not-allowed opacity-60' : ''
                 }`}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -242,25 +274,38 @@ const Clients: React.FC = () => {
         </div>
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)]/60 py-12 text-center">
-          <p className="mb-4 text-[var(--fg-muted)]">
-            {hasClients ? 'No clients match your filters.' : 'No clients found'}
-          </p>
-          {hasClients ? (
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--accent-orange)]"
-            >
-              Clear filters
-            </button>
+          {canManageClients ? (
+            <>
+              <p className="mb-4 text-[var(--fg-muted)]">
+                {hasClients ? 'No clients match your filters.' : 'No clients found'}
+              </p>
+              {hasClients ? (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--accent-orange)]"
+                >
+                  Clear filters
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="mx-auto flex items-center justify-center gap-2 rounded-lg bg-sunset-orange px-4 py-2 font-semibold text-white transition-opacity hover:opacity-90"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span>Add Your First Client</span>
+                </button>
+              )}
+            </>
           ) : (
-            <button
-              type="button"
-              className="mx-auto flex items-center justify-center gap-2 rounded-lg bg-sunset-orange px-4 py-2 font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Add Your First Client</span>
-            </button>
+            <div className="mx-auto max-w-xl space-y-3 px-4">
+              <p className="text-base font-medium text-[var(--fg)]">
+                Client management is unavailable for business accounts.
+              </p>
+              <p className="text-sm text-[var(--fg-muted)]">
+                Switch to an agency or consultant workspace to manage client relationships, track projects, and measure delivery performance.
+              </p>
+            </div>
           )}
         </div>
       )}
