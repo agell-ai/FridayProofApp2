@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import ClientCard from '../components/Clients/ClientCard';
 import ClientDetails from '../components/Clients/ClientDetails';
@@ -11,6 +11,12 @@ const Clients: React.FC = () => {
   const activeClient = selectedClientId
     ? clients.find(client => client.id === selectedClientId) ?? null
     : null;
+
+  useEffect(() => {
+    if (selectedClientId && !clients.some(client => client.id === selectedClientId)) {
+      setSelectedClientId(null);
+    }
+  }, [clients, selectedClientId]);
 
   if (selectedClientId && activeClient) {
     return (
