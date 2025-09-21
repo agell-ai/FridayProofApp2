@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
 import { Client } from '../types';
 
 // Mock clients data
@@ -579,16 +580,33 @@ const defaultFinancials: Client['financials'] = {
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
+    setIsLoading(true);
+
+    if (user?.accountType === 'business') {
+      setClients([]);
+      setIsLoading(false);
+      return;
+    }
+
     // Simulate API call
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       setClients(mockClients);
       setIsLoading(false);
     }, 1000);
-  }, []);
 
-  const createClient = (clientData: ClientInput) => {
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [user?.accountType]);
+
+  const createClient = (clientData: ClientInput): Client | null => {
+    if (user?.accountType === 'business') {
+      return null;
+    }
+
     const timestamp = new Date().toISOString();
     const newClient: Client = {
       id: Date.now().toString(),
@@ -621,6 +639,10 @@ export const useClients = () => {
   };
 
   const updateClient = (id: string, updates: Partial<Client>) => {
+    if (user?.accountType === 'business') {
+      return;
+    }
+
     setClients(prev => prev.map(client => {
       if (client.id !== id) {
         return client;
@@ -652,6 +674,10 @@ export const useClients = () => {
   };
 
   const deleteClient = (id: string) => {
+    if (user?.accountType === 'business') {
+      return;
+    }
+
     setClients(prev => prev.filter(client => client.id !== id));
   };
 
