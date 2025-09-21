@@ -80,8 +80,7 @@ const ToolDetails: React.FC<ToolDetailsProps> = ({ tool, onBack }) => {
                   {tool.category}
                 </span>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColorClass}`}>
-                  <span>{tool.clientId ? 'Client' : 'Business'}</span>
-                  {tool.status.charAt(0).toUpperCase() + tool.status.slice(1)}
+                  {tool.clientId ? 'Client' : 'Business'} • {tool.status.charAt(0).toUpperCase() + tool.status.slice(1)}
                 </span>
               </div>
             </div>
@@ -144,7 +143,7 @@ const ToolDetails: React.FC<ToolDetailsProps> = ({ tool, onBack }) => {
                     <div className="flex items-center justify-between">
                       <span>Status:</span>
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
-                        Active
+                        {tool.status.charAt(0).toUpperCase() + tool.status.slice(1)}
                       </span>
                     </div>
                   </div>
