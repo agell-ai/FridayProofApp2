@@ -6,10 +6,9 @@ import LoginForm from './components/Auth/LoginForm';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import { Footer } from './components/Shared/Footer';
-import Dashboard from './views/Dashboard';
 import Company from './views/Company';
 import Workspaces from './views/Workspaces';
-import Solutions from './views/Solutions';
+import SystemsHub from './views/Solutions';
 import Analytics from './views/Analytics';
 
 const AppContent: React.FC = () => {
@@ -31,23 +30,17 @@ const AppContent: React.FC = () => {
   const renderContent = () => {
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Analytics />;
       case 'company':
         return <Company />;
       case 'analytics':
         return <Analytics />;
       case 'workspaces':
         return <Workspaces />;
-      case 'solutions':
-        return <Solutions />;
-      case 'archive':
-        return (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-lg text-[var(--fg-muted)]">Archive page coming soon</p>
-          </div>
-        );
+      case 'systemsHub':
+        return <SystemsHub />;
       default:
-        return <Dashboard />;
+        return <Analytics />;
     }
   };
 

@@ -3,24 +3,24 @@ import { User } from '../types';
 export const getAvailablePages = (user: User): string[] => {
   const { accountType, role, enabledPages } = user;
 
-  const allPages = ['dashboard', 'company', 'workspaces', 'solutions', 'analytics', 'archive'];
+  const allPages = ['dashboard', 'company', 'workspaces', 'systemsHub', 'analytics'];
   
   // Define pages by account type
   const accountTypePages = {
     agency: allPages,
-    consultant: ['dashboard', 'company', 'workspaces', 'solutions', 'analytics', 'archive'],
-    business: ['dashboard', 'company', 'workspaces', 'solutions', 'analytics', 'archive']
+    consultant: allPages,
+    business: allPages
   };
 
   // Define pages by role
   const rolePages = {
     owner: accountTypePages[accountType],
-    manager: enabledPages || accountTypePages[accountType],
+    manager: (enabledPages || accountTypePages[accountType]).filter(page => allPages.includes(page)),
     employee: accountTypePages[accountType],
     contractor: accountTypePages[accountType],
-    client: ['dashboard', 'company', 'workspaces', 'solutions']
+    client: ['dashboard', 'company', 'workspaces', 'systemsHub']
   };
-  
+
   return rolePages[role];
 };
 
@@ -34,9 +34,8 @@ export const getPageTitle = (page: string): string => {
     dashboard: 'Dashboard',
     company: 'Company',
     workspaces: 'Workspaces',
-    solutions: 'Solutions',
-    analytics: 'Analytics',
-    archive: 'Archive'
+    systemsHub: 'Systems Hub',
+    analytics: 'Analytics'
   };
   return titles[page as keyof typeof titles] || 'Dashboard';
 };

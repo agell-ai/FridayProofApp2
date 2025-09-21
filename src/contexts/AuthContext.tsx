@@ -72,7 +72,7 @@ const mockUsers = {
     role: 'manager' as const,
     accountType: 'agency' as const,
     accountId: 'acc-1',
-    enabledPages: ['dashboard', 'company', 'analytics', 'workspaces', 'solutions', 'archive'],
+    enabledPages: ['dashboard', 'company', 'analytics', 'workspaces', 'systemsHub'],
     createdAt: '2024-01-01T00:00:00Z',
   },
   'employee@demo.com': {
