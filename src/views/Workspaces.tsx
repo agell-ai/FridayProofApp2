@@ -22,6 +22,7 @@ export default function Workspaces({ onSelectProject, onSelectClient }: Workspac
   const [searchTerm, setSearchTerm] = useState('');
   const [activeType, setActiveType] = useState<'project' | 'client' | 'team'>('project');
   const [showModal, setShowModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [selectedTeamMember, setSelectedTeamMember] = useState<any>(null);
 
   // Filter items based on active type and search term
@@ -109,6 +110,16 @@ export default function Workspaces({ onSelectProject, onSelectClient }: Workspac
     }
   };
 
+  const handleEdit = (item: any) => {
+    setEditingItem(item);
+    setShowModal(true);
+  };
+
+  const handleCreate = () => {
+    setEditingItem(null);
+    setShowModal(true);
+  };
+
   const getAddButtonText = () => {
     switch (activeType) {
       case 'project':
@@ -149,7 +160,7 @@ export default function Workspaces({ onSelectProject, onSelectClient }: Workspac
         </div>
         
         <button
-          onClick={() => setShowModal(true)}
+          onClick={handleCreate}
           className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -270,6 +281,7 @@ export default function Workspaces({ onSelectProject, onSelectClient }: Workspac
             key={item.id}
             item={item}
             onClick={() => handleCardClick(item)}
+            onEdit={handleEdit}
           />
         ))}
       </div>
@@ -289,7 +301,7 @@ export default function Workspaces({ onSelectProject, onSelectClient }: Workspac
             }
           </p>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={handleCreate}
             className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -302,7 +314,11 @@ export default function Workspaces({ onSelectProject, onSelectClient }: Workspac
       {showModal && (
         <EntityFormModal
           type={getEntityType()}
-          onClose={() => setShowModal(false)}
+          onClose={() => {
+            setShowModal(false);
+            setEditingItem(null);
+          }}
+          initialData={editingItem}
         />
       )}
 

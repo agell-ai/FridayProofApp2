@@ -16,7 +16,7 @@ interface WorkspaceItem {
 interface WorkspaceCardProps {
   item: WorkspaceItem;
   onClick: () => void;
-  onEdit: () => void;
+  onEdit: (item: WorkspaceItem) => void;
 }
 
 export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({ item, onClick, onEdit }) => {
@@ -70,7 +70,7 @@ export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({ item, onClick, onE
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onEdit();
+    onEdit(item);
   };
 
   return (
