@@ -1,20 +1,30 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Search, Filter, PlusCircle, Upload } from 'lucide-react';
+import { Search, PlusCircle, Upload } from 'lucide-react';
 import { useTools } from '../hooks/useTools';
 import { useProjects } from '../hooks/useProjects';
 import { useClients } from '../hooks/useClients';
 import { useTeam } from '../hooks/useTeam';
 import SolutionCard, { SolutionCardData } from '../components/Solutions/SolutionCard';
-import { EntityFormModal, ToolFormValues } from '../components/Shared/EntityFormModal';
+import { EntityFormModal, ToolFormValues, TemplateFormValues, MarketplaceFormValues } from '../components/Shared/EntityFormModal';
 import { Tool } from '../types/tools';
 
-const solutionTypes = ['tool', 'system', 'template', 'marketplace'] as const;
+const solutionTypes = ['active', 'library', 'marketplace'] as const;
 
 type SolutionType = (typeof solutionTypes)[number];
 
 type ToolFormState = {
   mode: 'create' | 'edit';
   tool?: Tool;
+};
+
+type TemplateFormState = {
+  mode: 'create' | 'edit';
+  template?: any;
+};
+
+type MarketplaceFormState = {
+  mode: 'create' | 'edit';
+  item?: any;
 };
 
 interface RoiMetricRecord {
@@ -32,9 +42,8 @@ interface ResourceOption {
 }
 
 const typeLabels: Record<SolutionType, string> = {
-  tool: 'Tools',
-  system: 'Systems',
-  template: 'Templates',
+  active: 'Active',
+  library: 'Library',
   marketplace: 'Marketplace',
 };
 
@@ -61,14 +70,25 @@ const deterministicNumber = (seed: string, min: number, max: number) => {
 };
 
 const Solutions: React.FC = () => {
-  const { tools, isLoading: loadingTools, createTool, updateTool } = useTools();
+  const { 
+    tools, 
+    isLoading: loadingTools, 
+    createTool, 
+    updateTool,
+    templates,
+    marketplaceItems,
+    createTemplate,
+    updateTemplate,
+    createMarketplaceItem,
+    updateMarketplaceItem
+  } = useTools();
   const { projects } = useProjects();
   const { clients } = useClients();
   const { teamMembers } = useTeam();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTypes, setActiveTypes] = useState<SolutionType[]>([...solutionTypes]);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<SolutionType>('active');
+  const [summaryFilterStatus, setSummaryFilterStatus] = useState<string>('all');
   const [roiMetrics, setRoiMetrics] = useState<Record<string, RoiMetricRecord>>({});
   const [selectedResourceKey, setSelectedResourceKey] = useState<string>('');
   const [manualMetrics, setManualMetrics] = useState({
@@ -80,6 +100,8 @@ const Solutions: React.FC = () => {
   });
   const [importFeedback, setImportFeedback] = useState<string>('');
   const [toolFormState, setToolFormState] = useState<ToolFormState | null>(null);
+  const [templateFormState, setTemplateFormState] = useState<TemplateFormState | null>(null);
+  const [marketplaceFormState, setMarketplaceFormState] = useState<MarketplaceFormState | null>(null);
 
   const systems = useMemo(() => {
     return projects.flatMap((project) =>
@@ -90,35 +112,6 @@ const Solutions: React.FC = () => {
       }))
     );
   }, [projects, clients]);
-
-  const templates = useMemo(() => (
-    clients.flatMap((client) =>
-      client.templates.map((template) => ({
-        id: `${client.id}-${template.id}`,
-        name: template.name,
-        description: `${template.category} playbook maintained by ${client.companyName}.`,
-        category: template.category,
-        usage: template.usage,
-        owner: client.companyName,
-        lastModified: template.lastModified,
-      }))
-    )
-  ), [clients]);
-
-  const marketplaceItems = useMemo(() => (
-    clients.flatMap((client) =>
-      client.library.map((item) => ({
-        id: `${client.id}-${item.id}`,
-        name: item.name,
-        description: `${item.type} contribution from ${client.companyName}.`,
-        category: item.category,
-        owner: client.companyName,
-        downloads: deterministicNumber(item.id, 120, 1400),
-        rating: (deterministicNumber(`${item.id}-rating`, 40, 50) / 10).toFixed(1),
-        createdAt: item.createdAt,
-      }))
-    )
-  ), [clients]);
 
   useEffect(() => {
     setRoiMetrics((prev) => {
@@ -212,90 +205,87 @@ const Solutions: React.FC = () => {
   const solutionItems: SolutionCardData[] = useMemo(() => {
     const items: SolutionCardData[] = [];
 
-    tools.forEach((tool) => {
-      items.push({
-        id: tool.id,
-        type: 'tool',
-        title: tool.name,
-        description: tool.description,
-        status: tool.status,
-        owner: tool.clientName ? `Client • ${tool.clientName}` : undefined,
-        meta: `Project • ${tool.projectName}`,
-        tags: [tool.category.toLowerCase(), tool.projectName, tool.clientName].filter(Boolean) as string[],
-        metrics: [
-          { label: 'Usage', value: `${tool.stats.usage}%`, tone: 'positive' },
-          { label: 'Efficiency', value: `${tool.stats.efficiency}%`, tone: 'positive' },
-        ],
-        roi: formatRoi(`tool-${tool.id}`),
+    if (activeTab === 'active') {
+      // Combine tools and systems for Active tab
+      tools.forEach((tool) => {
+        items.push({
+          id: tool.id,
+          type: 'tool',
+          title: tool.name,
+          description: tool.description,
+          status: tool.status,
+          owner: tool.clientName ? `Client • ${tool.clientName}` : undefined,
+          meta: `Project • ${tool.projectName}`,
+          tags: [tool.category.toLowerCase(), tool.projectName, tool.clientName].filter(Boolean) as string[],
+          metrics: [
+            { label: 'Usage', value: `${tool.stats.usage}%`, tone: 'positive' },
+            { label: 'Efficiency', value: `${tool.stats.efficiency}%`, tone: 'positive' },
+          ],
+          roi: formatRoi(`tool-${tool.id}`),
+        });
       });
-    });
 
-    systems.forEach(({ system, project, client }) => {
-      items.push({
-        id: system.id,
-        type: 'system',
-        title: system.name,
-        description: system.description,
-        status: system.status,
-        owner: client ? `Client • ${client.companyName}` : 'Internal',
-        meta: `Project • ${project.name}`,
-        tags: [system.type, system.status, project.name],
-        metrics: [
-          { label: 'Components', value: String(system.components.length) },
-          { label: 'Connections', value: String(system.connections.length) },
-        ],
-        roi: formatRoi(`system-${system.id}`),
+      systems.forEach(({ system, project, client }) => {
+        items.push({
+          id: system.id,
+          type: 'system',
+          title: system.name,
+          description: system.description,
+          status: system.status,
+          owner: client ? `Client • ${client.companyName}` : 'Internal',
+          meta: `Project • ${project.name}`,
+          tags: [system.type, system.status, project.name],
+          metrics: [
+            { label: 'Components', value: String(system.components.length) },
+            { label: 'Connections', value: String(system.connections.length) },
+          ],
+          roi: formatRoi(`system-${system.id}`),
+        });
       });
-    });
-
-    templates.forEach((template) => {
-      items.push({
-        id: template.id,
-        type: 'template',
-        title: template.name,
-        description: template.description,
-        owner: template.owner,
-        meta: `Last modified • ${new Date(template.lastModified).toLocaleDateString()}`,
-        tags: [template.category.toLowerCase()],
-        metrics: [
-          { label: 'Usage', value: `${template.usage} launches`, tone: 'positive' },
-        ],
+    } else if (activeTab === 'library') {
+      templates.forEach((template) => {
+        items.push({
+          id: template.id,
+          type: 'template',
+          title: template.name,
+          description: template.description,
+          owner: template.owner,
+          meta: `Last modified • ${new Date(template.lastModified).toLocaleDateString()}`,
+          tags: [template.category.toLowerCase()],
+          metrics: [
+            { label: 'Usage', value: `${template.usage} launches`, tone: 'positive' },
+          ],
+        });
       });
-    });
-
-    marketplaceItems.forEach((item) => {
-      items.push({
-        id: item.id,
-        type: 'marketplace',
-        title: item.name,
-        description: item.description,
-        owner: item.owner,
-        meta: `Published • ${new Date(item.createdAt).toLocaleDateString()}`,
-        tags: [item.category.toLowerCase()],
-        metrics: [
-          { label: 'Downloads', value: formatNumber(item.downloads), tone: 'positive' },
-          { label: 'Rating', value: `${item.rating}/5`, tone: 'positive' },
-        ],
+    } else if (activeTab === 'marketplace') {
+      marketplaceItems.forEach((item) => {
+        items.push({
+          id: item.id,
+          type: 'marketplace',
+          title: item.name,
+          description: item.description,
+          owner: item.owner,
+          meta: `Published • ${new Date(item.createdAt).toLocaleDateString()}`,
+          tags: [item.category.toLowerCase()],
+          metrics: [
+            { label: 'Downloads', value: formatNumber(item.downloads), tone: 'positive' },
+            { label: 'Rating', value: `${item.rating}/5`, tone: 'positive' },
+          ],
+        });
       });
-    });
+    }
 
     return items;
-  }, [tools, systems, templates, marketplaceItems, formatRoi]);
-
-  const availableStatuses = useMemo(() => {
-    const statuses = new Set<string>();
-    solutionItems.forEach((item) => {
-      if (item.status) statuses.add(item.status);
-    });
-    return Array.from(statuses);
-  }, [solutionItems]);
+  }, [tools, systems, templates, marketplaceItems, formatRoi, activeTab]);
 
   const filteredSolutions = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return solutionItems.filter((item) => {
-      if (!activeTypes.includes(item.type as SolutionType)) return false;
-      if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+      // Filter by status when on Active tab
+      if (activeTab === 'active' && summaryFilterStatus !== 'all' && item.status !== summaryFilterStatus) {
+        return false;
+      }
 
       if (!normalizedSearch) return true;
 
@@ -313,14 +303,72 @@ const Solutions: React.FC = () => {
 
       return searchable.some((value) => value.includes(normalizedSearch));
     });
-  }, [solutionItems, activeTypes, statusFilter, searchTerm]);
+  }, [solutionItems, searchTerm, activeTab, summaryFilterStatus]);
 
-  const summaryStats = useMemo(() => [
-    { label: 'Tools', value: tools.length },
-    { label: 'Systems', value: systems.length },
-    { label: 'Templates', value: templates.length },
-    { label: 'Marketplace Assets', value: marketplaceItems.length },
-  ], [tools.length, systems.length, templates.length, marketplaceItems.length]);
+  const summaryStats = useMemo(() => {
+    if (activeTab === 'active') {
+      const activeItems = [...tools, ...systems.map(s => s.system)];
+      const totalActive = activeItems.length;
+      const deployed = activeItems.filter(item => item.status === 'deployed' || item.status === 'active').length;
+      const testing = activeItems.filter(item => item.status === 'testing').length;
+      const development = activeItems.filter(item => item.status === 'development').length;
+
+      return [
+        { 
+          label: 'Total Active', 
+          value: totalActive,
+          onClick: () => setSummaryFilterStatus('all'),
+          isActive: summaryFilterStatus === 'all'
+        },
+        { 
+          label: 'Deployed', 
+          value: deployed,
+          onClick: () => setSummaryFilterStatus('deployed'),
+          isActive: summaryFilterStatus === 'deployed'
+        },
+        { 
+          label: 'Testing', 
+          value: testing,
+          onClick: () => setSummaryFilterStatus('testing'),
+          isActive: summaryFilterStatus === 'testing'
+        },
+        { 
+          label: 'Development', 
+          value: development,
+          onClick: () => setSummaryFilterStatus('development'),
+          isActive: summaryFilterStatus === 'development'
+        },
+      ];
+    } else if (activeTab === 'library') {
+      const totalTemplates = templates.length;
+      const categories = templates.map(t => t.category);
+      const mostUsedCategory = categories.length > 0 ? 
+        categories.reduce((a, b, i, arr) => 
+          arr.filter(v => v === a).length >= arr.filter(v => v === b).length ? a : b
+        ) : 'N/A';
+      const avgUsage = templates.length > 0 ? 
+        Math.round(templates.reduce((sum, t) => sum + t.usage, 0) / templates.length) : 0;
+
+      return [
+        { label: 'Total Templates', value: totalTemplates },
+        { label: 'Most Used Category', value: mostUsedCategory },
+        { label: 'New This Month', value: 3 }, // Mocked
+        { label: 'Avg Usage', value: avgUsage },
+      ];
+    } else {
+      const totalItems = marketplaceItems.length;
+      const totalDownloads = marketplaceItems.reduce((sum, item) => sum + item.downloads, 0);
+      const avgRating = marketplaceItems.length > 0 ? 
+        (marketplaceItems.reduce((sum, item) => sum + parseFloat(item.rating), 0) / marketplaceItems.length).toFixed(1) : '0.0';
+
+      return [
+        { label: 'Total Items', value: totalItems },
+        { label: 'Top Rated', value: `${avgRating}/5` },
+        { label: 'Total Downloads', value: formatNumber(totalDownloads) },
+        { label: 'New This Month', value: 2 }, // Mocked
+      ];
+    }
+  }, [tools, systems, templates, marketplaceItems, activeTab, summaryFilterStatus]);
 
   const handleManualSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -477,8 +525,125 @@ const Solutions: React.FC = () => {
     setToolFormState(null);
   };
 
-  const toggleType = (type: SolutionType) => {
-    setActiveTypes((prev) => (prev.includes(type) ? prev.filter((item) => item !== type) : [...prev, type]));
+  const handleTemplateSubmit = (values: TemplateFormValues) => {
+    if (!templateFormState) return;
+
+    if (templateFormState.mode === 'create') {
+      createTemplate({
+        name: values.name,
+        description: values.description,
+        category: values.category,
+        usage: values.usage,
+        lastModified: new Date().toISOString(),
+        owner: 'Internal',
+      });
+    } else if (templateFormState.template) {
+      updateTemplate(templateFormState.template.id, {
+        name: values.name,
+        description: values.description,
+        category: values.category,
+        usage: values.usage,
+        lastModified: new Date().toISOString(),
+      });
+    }
+
+    setTemplateFormState(null);
+  };
+
+  const handleMarketplaceSubmit = (values: MarketplaceFormValues) => {
+    if (!marketplaceFormState) return;
+
+    if (marketplaceFormState.mode === 'create') {
+      createMarketplaceItem({
+        name: values.name,
+        description: values.description,
+        category: values.category,
+        downloads: values.downloads,
+        rating: values.rating.toString(),
+        price: values.price,
+        owner: 'Internal',
+        createdAt: new Date().toISOString(),
+      });
+    } else if (marketplaceFormState.item) {
+      updateMarketplaceItem(marketplaceFormState.item.id, {
+        name: values.name,
+        description: values.description,
+        category: values.category,
+        downloads: values.downloads,
+        rating: values.rating.toString(),
+        price: values.price,
+      });
+    }
+
+    setMarketplaceFormState(null);
+  };
+
+  const handleCreateTemplate = (sourceItem: SolutionCardData) => {
+    const sourceData = sourceItem.type === 'tool' 
+      ? tools.find(t => t.id === sourceItem.id)
+      : systems.find(s => s.system.id === sourceItem.id)?.system;
+
+    if (sourceData) {
+      setTemplateFormState({
+        mode: 'create',
+        template: {
+          name: `${sourceData.name} Template`,
+          description: `Template based on ${sourceData.name}`,
+          category: sourceItem.type === 'tool' ? sourceData.category : sourceData.type,
+          usage: 0,
+          lastModified: new Date().toISOString(),
+          owner: 'Internal',
+        }
+      });
+    }
+  };
+
+  const handleListInMarketplace = (templateItem: SolutionCardData) => {
+    const template = templates.find(t => t.id === templateItem.id);
+    
+    if (template) {
+      setMarketplaceFormState({
+        mode: 'create',
+        item: {
+          name: template.name,
+          description: template.description,
+          category: template.category,
+          downloads: 0,
+          rating: '0.0',
+          price: 99,
+          owner: template.owner,
+          createdAt: new Date().toISOString(),
+        }
+      });
+    }
+  };
+
+  const handleTabChange = (tab: SolutionType) => {
+    setActiveTab(tab);
+    setSummaryFilterStatus('all');
+  };
+
+  const getCreateButtonText = () => {
+    switch (activeTab) {
+      case 'active': return 'Create Tool';
+      case 'library': return 'Create Template';
+      case 'marketplace': return 'Create Listing';
+      default: return 'Create';
+    }
+  };
+
+  const handleCreateClick = () => {
+    switch (activeTab) {
+      case 'active':
+        setToolFormState({ mode: 'create' });
+        break;
+      case 'library':
+        setTemplateFormState({ mode: 'create' });
+        break;
+      case 'marketplace':
+        setMarketplaceFormState({ mode: 'create' });
+        break;
+    }
   };
 
   return (
@@ -504,12 +669,12 @@ const Solutions: React.FC = () => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
               {solutionTypes.map((type) => {
-                const isActive = activeTypes.includes(type);
+                const isActive = activeTab === type;
                 return (
                   <button
                     key={type}
                     type="button"
-                    onClick={() => toggleType(type)}
+                    onClick={() => handleTabChange(type)}
                     className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
                       isActive
                         ? 'border-transparent bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white'
@@ -522,32 +687,14 @@ const Solutions: React.FC = () => {
               })}
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
-                <select
-                  className="appearance-none rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-8 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                  value={statusFilter}
-                  onChange={(event) => setStatusFilter(event.target.value)}
-                >
-                  <option value="all">All statuses</option>
-                  {availableStatuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setToolFormState({ mode: 'create' })}
-                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Add Tool
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleCreateClick}
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm"
+            >
+              <PlusCircle className="h-4 w-4" />
+              {getCreateButtonText()}
+            </button>
           </div>
         </div>
 
@@ -555,7 +702,12 @@ const Solutions: React.FC = () => {
           {summaryStats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/60 px-4 py-3"
+              className={`rounded-xl border px-4 py-3 transition-all cursor-pointer ${
+                'isActive' in stat && stat.isActive
+                  ? 'border-[var(--accent-purple)] bg-[var(--accent-purple)]/10'
+                  : 'border-[var(--border)] bg-[var(--surface)]/60 hover:bg-[var(--surface)]'
+              }`}
+              onClick={'onClick' in stat ? stat.onClick : undefined}
             >
               <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">{stat.label}</p>
               <p className="mt-1 text-2xl font-semibold text-[var(--fg)]">{stat.value}</p>
@@ -584,7 +736,19 @@ const Solutions: React.FC = () => {
                 if (tool) {
                   setToolFormState({ mode: 'edit', tool });
                 }
+              } : item.type === 'template' ? () => {
+                const template = templates.find((candidate) => candidate.id === item.id);
+                if (template) {
+                  setTemplateFormState({ mode: 'edit', template });
+                }
+              } : item.type === 'marketplace' ? () => {
+                const marketplaceItem = marketplaceItems.find((candidate) => candidate.id === item.id);
+                if (marketplaceItem) {
+                  setMarketplaceFormState({ mode: 'edit', item: marketplaceItem });
+                }
               } : undefined}
+              onCreateTemplate={activeTab === 'active' ? () => handleCreateTemplate(item) : undefined}
+              onListInMarketplace={activeTab === 'library' ? () => handleListInMarketplace(item) : undefined}
             />
           ))}
         </div>
@@ -692,6 +856,30 @@ const Solutions: React.FC = () => {
         teamMembers={teamMembers}
         onClose={() => setToolFormState(null)}
         onSubmit={handleToolSubmit}
+      />
+
+      <EntityFormModal
+        isOpen={Boolean(templateFormState)}
+        type="template"
+        mode={templateFormState?.mode || 'create'}
+        initialData={templateFormState?.template}
+        clients={clients}
+        projects={projects}
+        teamMembers={teamMembers}
+        onClose={() => setTemplateFormState(null)}
+        onSubmit={handleTemplateSubmit}
+      />
+
+      <EntityFormModal
+        isOpen={Boolean(marketplaceFormState)}
+        type="marketplace"
+        mode={marketplaceFormState?.mode || 'create'}
+        initialData={marketplaceFormState?.item}
+        clients={clients}
+        projects={projects}
+        teamMembers={teamMembers}
+        onClose={() => setMarketplaceFormState(null)}
+        onSubmit={handleMarketplaceSubmit}
       />
     </div>
   );

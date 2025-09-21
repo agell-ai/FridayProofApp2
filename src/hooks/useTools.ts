@@ -21,6 +21,30 @@ type ToolFormPayload = {
 
 type ToolUpdatePayload = Partial<ToolFormPayload>;
 
+type TemplateFormPayload = {
+  name: string;
+  description: string;
+  category: string;
+  usage: number;
+  lastModified: string;
+  owner: string;
+};
+
+type TemplateUpdatePayload = Partial<TemplateFormPayload>;
+
+type MarketplaceFormPayload = {
+  name: string;
+  description: string;
+  category: string;
+  downloads: number;
+  rating: string;
+  price: number;
+  owner: string;
+  createdAt: string;
+};
+
+type MarketplaceUpdatePayload = Partial<MarketplaceFormPayload>;
+
 type ToolOverride = Omit<Partial<Tool>, 'stats' | 'teamMembers'> & {
   stats?: Partial<Tool['stats']>;
   teamMembers?: string[];
@@ -185,6 +209,8 @@ const generateAdditionalTools = (clients: Client[], projects: Project[]): Tool[]
 export const useTools = () => {
   const [generatedTools, setGeneratedTools] = useState<Tool[]>([]);
   const [customTools, setCustomTools] = useState<Tool[]>([]);
+  const [customTemplates, setCustomTemplates] = useState<any[]>([]);
+  const [customMarketplaceItems, setCustomMarketplaceItems] = useState<any[]>([]);
   const [toolOverrides, setToolOverrides] = useState<Record<string, ToolOverride>>({});
   const [isLoading, setIsLoading] = useState(true);
   const { clients } = useClients();
@@ -303,6 +329,37 @@ export const useTools = () => {
     generateToolsFromData();
   }, [clients, projects, user?.accountType, generateToolsFromData]);
 
+  const templates = useMemo(() => {
+    const clientTemplates = clients.flatMap((client) =>
+      client.templates.map((template) => ({
+        id: `${client.id}-${template.id}`,
+        name: template.name,
+        description: `${template.category} playbook maintained by ${client.companyName}.`,
+        category: template.category,
+        usage: template.usage,
+        owner: client.companyName,
+        lastModified: template.lastModified,
+      }))
+    );
+    return [...clientTemplates, ...customTemplates];
+  }, [clients, customTemplates]);
+
+  const marketplaceItems = useMemo(() => {
+    const clientMarketplaceItems = clients.flatMap((client) =>
+      client.library.map((item) => ({
+        id: `${client.id}-${item.id}`,
+        name: item.name,
+        description: `${item.type} contribution from ${client.companyName}.`,
+        category: item.category,
+        owner: client.companyName,
+        downloads: deterministicNumber(item.id, 120, 1400),
+        rating: (deterministicNumber(`${item.id}-rating`, 40, 50) / 10).toFixed(1),
+        createdAt: item.createdAt,
+      }))
+    );
+    return [...clientMarketplaceItems, ...customMarketplaceItems];
+  }, [clients, customMarketplaceItems]);
+
   const createTool = (toolData: ToolFormPayload) => {
     const timestamp = new Date().toISOString();
     const associatedClient = toolData.clientId ? clients.find(client => client.id === toolData.clientId) : undefined;
@@ -371,6 +428,60 @@ export const useTools = () => {
     });
   };
 
+  const createTemplate = (templateData: TemplateFormPayload) => {
+    const newTemplate = {
+      id: Date.now().toString(),
+      name: templateData.name,
+      description: templateData.description,
+      category: templateData.category,
+      usage: templateData.usage,
+      owner: templateData.owner,
+      lastModified: templateData.lastModified,
+    };
+    setCustomTemplates(prev => [...prev, newTemplate]);
+    return newTemplate;
+  };
+
+  const updateTemplate = (id: string, updates: TemplateUpdatePayload) => {
+    setCustomTemplates(prev => prev.map(template => 
+      template.id === id 
+        ? { ...template, ...updates, lastModified: new Date().toISOString() }
+        : template
+    ));
+  };
+
+  const deleteTemplate = (id: string) => {
+    setCustomTemplates(prev => prev.filter(template => template.id !== id));
+  };
+
+  const createMarketplaceItem = (itemData: MarketplaceFormPayload) => {
+    const newItem = {
+      id: Date.now().toString(),
+      name: itemData.name,
+      description: itemData.description,
+      category: itemData.category,
+      downloads: itemData.downloads,
+      rating: itemData.rating,
+      price: itemData.price,
+      owner: itemData.owner,
+      createdAt: itemData.createdAt,
+    };
+    setCustomMarketplaceItems(prev => [...prev, newItem]);
+    return newItem;
+  };
+
+  const updateMarketplaceItem = (id: string, updates: MarketplaceUpdatePayload) => {
+    setCustomMarketplaceItems(prev => prev.map(item => 
+      item.id === id 
+        ? { ...item, ...updates }
+        : item
+    ));
+  };
+
+  const deleteMarketplaceItem = (id: string) => {
+    setCustomMarketplaceItems(prev => prev.filter(item => item.id !== id));
+  };
+
   const tools = useMemo(() => {
     const mergedGenerated = generatedTools.map(tool => mergeToolWithOverride(tool, toolOverrides[tool.id]));
     return [...mergedGenerated, ...customTools];
@@ -378,9 +489,17 @@ export const useTools = () => {
 
   return {
     tools,
+    templates,
+    marketplaceItems,
     isLoading,
     createTool,
     updateTool,
     deleteTool,
+    createTemplate,
+    updateTemplate,
+    deleteTemplate,
+    createMarketplaceItem,
+    updateMarketplaceItem,
+    deleteMarketplaceItem,
   };
 };

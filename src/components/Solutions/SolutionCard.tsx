@@ -37,6 +37,8 @@ export interface SolutionCardData {
 interface SolutionCardProps {
   data: SolutionCardData;
   onEdit?: (data: SolutionCardData) => void;
+  onCreateTemplate?: (data: SolutionCardData) => void;
+  onListInMarketplace?: (data: SolutionCardData) => void;
 }
 
 const typeConfig: Record<SolutionType, { label: string; icon: React.ComponentType<{ className?: string }>; badgeClass: string }> = {
@@ -66,6 +68,7 @@ const statusStyles: Record<string, string> = {
   active: 'border-emerald-200 text-emerald-600 dark:text-emerald-300 bg-emerald-500/10',
   development: 'border-indigo-200 text-indigo-600 dark:text-indigo-300 bg-indigo-500/10',
   testing: 'border-purple-200 text-purple-600 dark:text-purple-300 bg-purple-500/10',
+  deployed: 'border-emerald-200 text-emerald-600 dark:text-emerald-300 bg-emerald-500/10',
   inactive: 'border-slate-200 text-slate-600 dark:text-slate-300 bg-slate-500/10',
   retired: 'border-rose-200 text-rose-600 dark:text-rose-300 bg-rose-500/10',
 };
@@ -82,13 +85,17 @@ const formatLabel = (value: string) =>
     .replace(/-/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
-export const SolutionCard: React.FC<SolutionCardProps> = ({ data, onEdit }) => {
+export const SolutionCard: React.FC<SolutionCardProps> = ({ data, onEdit, onCreateTemplate, onListInMarketplace }) => {
   const type = typeConfig[data.type];
   const StatusIcon = type.icon;
   const statusClass = data.status ? statusStyles[data.status] || 'border-[var(--border)] text-[var(--fg-muted)] bg-[var(--surface)]' : '';
+  
+  const showEditButton = (data.type === 'tool' || data.type === 'system' || data.type === 'template') && onEdit;
+  const showCreateTemplateButton = (data.type === 'tool' || data.type === 'system') && onCreateTemplate;
+  const showListInMarketplaceButton = data.type === 'template' && onListInMarketplace;
 
   return (
-    <Card glowOnHover className="p-6 h-full flex flex-col gap-5">
+    <Card glowOnHover className="p-6 h-full flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-[var(--surface)] flex items-center justify-center">
@@ -109,7 +116,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ data, onEdit }) => {
             {data.owner && <p className="text-sm text-[var(--fg-muted)]">{data.owner}</p>}
           </div>
         </div>
-        {onEdit && (
+        {showEditButton && (
           <button
             type="button"
             onClick={() => onEdit(data)}
@@ -172,6 +179,28 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ data, onEdit }) => {
           )}
         </div>
       )}
+
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-2 mt-auto">
+        {showCreateTemplateButton && (
+          <button
+            type="button"
+            onClick={() => onCreateTemplate!(data)}
+            className="w-full px-3 py-2 text-sm font-medium text-[var(--fg)] bg-[var(--surface)] border border-[var(--border)] rounded-lg hover:bg-[var(--border)] transition-colors"
+          >
+            Create Template
+          </button>
+        )}
+        {showListInMarketplaceButton && (
+          <button
+            type="button"
+            onClick={() => onListInMarketplace!(data)}
+            className="w-full px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] rounded-lg hover:opacity-90 transition-opacity"
+          >
+            List in Marketplace
+          </button>
+        )}
+      </div>
 
       {data.tags.length > 0 && (
         <div className="flex flex-wrap gap-2 text-xs text-[var(--fg-muted)]">

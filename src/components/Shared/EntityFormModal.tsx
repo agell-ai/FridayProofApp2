@@ -46,17 +46,39 @@ export interface ToolFormValues {
   stats: Tool['stats'];
 }
 
+export interface TemplateFormValues {
+  name: string;
+  description: string;
+  category: string;
+  usage: number;
+  lastModified: string;
+  owner: string;
+}
+
+export interface MarketplaceFormValues {
+  name: string;
+  description: string;
+  category: string;
+  downloads: number;
+  rating: number;
+  price: number;
+  owner: string;
+  createdAt: string;
+}
+
 export type EntityFormValues =
   | ClientFormValues
   | ProjectFormValues
   | TeamFormValues
-  | ToolFormValues;
+  | ToolFormValues
+  | TemplateFormValues
+  | MarketplaceFormValues;
 
 interface EntityFormModalProps {
   isOpen: boolean;
-  type: EntityType;
+  type: EntityType | 'template' | 'marketplace';
   mode: FormMode;
-  initialData?: Client | Project | TeamMember | Tool | null;
+  initialData?: Client | Project | TeamMember | Tool | any | null;
   clients?: Client[];
   projects?: Project[];
   teamMembers?: TeamMember[];
@@ -94,6 +116,20 @@ type ToolFormProps = {
   projects: Project[];
   teamMembers: TeamMember[];
   onSubmit: (values: ToolFormValues) => void;
+  onCancel: () => void;
+};
+
+type TemplateFormProps = {
+  mode: FormMode;
+  initialData?: any | null;
+  onSubmit: (values: TemplateFormValues) => void;
+  onCancel: () => void;
+};
+
+type MarketplaceFormProps = {
+  mode: FormMode;
+  initialData?: any | null;
+  onSubmit: (values: MarketplaceFormValues) => void;
   onCancel: () => void;
 };
 
@@ -798,11 +834,247 @@ const ToolForm: React.FC<ToolFormProps> = ({ mode, initialData, clients, project
   );
 };
 
+const TemplateForm: React.FC<TemplateFormProps> = ({ mode, initialData, onSubmit, onCancel }) => {
+  const [formValues, setFormValues] = useState<TemplateFormValues>({
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    category: initialData?.category || '',
+    usage: initialData?.usage || 0,
+    lastModified: initialData?.lastModified || new Date().toISOString(),
+    owner: initialData?.owner || 'Internal',
+  });
+
+  useEffect(() => {
+    setFormValues({
+      name: initialData?.name || '',
+      description: initialData?.description || '',
+      category: initialData?.category || '',
+      usage: initialData?.usage || 0,
+      lastModified: initialData?.lastModified || new Date().toISOString(),
+      owner: initialData?.owner || 'Internal',
+    });
+  }, [initialData]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit({
+      ...formValues,
+      lastModified: new Date().toISOString(),
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Section title="Template Details">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClassName}>Name</label>
+            <input
+              className={inputClassName}
+              value={formValues.name}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, name: event.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Category</label>
+            <input
+              className={inputClassName}
+              value={formValues.category}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, category: event.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Usage Count</label>
+            <input
+              type="number"
+              min={0}
+              className={inputClassName}
+              value={formValues.usage}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, usage: Number(event.target.value) }))}
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Owner</label>
+            <input
+              className={inputClassName}
+              value={formValues.owner}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, owner: event.target.value }))}
+              required
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className={labelClassName}>Description</label>
+            <textarea
+              className={`${inputClassName} min-h-[96px]`}
+              value={formValues.description}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, description: event.target.value }))}
+              placeholder="Describe what this template provides"
+              required
+            />
+          </div>
+        </div>
+      </Section>
+
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+        >
+          <Save className="w-4 h-4" />
+          {mode === 'create' ? 'Create Template' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const MarketplaceForm: React.FC<MarketplaceFormProps> = ({ mode, initialData, onSubmit, onCancel }) => {
+  const [formValues, setFormValues] = useState<MarketplaceFormValues>({
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    category: initialData?.category || '',
+    downloads: initialData?.downloads || 0,
+    rating: initialData?.rating ? parseFloat(initialData.rating) : 0,
+    price: initialData?.price || 99,
+    owner: initialData?.owner || 'Internal',
+    createdAt: initialData?.createdAt || new Date().toISOString(),
+  });
+
+  useEffect(() => {
+    setFormValues({
+      name: initialData?.name || '',
+      description: initialData?.description || '',
+      category: initialData?.category || '',
+      downloads: initialData?.downloads || 0,
+      rating: initialData?.rating ? parseFloat(initialData.rating) : 0,
+      price: initialData?.price || 99,
+      owner: initialData?.owner || 'Internal',
+      createdAt: initialData?.createdAt || new Date().toISOString(),
+    });
+  }, [initialData]);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit(formValues);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Section title="Marketplace Listing">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClassName}>Name</label>
+            <input
+              className={inputClassName}
+              value={formValues.name}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, name: event.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Category</label>
+            <input
+              className={inputClassName}
+              value={formValues.category}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, category: event.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Price ($)</label>
+            <input
+              type="number"
+              min={0}
+              className={inputClassName}
+              value={formValues.price}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, price: Number(event.target.value) }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Owner</label>
+            <input
+              className={inputClassName}
+              value={formValues.owner}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, owner: event.target.value }))}
+              required
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Downloads</label>
+            <input
+              type="number"
+              min={0}
+              className={inputClassName}
+              value={formValues.downloads}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, downloads: Number(event.target.value) }))}
+            />
+          </div>
+          <div>
+            <label className={labelClassName}>Rating (0-5)</label>
+            <input
+              type="number"
+              min={0}
+              max={5}
+              step={0.1}
+              className={inputClassName}
+              value={formValues.rating}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, rating: Number(event.target.value) }))}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className={labelClassName}>Description</label>
+            <textarea
+              className={`${inputClassName} min-h-[96px]`}
+              value={formValues.description}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, description: event.target.value }))}
+              placeholder="Describe what this marketplace item provides"
+              required
+            />
+          </div>
+        </div>
+      </Section>
+
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+        >
+          <Save className="w-4 h-4" />
+          {mode === 'create' ? 'List Item' : 'Save Changes'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 const iconMap: Record<EntityType, React.ComponentType<{ className?: string }>> = {
   client: Building2,
   project: FolderOpen,
   team: Users,
   tool: Wrench,
+};
+
+const extendedIconMap: Record<EntityType | 'template' | 'marketplace', React.ComponentType<{ className?: string }>> = {
+  ...iconMap,
+  template: FileText,
+  marketplace: ShoppingBag,
 };
 
 const titleMap: Record<EntityType, string> = {
@@ -812,11 +1084,23 @@ const titleMap: Record<EntityType, string> = {
   tool: 'Tool',
 };
 
+const extendedTitleMap: Record<EntityType | 'template' | 'marketplace', string> = {
+  ...titleMap,
+  template: 'Template',
+  marketplace: 'Marketplace Item',
+};
+
 const descriptionMap: Record<EntityType, string> = {
   client: 'Track partner organizations with all of the essentials in one place.',
   project: 'Organize initiatives, attach contributors, and capture context.',
   team: 'Invite collaborators and keep their skills current.',
   tool: 'Catalog automations, agents, and AI workflows across the business.',
+};
+
+const extendedDescriptionMap: Record<EntityType | 'template' | 'marketplace', string> = {
+  ...descriptionMap,
+  template: 'Create reusable templates for common workflows and processes.',
+  marketplace: 'List your solutions in the marketplace for others to discover.',
 };
 
 export const EntityFormModal: React.FC<EntityFormModalProps> = ({
@@ -832,8 +1116,8 @@ export const EntityFormModal: React.FC<EntityFormModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const Icon = iconMap[type];
-  const title = titleMap[type];
+  const Icon = extendedIconMap[type as keyof typeof extendedIconMap];
+  const title = extendedTitleMap[type as keyof typeof extendedTitleMap];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--fg)]/10 backdrop-blur-sm p-4">
@@ -847,7 +1131,7 @@ export const EntityFormModal: React.FC<EntityFormModalProps> = ({
               <h2 className="text-lg font-semibold text-[var(--fg)]">
                 {mode === 'create' ? `Create ${title}` : `Edit ${title}`}
               </h2>
-              <p className="text-sm text-[var(--fg-muted)]">{descriptionMap[type]}</p>
+              <p className="text-sm text-[var(--fg-muted)]">{extendedDescriptionMap[type as keyof typeof extendedDescriptionMap]}</p>
             </div>
           </div>
           <button
@@ -898,6 +1182,24 @@ export const EntityFormModal: React.FC<EntityFormModalProps> = ({
               projects={projects}
               teamMembers={teamMembers}
               onSubmit={onSubmit as (values: ToolFormValues) => void}
+              onCancel={onClose}
+            />
+          )}
+
+          {type === 'template' && (
+            <TemplateForm
+              mode={mode}
+              initialData={initialData}
+              onSubmit={onSubmit as (values: TemplateFormValues) => void}
+              onCancel={onClose}
+            />
+          )}
+
+          {type === 'marketplace' && (
+            <MarketplaceForm
+              mode={mode}
+              initialData={initialData}
+              onSubmit={onSubmit as (values: MarketplaceFormValues) => void}
               onCancel={onClose}
             />
           )}
