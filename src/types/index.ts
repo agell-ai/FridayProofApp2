@@ -168,6 +168,7 @@ export interface ClientTemplate {
 
 export interface ClientInvoice {
   id: string;
+  clientId: string;
   number: string;
   amount: number;
   status: 'paid' | 'pending' | 'overdue';
@@ -177,6 +178,7 @@ export interface ClientInvoice {
 
 export interface ClientProposal {
   id: string;
+  clientId: string;
   title: string;
   value: number;
   status: 'draft' | 'sent' | 'accepted' | 'rejected';

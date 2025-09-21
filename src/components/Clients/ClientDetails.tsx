@@ -49,7 +49,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onClose }) => {
             </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {client.name}
+                {client.companyName}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">{client.industry}</p>
             </div>
@@ -76,8 +76,8 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onClose }) => {
                   <Mail className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                    <a href={`mailto:${client.email}`} className="text-blue-600 hover:text-blue-700">
-                      {client.email}
+                    <a href={`mailto:${client.contacts[0]?.email}`} className="text-blue-600 hover:text-blue-700">
+                      {client.contacts[0]?.email}
                     </a>
                   </div>
                 </div>
@@ -86,7 +86,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onClose }) => {
                   <Phone className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
-                    <p className="text-gray-900 dark:text-white">{client.phone}</p>
+                    <p className="text-gray-900 dark:text-white">{client.contacts[0]?.phone}</p>
                   </div>
                 </div>
 
@@ -126,12 +126,12 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onClose }) => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
-                    <p className="text-2xl font-bold text-green-600">${totalRevenue.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-green-600">${client.analytics.totalRevenue.toLocaleString()}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Project Value</p>
-                    <p className="text-2xl font-bold text-blue-600">${projectMetrics.totalValue.toLocaleString()}</p>
-                  </div>
+                    <p className="text-2xl font-bold text-blue-600">${client.projects.reduce((sum, p) => sum + p.budget, 0).toLocaleString()}</p>
+                  <p className="text-gray-900 dark:text-white">{client.location}</p>
                 </div>
               </div>
 
@@ -167,8 +167,8 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onClose }) => {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500 dark:text-gray-400">Status:</span>
                         <span className={`px-2 py-1 rounded-full text-xs ${
-                          project.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          project.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                          project.status === 'deployed' ? 'bg-green-100 text-green-800' :
+                          project.status === 'development' ? 'bg-blue-100 text-blue-800' :
                           'bg-yellow-100 text-yellow-800'
                         }`}>
                           {project.status}
@@ -176,12 +176,12 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onClose }) => {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500 dark:text-gray-400">Budget:</span>
-                        <span className="text-gray-900 dark:text-white">${project.budget?.toLocaleString()}</span>
+                        <span className="text-gray-900 dark:text-white">${project.budget.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Updated:</span>
+                        <span className="text-gray-500 dark:text-gray-400">Started:</span>
                         <span className="text-gray-900 dark:text-white">
-                          {new Date(project.updatedAt).toLocaleDateString()}
+                          {new Date(project.startDate).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -212,7 +212,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onClose }) => {
                     {clientInvoices.map((invoice) => (
                       <tr key={invoice.id}>
                         <td className="border border-gray-200 dark:border-gray-700 px-4 py-2">
-                          {invoice.invoiceNumber}
+                          {invoice.number}
                         </td>
                         <td className="border border-gray-200 dark:border-gray-700 px-4 py-2">
                           ${invoice.amount.toLocaleString()}
