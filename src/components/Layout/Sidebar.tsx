@@ -12,12 +12,16 @@ interface SidebarProps {
   onViewChange: (view: ViewId) => void;
 }
 
+const MENU_ITEM_IDS: ViewId[] = ['dashboard', 'company', 'clients', 'projects', 'team'];
+
+const allMenuItems = NAVIGATION_ITEMS.filter((item) => MENU_ITEM_IDS.includes(item.id));
+
 const Sidebar: React.FC<SidebarProps> = ({ activeView, availablePages, onViewChange }) => {
   const { user, account, logout } = useAuth();
 
   if (!user || !account) return null;
 
-  const menuItems = NAVIGATION_ITEMS.filter((item) => availablePages.includes(item.id));
+  const menuItems = allMenuItems.filter((item) => availablePages.includes(item.id));
 
   return (
     <div className="w-64 bg-[var(--bg-start)] border-r border-[var(--border)] flex flex-col">
