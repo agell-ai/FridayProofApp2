@@ -24,6 +24,13 @@ import { Client, ClientInvoice, ClientProposal, Project, System, TeamMember } fr
 
 type WorkspaceView = 'project' | 'client' | 'team';
 
+type SummaryStat = {
+  label: string;
+  value: number;
+  filterKey: string;
+  isActive: boolean;
+};
+
 const viewLabels: Record<WorkspaceView, string> = {
   project: 'Projects',
   client: 'Clients',
@@ -121,6 +128,9 @@ const Workspaces: React.FC = () => {
 
   const [selectedView, setSelectedView] = useState<WorkspaceView>('project');
   const [searchTerm, setSearchTerm] = useState('');
+  const [projectStatusFilter, setProjectStatusFilter] = useState<Project['status'] | 'all'>('all');
+  const [clientStatusFilter, setClientStatusFilter] = useState<Client['status'] | 'all'>('all');
+  const [teamTypeFilter, setTeamTypeFilter] = useState<TeamMember['type'] | 'all'>('all');
   const [formState, setFormState] = useState<FormState | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -164,11 +174,17 @@ const Workspaces: React.FC = () => {
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
   const projectResults = useMemo(() => {
-    if (!normalizedSearch) {
-      return projects;
-    }
-
     return projects.filter((project) => {
+      const matchesStatus =
+        projectStatusFilter === 'all' || project.status === projectStatusFilter;
+      if (!matchesStatus) {
+        return false;
+      }
+
+      if (!normalizedSearch) {
+        return true;
+      }
+
       const client = clients.find((item) => item.id === project.clientId);
       const values = [
         project.name,
@@ -178,25 +194,41 @@ const Workspaces: React.FC = () => {
       ];
       return values.some((value) => value.toLowerCase().includes(normalizedSearch));
     });
-  }, [projects, clients, normalizedSearch]);
+  }, [projects, clients, normalizedSearch, projectStatusFilter]);
 
   const clientResults = useMemo(() => {
-    if (!normalizedSearch) {
-      return clients;
-    }
-
     return clients.filter((client) => {
+      const matchesStatus =
+        clientStatusFilter === 'all' || client.status === clientStatusFilter;
+      if (!matchesStatus) {
+        return false;
+      }
+
+      if (!normalizedSearch) {
+        return true;
+      }
+
       const values = [client.companyName, client.status, client.industry, client.location];
       return values.some((value) => value.toLowerCase().includes(normalizedSearch));
     });
-  }, [clients, normalizedSearch]);
+  }, [clients, normalizedSearch, clientStatusFilter]);
 
   const teamResults = useMemo(() => {
-    if (!normalizedSearch) {
-      return teamMembers;
-    }
-
     return teamMembers.filter((member) => {
+      const matchesType =
+        teamTypeFilter === 'all'
+          ? true
+          : teamTypeFilter === 'inactive'
+            ? member.type === 'inactive' || member.status === 'inactive'
+            : member.type === teamTypeFilter;
+      if (!matchesType) {
+        return false;
+      }
+
+      if (!normalizedSearch) {
+        return true;
+      }
+
       const values = [
         member.name,
         member.email,
@@ -208,11 +240,11 @@ const Workspaces: React.FC = () => {
       ];
       return values.some((value) => value.toLowerCase().includes(normalizedSearch));
     });
-  }, [teamMembers, normalizedSearch]);
+  }, [teamMembers, normalizedSearch, teamTypeFilter]);
 
   const isLoading = loadingClients || loadingProjects || loadingTeam;
 
-  const summaryStats = useMemo(() => {
+  const summaryStats = useMemo<SummaryStat[]>(() => {
     if (selectedView === 'project') {
       const statusOrder: Project['status'][] = [
         'deployed',
@@ -222,44 +254,105 @@ const Workspaces: React.FC = () => {
         'maintenance',
       ];
 
-      return statusOrder.map((status) => ({
-        label: formatMetricLabel(status),
-        value: projects.filter((project) => project.status === status).length,
-      }));
+      return [
+        {
+          label: 'Total',
+          value: projects.length,
+          filterKey: 'all',
+          isActive: projectStatusFilter === 'all',
+        },
+        ...statusOrder.map((status) => ({
+          label: formatMetricLabel(status),
+          value: projects.filter((project) => project.status === status).length,
+          filterKey: status,
+          isActive: projectStatusFilter === status,
+        })),
+      ];
     }
 
     if (selectedView === 'client') {
-      const total = clients.length;
-      const active = clients.filter((client) => client.status === 'active').length;
-      const prospects = clients.filter((client) => client.status === 'prospect').length;
-      const inactive = clients.filter((client) => client.status === 'inactive').length;
+      const statusStats: Array<{ key: Client['status']; label: string }> = [
+        { key: 'active', label: 'Active' },
+        { key: 'prospect', label: 'Prospects' },
+        { key: 'inactive', label: 'Inactive' },
+      ];
 
       return [
-        { label: 'Total', value: total },
-        { label: 'Active', value: active },
-        { label: 'Prospects', value: prospects },
-        { label: 'Inactive', value: inactive },
+        {
+          label: 'Total',
+          value: clients.length,
+          filterKey: 'all',
+          isActive: clientStatusFilter === 'all',
+        },
+        ...statusStats.map(({ key, label }) => ({
+          label,
+          value: clients.filter((client) => client.status === key).length,
+          filterKey: key,
+          isActive: clientStatusFilter === key,
+        })),
       ];
     }
 
     if (selectedView === 'team') {
-      const total = teamMembers.length;
-      const internal = teamMembers.filter((member) => member.type === 'internal').length;
-      const external = teamMembers.filter((member) => member.type === 'external').length;
-      const inactive = teamMembers.filter(
+      const inactiveCount = teamMembers.filter(
         (member) => member.type === 'inactive' || member.status === 'inactive'
       ).length;
 
       return [
-        { label: 'Total', value: total },
-        { label: 'Internal', value: internal },
-        { label: 'External', value: external },
-        { label: 'Inactive', value: inactive },
+        {
+          label: 'Total',
+          value: teamMembers.length,
+          filterKey: 'all',
+          isActive: teamTypeFilter === 'all',
+        },
+        {
+          label: 'Internal',
+          value: teamMembers.filter((member) => member.type === 'internal').length,
+          filterKey: 'internal',
+          isActive: teamTypeFilter === 'internal',
+        },
+        {
+          label: 'External',
+          value: teamMembers.filter((member) => member.type === 'external').length,
+          filterKey: 'external',
+          isActive: teamTypeFilter === 'external',
+        },
+        {
+          label: 'Inactive',
+          value: inactiveCount,
+          filterKey: 'inactive',
+          isActive: teamTypeFilter === 'inactive',
+        },
       ];
     }
 
     return [];
-  }, [selectedView, projects, clients, teamMembers]);
+  }, [
+    selectedView,
+    projects,
+    clients,
+    teamMembers,
+    projectStatusFilter,
+    clientStatusFilter,
+    teamTypeFilter,
+  ]);
+
+  const handleSummaryCardClick = (filterKey: string) => {
+    if (selectedView === 'project') {
+      const nextKey = filterKey as Project['status'] | 'all';
+      setProjectStatusFilter((previous) => (previous === nextKey ? 'all' : nextKey));
+      return;
+    }
+
+    if (selectedView === 'client') {
+      const nextKey = filterKey as Client['status'] | 'all';
+      setClientStatusFilter((previous) => (previous === nextKey ? 'all' : nextKey));
+      return;
+    }
+
+    const nextKey = filterKey as TeamMember['type'] | 'all';
+    setTeamTypeFilter((previous) => (previous === nextKey ? 'all' : nextKey));
+  };
 
   const handleFormSubmit = (values: EntityFormValues) => {
     if (!formState) return;
@@ -548,13 +641,26 @@ const Workspaces: React.FC = () => {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {summaryStats.map((stat) => (
-            <div
+            <button
               key={stat.label}
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/60 px-4 py-3"
+              type="button"
+              onClick={() => handleSummaryCardClick(stat.filterKey)}
+              aria-pressed={stat.isActive}
+              className={`rounded-xl border bg-[var(--surface)]/60 px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] ${
+                stat.isActive
+                  ? 'border-[var(--accent-purple)] bg-[var(--accent-purple)]/10 shadow-sm'
+                  : 'border-[var(--border)] hover:border-[var(--accent-purple)]/40 hover:bg-[var(--surface)]/80'
+              }`}
             >
-              <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">{stat.label}</p>
+              <p
+                className={`text-xs uppercase tracking-wide ${
+                  stat.isActive ? 'text-[var(--accent-purple)]' : 'text-[var(--fg-muted)]'
+                }`}
+              >
+                {stat.label}
+              </p>
               <p className="mt-1 text-2xl font-semibold text-[var(--fg)]">{stat.value}</p>
-            </div>
+            </button>
           ))}
         </div>
       </div>
