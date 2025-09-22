@@ -74,7 +74,7 @@ const AppContent: React.FC = () => {
       <div className="flex-1 flex">
         <Sidebar activeView={activeView} availablePages={availablePages} onViewChange={setActiveView} />
         <div className="flex-1 flex flex-col">
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 overflow-auto px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
             <ActiveViewComponent />
           </main>
         </div>

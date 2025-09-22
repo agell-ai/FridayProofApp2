@@ -880,14 +880,16 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedProposal.title}</h2>
               <div className="flex items-center gap-2">
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="gradient"
                   onClick={() => openEditProposalModal(selectedProposal)}
                   disabled={isReadOnlyMode}
-                  className="px-3 py-1.5 rounded-lg bg-gradient-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 text-sm font-semibold"
                 >
                   Edit
-                </button>
+                </Button>
                 <button
                   onClick={() => setSelectedProposal(null)}
                   className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-white/20 dark:hover:bg-white/10"

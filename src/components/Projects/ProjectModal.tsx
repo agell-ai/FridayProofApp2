@@ -6,6 +6,7 @@ import { useTeam } from '../../hooks/useTeam';
 import { useAuth } from '../../hooks/useAuth';
 import TeamMemberModal from '../Clients/TeamMemberModal';
 import ClientModal from './ClientModal';
+import { Button } from '../Shared/Button';
 
 interface ProjectModalProps {
   project: Project;
@@ -165,9 +166,14 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) => {
               <div className="bg-white/20 dark:bg-white/10 border border-white/20 dark:border-white/10 rounded-xl p-6 backdrop-blur-sm">
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h4>
                 <div className="space-y-3">
-                  <button className="w-full bg-gradient-primary text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="gradient"
+                    className="w-full px-4 py-2 font-semibold"
+                  >
                     Add System
-                  </button>
+                  </Button>
                   <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm">
                     Edit Project
                   </button>
