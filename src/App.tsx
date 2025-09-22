@@ -7,29 +7,17 @@ import LoginForm from './components/Auth/LoginForm';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import { Footer } from './components/Shared/Footer';
-import Company from './views/Company';
 import Dashboard from './views/Dashboard';
 import Workspaces from './views/Workspaces';
 import Solutions from './views/Solutions';
-import Analytics from './views/Analytics';
-import Clients from './views/Clients';
-import Projects from './views/Projects';
-import Team from './views/Team';
-import Tools from './views/Tools';
 import { DEFAULT_VIEW_ID } from './lib/navigation';
 import { getAvailablePages } from './utils/permissions';
 import type { ViewId } from './types/navigation';
 
 const VIEW_COMPONENTS: Record<ViewId, React.ComponentType> = {
   dashboard: Dashboard,
-  company: Company,
-  clients: Clients,
-  projects: Projects,
-  team: Team,
   workspaces: Workspaces,
-  tools: Tools,
   solutions: Solutions,
-  analytics: Analytics,
 };
 
 const AppContent: React.FC = () => {

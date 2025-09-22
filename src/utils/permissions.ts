@@ -12,27 +12,11 @@ export const titles: Record<ViewId, string> = NAVIGATION_ITEMS.reduce(
   {} as Record<ViewId, string>,
 );
 
-const BUSINESS_RESTRICTED_PAGES: ViewId[] = allPages.filter((page) => page !== 'clients');
+const BUSINESS_RESTRICTED_PAGES: ViewId[] = allPages;
 
-const CONTRACTOR_ALLOWED_PAGES: ViewId[] = [
-  'dashboard',
-  'projects',
-  'team',
-  'workspaces',
-  'tools',
-  'solutions',
-  'analytics',
-];
+const CONTRACTOR_ALLOWED_PAGES: ViewId[] = ['dashboard', 'workspaces', 'solutions'];
 
-const CLIENT_ALLOWED_PAGES: ViewId[] = [
-  'dashboard',
-  'company',
-  'projects',
-  'workspaces',
-  'tools',
-  'solutions',
-  'analytics',
-];
+const CLIENT_ALLOWED_PAGES: ViewId[] = ['dashboard', 'workspaces', 'solutions'];
 
 const filterPages = (pages: ViewId[], allowed: ViewId[]): ViewId[] =>
   pages.filter((page): page is ViewId => allowed.includes(page));

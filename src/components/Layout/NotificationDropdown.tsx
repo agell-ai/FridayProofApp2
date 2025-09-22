@@ -169,7 +169,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onNavigate 
             <div className="border-t border-[var(--border)] bg-[var(--surface)] px-4 py-3">
               <button
                 onClick={() => {
-                  onNavigate('notifications');
+                  onNavigate('dashboard');
                   setIsOpen(false);
                 }}
                 className="w-full text-center text-sm text-[var(--accent-purple)] transition-colors hover:text-[var(--accent-pink)]"
