@@ -17,11 +17,12 @@ import { useProjects } from '../hooks/useProjects';
 import { Project } from '../types';
 import {
   DATE_RANGE_OPTIONS,
+  DEFAULT_TIME_RANGE,
   DateRangeKey,
   getDateRange,
   getDateRangeLabel,
   isDateWithinRange,
-} from '../utils/dateRanges';
+} from '../utils/timeRanges';
 
 type StatusFilterValue = 'all' | Project['status'];
 type MetricKey = 'total' | 'completed' | 'in-progress' | 'new';
@@ -105,7 +106,7 @@ const Projects: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('all');
   const [activeMetric, setActiveMetric] = useState<MetricKey>('total');
-  const [timeRange, setTimeRange] = useState<DateRangeKey>('all');
+  const [timeRange, setTimeRange] = useState<DateRangeKey>(DEFAULT_TIME_RANGE);
 
   const availableStatuses = useMemo(() => {
     const statuses = new Set<Project['status']>();
