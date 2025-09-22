@@ -1,9 +1,13 @@
-import { LayoutDashboard, PanelsTopLeft, Share2 } from 'lucide-react';
+import { FolderOpen, Handshake, LayoutDashboard, PanelsTopLeft, Share2, Users, Wrench } from 'lucide-react';
 
 import type { NavigationItem, ViewId } from '../types/navigation';
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'projects-metrics', label: 'Project Metrics', icon: FolderOpen },
+  { id: 'systems-metrics', label: 'Systems Metrics', icon: Wrench },
+  { id: 'clients-metrics', label: 'Client Metrics', icon: Handshake },
+  { id: 'team-metrics', label: 'Team Metrics', icon: Users },
   { id: 'workspaces', label: 'Workspaces', icon: PanelsTopLeft },
   { id: 'solutions', label: 'Solutions Hub', icon: Share2 },
 ];

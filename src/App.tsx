@@ -10,14 +10,22 @@ import { Footer } from './components/Shared/Footer';
 import Dashboard from './views/Dashboard';
 import Workspaces from './views/Workspaces';
 import Solutions from './views/Solutions';
+import ProjectsMetrics from './views/ProjectsMetrics';
+import SystemsMetrics from './views/SystemsMetrics';
+import ClientsMetrics from './views/ClientsMetrics';
+import TeamMetrics from './views/TeamMetrics';
 import { DEFAULT_VIEW_ID } from './lib/navigation';
 import { getAvailablePages } from './utils/permissions';
-import type { ViewId } from './types/navigation';
+import type { ViewComponentProps, ViewId } from './types/navigation';
 
-const VIEW_COMPONENTS: Record<ViewId, React.ComponentType> = {
+const VIEW_COMPONENTS: Record<ViewId, React.ComponentType<ViewComponentProps>> = {
   dashboard: Dashboard,
   workspaces: Workspaces,
   solutions: Solutions,
+  'projects-metrics': ProjectsMetrics,
+  'systems-metrics': SystemsMetrics,
+  'clients-metrics': ClientsMetrics,
+  'team-metrics': TeamMetrics,
 };
 
 const AppContent: React.FC = () => {
@@ -64,7 +72,7 @@ const AppContent: React.FC = () => {
         <Sidebar activeView={activeView} availablePages={availablePages} onViewChange={setActiveView} />
         <div className="flex-1 flex flex-col">
           <main className="flex-1 overflow-auto px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-            <ActiveViewComponent />
+            <ActiveViewComponent onNavigate={setActiveView} />
           </main>
         </div>
       </div>
