@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BarChart3, PlusCircle, Search } from 'lucide-react';
+import { ArrowLeft, BarChart3, Pencil, PlusCircle, Search } from 'lucide-react';
 import { useTools } from '../hooks/useTools';
 import { useProjects } from '../hooks/useProjects';
 import { useClients } from '../hooks/useClients';
@@ -99,6 +99,373 @@ const deterministicNumber = (seed: string, min: number, max: number) => {
   return Math.round(min + ratio * (max - min));
 };
 
+const toTitleCase = (value: string) =>
+  value
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const clampPercent = (value: number) => {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(100, Math.round(value)));
+};
+
+const progressWidth = (value: number) => {
+  const percent = clampPercent(value);
+  if (percent <= 0) {
+    return '0%';
+  }
+  return `${Math.max(percent, 6)}%`;
+};
+
+const formatDate = (value?: string) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString();
+};
+
+type ActiveDetailViewProps = {
+  entry: ActiveItemEntry;
+  roiMetrics?: RoiMetricRecord;
+  onBack: () => void;
+  onEdit: () => void;
+  onManageRoi: () => void;
+  roiAvailable: boolean;
+};
+
+const ActiveDetailView: React.FC<ActiveDetailViewProps> = ({
+  entry,
+  roiMetrics,
+  onBack,
+  onEdit,
+  onManageRoi,
+  roiAvailable,
+}) => {
+  const isTool = entry.meta.kind === 'tool';
+  const roi = {
+    costSavings: roiMetrics?.costSavings ?? 0,
+    hoursSaved: roiMetrics?.hoursSaved ?? 0,
+    revenueGenerated: roiMetrics?.revenueGenerated ?? 0,
+    adoptionRate: roiMetrics?.adoptionRate ?? 0,
+    efficiencyGain: roiMetrics?.efficiencyGain ?? 0,
+    lastUpdated: roiMetrics?.lastUpdated,
+  };
+
+  const roiBarData = [
+    {
+      label: 'Cost Savings',
+      display: formatCurrency(roi.costSavings),
+      percent: (roi.costSavings / 150000) * 100,
+    },
+    {
+      label: 'Revenue Impact',
+      display: formatCurrency(roi.revenueGenerated),
+      percent: (roi.revenueGenerated / 200000) * 100,
+    },
+    {
+      label: 'Hours Saved',
+      display: `${formatNumber(roi.hoursSaved)} hrs`,
+      percent: (roi.hoursSaved / 2000) * 100,
+    },
+  ];
+
+  const detailItems = isTool
+    ? [
+        { label: 'Project', value: entry.meta.tool.projectName || 'Unassigned' },
+        { label: 'Client', value: entry.meta.tool.clientName || 'Internal' },
+        { label: 'Category', value: toTitleCase(entry.meta.tool.category) },
+        { label: 'Status', value: toTitleCase(entry.meta.tool.status) },
+        { label: 'Created', value: formatDate(entry.meta.tool.createdAt) },
+        { label: 'Last Updated', value: formatDate(entry.meta.tool.updatedAt) },
+      ]
+    : [
+        { label: 'Project', value: entry.meta.project.name },
+        { label: 'Client', value: entry.meta.client?.companyName || 'Internal' },
+        { label: 'System Type', value: toTitleCase(entry.meta.system.type) },
+        { label: 'Status', value: toTitleCase(entry.meta.system.status) },
+        { label: 'Created', value: formatDate(entry.meta.system.createdAt) },
+        { label: 'Last Updated', value: formatDate(entry.meta.project.updatedAt) },
+      ];
+
+  const performanceMetrics = isTool
+    ? [
+        {
+          label: 'Usage',
+          value: `${entry.meta.tool.stats.usage}%`,
+          percent: entry.meta.tool.stats.usage,
+        },
+        {
+          label: 'Efficiency',
+          value: `${entry.meta.tool.stats.efficiency}%`,
+          percent: entry.meta.tool.stats.efficiency,
+        },
+        {
+          label: 'Uptime',
+          value: `${entry.meta.tool.stats.uptime}%`,
+          percent: entry.meta.tool.stats.uptime,
+        },
+        {
+          label: 'Reliability',
+          value: `${clampPercent(100 - entry.meta.tool.stats.errorRate)}%`,
+          helper: `Error rate ${entry.meta.tool.stats.errorRate}%`,
+          percent: 100 - entry.meta.tool.stats.errorRate,
+        },
+      ]
+    : [];
+
+  const totalComponents = !isTool ? entry.meta.system.components.length : 0;
+  const activeComponents = !isTool
+    ? entry.meta.system.components.filter((component) => component.status === 'active').length
+    : 0;
+  const connectionCount = !isTool ? entry.meta.system.connections.length : 0;
+  const componentBreakdown = !isTool
+    ? Object.entries(
+        entry.meta.system.components.reduce<Record<string, number>>((accumulator, component) => {
+          const key = component.type;
+          accumulator[key] = (accumulator[key] || 0) + 1;
+          return accumulator;
+        }, {})
+      )
+        .map(([type, count]) => ({
+          type,
+          label: toTitleCase(type),
+          count,
+        }))
+        .sort((a, b) => b.count - a.count)
+    : [];
+
+  const componentDensity = !isTool && totalComponents > 0
+    ? Math.round((connectionCount / totalComponents) * 10) / 10
+    : 0;
+
+  const businessImpact = isTool
+    ? entry.meta.tool.businessImpact
+    : entry.meta.system.businessImpact;
+
+  const renderProgress = (percent: number) => (
+    <div className="h-2 rounded-full bg-[var(--surface)]">
+      <div
+        className="h-2 rounded-full bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)]"
+        style={{ width: progressWidth(percent) }}
+      />
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="w-fit gap-2 text-[var(--fg-muted)] hover:text-[var(--fg)]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to active overview
+        </Button>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onEdit}
+            className="gap-2 text-[var(--fg-muted)] hover:text-[var(--fg)]"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit {isTool ? 'Tool' : 'System'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onManageRoi}
+            disabled={!roiAvailable}
+            className="gap-2 text-[var(--fg-muted)] hover:text-[var(--fg)]"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Manage ROI
+          </Button>
+        </div>
+      </div>
+
+      <Card className="space-y-5 p-6">
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-wide">
+            <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[var(--fg-muted)]">
+              {isTool ? 'Tool' : 'System'}
+            </span>
+            {entry.card.status && (
+              <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-[var(--fg)]">
+                {toTitleCase(entry.card.status)}
+              </span>
+            )}
+          </div>
+          <h2 className="text-2xl font-semibold text-[var(--fg)]">{entry.card.title}</h2>
+          <p className="text-sm text-[var(--fg-muted)] leading-relaxed">{entry.card.description}</p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {detailItems.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/70 p-3"
+            >
+              <p className="text-[11px] uppercase tracking-wide text-[var(--fg-muted)]">{item.label}</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--fg)]">{item.value}</p>
+            </div>
+          ))}
+        </div>
+
+      </Card>
+
+      <Card className="space-y-6 p-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-[var(--fg)]">ROI Overview</h3>
+            <p className="text-sm text-[var(--fg-muted)]">Financial and efficiency signals for this resource.</p>
+          </div>
+          <p className="text-xs text-[var(--fg-muted)]">
+            Last updated {roi.lastUpdated ? formatDate(roi.lastUpdated) : 'not yet recorded'}
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {roiBarData.map((metric) => (
+            <div key={metric.label} className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[var(--fg-muted)]">{metric.label}</span>
+                <span className="font-semibold text-[var(--fg)]">{metric.display}</span>
+              </div>
+              {renderProgress(metric.percent)}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-[var(--fg-muted)]">Adoption Rate</span>
+              <span className="font-semibold text-[var(--fg)]">{`${clampPercent(roi.adoptionRate)}%`}</span>
+            </div>
+            {renderProgress(roi.adoptionRate)}
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-[var(--fg-muted)]">Efficiency Gain</span>
+              <span className="font-semibold text-[var(--fg)]">{`${clampPercent(roi.efficiencyGain)}%`}</span>
+            </div>
+            {renderProgress(roi.efficiencyGain)}
+          </div>
+        </div>
+      </Card>
+
+      {isTool ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card className="space-y-4 p-6">
+            <h3 className="text-base font-semibold text-[var(--fg)]">Performance Signals</h3>
+            <div className="space-y-3">
+              {performanceMetrics.map((metric) => (
+                <div key={metric.label} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-[var(--fg-muted)]">{metric.label}</span>
+                    <span className="font-semibold text-[var(--fg)]">{metric.value}</span>
+                  </div>
+                  {renderProgress(metric.percent)}
+                  {metric.helper && (
+                    <p className="text-[11px] text-[var(--fg-muted)]">{metric.helper}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="space-y-4 p-6">
+            <h3 className="text-base font-semibold text-[var(--fg)]">Operational Context</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">Total Runs</p>
+                <p className="mt-1 text-lg font-semibold text-[var(--fg)]">{formatNumber(entry.meta.tool.stats.totalRuns)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">Avg Processing Time</p>
+                <p className="mt-1 text-lg font-semibold text-[var(--fg)]">{`${(entry.meta.tool.stats.processingTime / 1000).toFixed(1)}s`}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">Team Contributors</p>
+                <p className="mt-1 text-lg font-semibold text-[var(--fg)]">{entry.meta.tool.teamMembers.length}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">Uptime (rolling)</p>
+                <p className="mt-1 text-lg font-semibold text-[var(--fg)]">{`${entry.meta.tool.stats.uptime}%`}</p>
+              </div>
+            </div>
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)]/60 p-4">
+              <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">Business Notes</p>
+              <p className="mt-2 text-sm text-[var(--fg)] leading-relaxed">
+                {businessImpact || 'Document the business impact to capture measurable outcomes for stakeholders.'}
+              </p>
+            </div>
+          </Card>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card className="space-y-4 p-6">
+              <h3 className="text-base font-semibold text-[var(--fg)]">System Footprint</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">Components</p>
+                  <p className="mt-1 text-lg font-semibold text-[var(--fg)]">{formatNumber(totalComponents)}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">Active Components</p>
+                  <p className="mt-1 text-lg font-semibold text-[var(--fg)]">{formatNumber(activeComponents)}</p>
+                  <div className="mt-2">{renderProgress((activeComponents / (totalComponents || 1)) * 100)}</div>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">Connections</p>
+                  <p className="mt-1 text-lg font-semibold text-[var(--fg)]">{formatNumber(connectionCount)}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">Integration Density</p>
+                  <p className="mt-1 text-lg font-semibold text-[var(--fg)]">{componentDensity.toFixed(1)}</p>
+                  <p className="text-[11px] text-[var(--fg-muted)]">Connections per component</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="space-y-4 p-6">
+              <h3 className="text-base font-semibold text-[var(--fg)]">Component Mix</h3>
+              <div className="space-y-3">
+                {componentBreakdown.map((item) => (
+                  <div key={item.type} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-[var(--fg-muted)]">{item.label}</span>
+                      <span className="font-semibold text-[var(--fg)]">{formatNumber(item.count)}</span>
+                    </div>
+                    {renderProgress((item.count / (totalComponents || 1)) * 100)}
+                  </div>
+                ))}
+                {componentBreakdown.length === 0 && (
+                  <p className="text-sm text-[var(--fg-muted)]">No components recorded yet.</p>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          <Card className="space-y-3 p-6">
+            <h3 className="text-base font-semibold text-[var(--fg)]">Business Notes</h3>
+            <p className="text-sm text-[var(--fg)] leading-relaxed">
+              {businessImpact || 'Document the business impact to inform delivery and ROI conversations.'}
+            </p>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Solutions: React.FC = () => {
   const { tools, isLoading: loadingTools, createTool, updateTool } = useTools();
   const { projects, updateProject } = useProjects();
@@ -114,6 +481,8 @@ const Solutions: React.FC = () => {
   const [templateFormState, setTemplateFormState] = useState<TemplateModalState | null>(null);
   const [marketplaceFormState, setMarketplaceFormState] = useState<MarketplaceModalState | null>(null);
   const [isRoiManagerOpen, setIsRoiManagerOpen] = useState(false);
+  const [selectedActiveEntry, setSelectedActiveEntry] = useState<ActiveItemEntry | null>(null);
+  const [roiManagerDefaultKey, setRoiManagerDefaultKey] = useState<string | null>(null);
   const [templateDescriptions, setTemplateDescriptions] = useState<Record<string, string>>({});
   const [marketplaceDescriptions, setMarketplaceDescriptions] = useState<Record<string, string>>({});
   const [marketplaceMetrics, setMarketplaceMetrics] = useState<Record<string, { downloads: number; rating: number }>>({});
@@ -134,6 +503,12 @@ const Solutions: React.FC = () => {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [showCreateMenu]);
+
+  useEffect(() => {
+    if (activeView !== 'active') {
+      setSelectedActiveEntry(null);
+    }
+  }, [activeView]);
 
   useEffect(() => {
     setTemplateDescriptions((prev) => {
@@ -306,6 +681,45 @@ const Solutions: React.FC = () => {
     [roiMetrics]
   );
 
+  const getActiveEntryKey = (entry: ActiveItemEntry) =>
+    entry.meta.kind === 'tool'
+      ? `tool-${entry.meta.tool.id}`
+      : `system-${entry.meta.system.id}`;
+
+  const handleEditActiveEntry = (entry: ActiveItemEntry) => {
+    if (entry.meta.kind === 'tool') {
+      setToolFormState({ mode: 'edit', tool: entry.meta.tool });
+      return;
+    }
+
+    setSystemFormState({
+      mode: 'edit',
+      initialValues: {
+        systemId: entry.meta.system.id,
+        projectId: entry.meta.project.id,
+        name: entry.meta.system.name,
+        description: entry.meta.system.description,
+        status: entry.meta.system.status,
+        type: entry.meta.system.type,
+        businessImpact: entry.meta.system.businessImpact,
+      },
+    });
+  };
+
+  const handleSelectActiveEntry = (entry: ActiveItemEntry) => {
+    setSelectedActiveEntry(entry);
+    setShowCreateMenu(false);
+  };
+
+  const handleOpenRoiManagerForEntry = (entry: ActiveItemEntry) => {
+    setRoiManagerDefaultKey(getActiveEntryKey(entry));
+    setIsRoiManagerOpen(true);
+  };
+
+  const handleBackToActiveList = () => {
+    setSelectedActiveEntry(null);
+  };
+
   const activeItems = useMemo<ActiveItemEntry[]>(() => {
     const entries: ActiveItemEntry[] = [];
 
@@ -456,6 +870,17 @@ const Solutions: React.FC = () => {
       return searchable.some((value) => value.includes(normalizedSearch));
     });
   }, [activeItems, activeStatusFilter, searchTerm]);
+
+  useEffect(() => {
+    if (!selectedActiveEntry) {
+      return;
+    }
+
+    const exists = filteredActiveItems.some((entry) => entry.card.id === selectedActiveEntry.card.id);
+    if (!exists) {
+      setSelectedActiveEntry(null);
+    }
+  }, [filteredActiveItems, selectedActiveEntry]);
 
   const filteredLibraryItems = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -832,6 +1257,10 @@ const Solutions: React.FC = () => {
 
   const isActiveView = activeView === 'active';
   const isLibraryView = activeView === 'library';
+  const selectedResourceKey = selectedActiveEntry ? getActiveEntryKey(selectedActiveEntry) : null;
+  const isSelectedResourceAvailable = selectedResourceKey
+    ? resourceOptions.some((option) => option.key === selectedResourceKey)
+    : false;
   const hasResults = isActiveView
     ? filteredActiveItems.length > 0
     : isLibraryView
@@ -887,19 +1316,6 @@ const Solutions: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {isActiveView && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsRoiManagerOpen(true)}
-                  disabled={resourceOptions.length === 0}
-                  className="gap-2 text-[var(--fg-muted)] hover:text-[var(--fg)]"
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  Manage ROI
-                </Button>
-              )}
-
               <div ref={isActiveView ? createMenuRef : undefined} className="relative">
                 <Button variant="primary" size="sm" glowOnHover onClick={handleCreateClick} className="flex items-center gap-2">
                   <PlusCircle className="h-4 w-4" />
@@ -937,6 +1353,7 @@ const Solutions: React.FC = () => {
                   key={stat.label}
                   glowOnHover
                   activeGlow={isSelected}
+                  glowStyle="outline"
                   onClick={() => setActiveStatusFilter(stat.filter)}
                   className={`p-4 ${isSelected ? 'border-[var(--accent-purple)] bg-[var(--surface)]' : ''}`}
                 >
@@ -959,79 +1376,80 @@ const Solutions: React.FC = () => {
           <p className="mt-2 text-sm">Try refining your filters or search keywords.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {isActiveView &&
-            filteredActiveItems.map((entry) => (
-              <SolutionCard
-                key={`active-${entry.card.id}`}
-                data={entry.card}
-                onEdit={() => {
-                  if (entry.meta.kind === 'tool') {
-                    setToolFormState({ mode: 'edit', tool: entry.meta.tool });
-                  } else {
-                    setSystemFormState({
+        <>
+          {isActiveView ? (
+            selectedActiveEntry ? (
+              <ActiveDetailView
+                entry={selectedActiveEntry}
+                roiMetrics={selectedResourceKey ? roiMetrics[selectedResourceKey] : undefined}
+                onBack={handleBackToActiveList}
+                onEdit={() => handleEditActiveEntry(selectedActiveEntry)}
+                onManageRoi={() => handleOpenRoiManagerForEntry(selectedActiveEntry)}
+                roiAvailable={isSelectedResourceAvailable}
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {filteredActiveItems.map((entry) => (
+                  <SolutionCard
+                    key={`active-${entry.card.id}`}
+                    data={entry.card}
+                    onSelect={() => handleSelectActiveEntry(entry)}
+                    onEdit={() => handleEditActiveEntry(entry)}
+                    showTags={false}
+                    onCreateTemplate={() => handleCreateTemplateFromActive(entry)}
+                  />
+                ))}
+              </div>
+            )
+          ) : isLibraryView ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {filteredLibraryItems.map((entry) => (
+                <SolutionCard
+                  key={`library-${entry.card.id}`}
+                  data={entry.card}
+                  onEdit={() =>
+                    setTemplateFormState({
                       mode: 'edit',
                       initialValues: {
-                        systemId: entry.meta.system.id,
-                        projectId: entry.meta.project.id,
-                        name: entry.meta.system.name,
-                        description: entry.meta.system.description,
-                        status: entry.meta.system.status,
-                        type: entry.meta.system.type,
-                        businessImpact: entry.meta.system.businessImpact,
+                        templateId: entry.meta.template.id,
+                        clientId: entry.meta.client.id,
+                        name: entry.meta.template.name,
+                        category: entry.meta.template.category,
+                        usage: entry.meta.template.usage,
+                        description: entry.meta.description,
                       },
-                    });
+                    })
                   }
-                }}
-                onCreateTemplate={() => handleCreateTemplateFromActive(entry)}
-              />
-            ))}
-
-          {isLibraryView &&
-            filteredLibraryItems.map((entry) => (
-              <SolutionCard
-                key={`library-${entry.card.id}`}
-                data={entry.card}
-                onEdit={() =>
-                  setTemplateFormState({
-                    mode: 'edit',
-                    initialValues: {
-                      templateId: entry.meta.template.id,
-                      clientId: entry.meta.client.id,
-                      name: entry.meta.template.name,
-                      category: entry.meta.template.category,
-                      usage: entry.meta.template.usage,
-                      description: entry.meta.description,
-                    },
-                  })
-                }
-                onListInMarketplace={() => handleListTemplateInMarketplace(entry)}
-              />
-            ))}
-
-          {!isActiveView && !isLibraryView &&
-            filteredMarketplaceItems.map((entry) => (
-              <SolutionCard
-                key={`market-${entry.card.id}`}
-                data={entry.card}
-                onEdit={() =>
-                  setMarketplaceFormState({
-                    mode: 'edit',
-                    initialValues: {
-                      itemId: entry.meta.item.id,
-                      clientId: entry.meta.client.id,
-                      name: entry.meta.item.name,
-                      type: entry.meta.item.type,
-                      category: entry.meta.item.category,
-                      description: entry.meta.description,
-                      downloads: entry.meta.downloads,
-                      rating: entry.meta.rating,
-                    },
-                  })
-                }
-              />
-            ))}
-        </div>
+                  onListInMarketplace={() => handleListTemplateInMarketplace(entry)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {filteredMarketplaceItems.map((entry) => (
+                <SolutionCard
+                  key={`market-${entry.card.id}`}
+                  data={entry.card}
+                  onEdit={() =>
+                    setMarketplaceFormState({
+                      mode: 'edit',
+                      initialValues: {
+                        itemId: entry.meta.item.id,
+                        clientId: entry.meta.client.id,
+                        name: entry.meta.item.name,
+                        type: entry.meta.item.type,
+                        category: entry.meta.item.category,
+                        description: entry.meta.description,
+                        downloads: entry.meta.downloads,
+                        rating: entry.meta.rating,
+                      },
+                    })
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <EntityFormModal
@@ -1075,11 +1493,15 @@ const Solutions: React.FC = () => {
 
       <RoiManagerModal
         isOpen={isRoiManagerOpen}
-        onClose={() => setIsRoiManagerOpen(false)}
+        onClose={() => {
+          setIsRoiManagerOpen(false);
+          setRoiManagerDefaultKey(null);
+        }}
         resourceOptions={resourceOptions}
         metricsMap={roiMetrics}
         onManualUpdate={handleManualRoiUpdate}
         onBulkImport={handleBulkRoiImport}
+        defaultKey={roiManagerDefaultKey || undefined}
       />
     </div>
   );

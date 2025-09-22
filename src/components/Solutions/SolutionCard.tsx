@@ -47,6 +47,8 @@ interface SolutionCardProps {
   onEdit?: (data: SolutionCardData) => void;
   onCreateTemplate?: (data: SolutionCardData) => void;
   onListInMarketplace?: (data: SolutionCardData) => void;
+  onSelect?: (data: SolutionCardData) => void;
+  showTags?: boolean;
 }
 
 const typeConfig: Record<SolutionType, { label: string; icon: React.ComponentType<{ className?: string }>; badgeClass: string }> = {
@@ -97,6 +99,8 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
   onEdit,
   onCreateTemplate,
   onListInMarketplace,
+  onSelect,
+  showTags = true,
 }) => {
   const type = typeConfig[data.type];
   const StatusIcon = type.icon;
@@ -104,8 +108,33 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
 
   const hasFooterActions = Boolean(onCreateTemplate || onListInMarketplace);
 
+  const handleEditClick: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.stopPropagation();
+    if (onEdit) {
+      onEdit(data);
+    }
+  };
+
+  const handleCreateTemplateClick: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.stopPropagation();
+    if (onCreateTemplate) {
+      onCreateTemplate(data);
+    }
+  };
+
+  const handleListInMarketplaceClick: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.stopPropagation();
+    if (onListInMarketplace) {
+      onListInMarketplace(data);
+    }
+  };
+
   return (
-    <Card glowOnHover className="p-6 h-full flex flex-col gap-5">
+    <Card
+      glowOnHover
+      className="p-6 h-full flex flex-col gap-5"
+      onClick={onSelect ? () => onSelect(data) : undefined}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-[var(--surface)] flex items-center justify-center">
@@ -129,7 +158,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
         {onEdit && (
           <button
             type="button"
-            onClick={() => onEdit(data)}
+            onClick={handleEditClick}
             className="p-2 rounded-full text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface)] transition"
             aria-label={`Edit ${data.title}`}
           >
@@ -206,7 +235,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
         </div>
       )}
 
-      {data.tags.length > 0 && (
+      {showTags && data.tags.length > 0 && (
         <div className="flex flex-wrap gap-2 text-xs text-[var(--fg-muted)]">
           {data.tags.slice(0, 6).map((tag) => (
             <span key={`${data.id}-${tag}`} className="px-2 py-1 rounded-full bg-[var(--surface)] capitalize">
@@ -222,7 +251,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
             <Button
               size="xs"
               variant="outline"
-              onClick={() => onCreateTemplate(data)}
+              onClick={handleCreateTemplateClick}
               className="text-[var(--fg-muted)] hover:text-[var(--fg)]"
             >
               Create Template
@@ -232,7 +261,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
             <Button
               size="xs"
               variant="outline"
-              onClick={() => onListInMarketplace(data)}
+              onClick={handleListInMarketplaceClick}
               className="text-[var(--fg-muted)] hover:text-[var(--fg)]"
             >
               List in Marketplace

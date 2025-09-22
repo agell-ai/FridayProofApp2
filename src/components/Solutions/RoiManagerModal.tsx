@@ -11,6 +11,7 @@ interface RoiManagerModalProps {
   metricsMap: Record<string, RoiMetricRecord>;
   onManualUpdate: (key: string, metrics: RoiMetricRecord) => void;
   onBulkImport: (updates: Array<{ key: string; metrics: RoiMetricRecord }>) => void;
+  defaultKey?: string;
 }
 
 interface FeedbackState {
@@ -55,6 +56,7 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
   metricsMap,
   onManualUpdate,
   onBulkImport,
+  defaultKey,
 }) => {
   const [selectedKey, setSelectedKey] = useState<string>('');
   const [formValues, setFormValues] = useState(createEmptyFormState);
@@ -84,10 +86,22 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
       return;
     }
 
+    if (defaultKey && optionMap.has(defaultKey) && selectedKey !== defaultKey) {
+      setSelectedKey(defaultKey);
+      return;
+    }
+
     if (!selectedKey || !optionMap.has(selectedKey)) {
       setSelectedKey(resourceOptions[0].key);
     }
-  }, [isOpen, hasResources, optionMap, resourceOptions, selectedKey]);
+  }, [
+    isOpen,
+    hasResources,
+    optionMap,
+    resourceOptions,
+    selectedKey,
+    defaultKey,
+  ]);
 
   useEffect(() => {
     if (!isOpen) return;
