@@ -88,6 +88,13 @@ const buildSystemsFromNames = (names: string[], project: Project): System[] => {
   return results;
 };
 
+const formatMetricLabel = (value: string) =>
+  value
+    .split(/[-\s]/)
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
+
 const Workspaces: React.FC = () => {
   const {
     clients,
@@ -206,20 +213,53 @@ const Workspaces: React.FC = () => {
   const isLoading = loadingClients || loadingProjects || loadingTeam;
 
   const summaryStats = useMemo(() => {
-    const stats: { label: string; value: number }[] = [
-      { label: 'Projects', value: projects.length },
-    ];
+    if (selectedView === 'project') {
+      const statusOrder: Project['status'][] = [
+        'planning',
+        'development',
+        'testing',
+        'deployed',
+        'maintenance',
+      ];
 
-    if (availableViews.includes('client')) {
-      stats.push({ label: 'Clients', value: clients.length });
+      return statusOrder.map((status) => ({
+        label: formatMetricLabel(status),
+        value: projects.filter((project) => project.status === status).length,
+      }));
     }
 
-    if (availableViews.includes('team')) {
-      stats.push({ label: 'Team Members', value: teamMembers.length });
+    if (selectedView === 'client') {
+      const total = clients.length;
+      const active = clients.filter((client) => client.status === 'active').length;
+      const prospects = clients.filter((client) => client.status === 'prospect').length;
+      const inactive = clients.filter((client) => client.status === 'inactive').length;
+
+      return [
+        { label: 'Total', value: total },
+        { label: 'Active', value: active },
+        { label: 'Prospects', value: prospects },
+        { label: 'Inactive', value: inactive },
+      ];
     }
 
-    return stats;
-  }, [projects.length, clients.length, teamMembers.length, availableViews]);
+    if (selectedView === 'team') {
+      const total = teamMembers.length;
+      const internal = teamMembers.filter((member) => member.type === 'internal').length;
+      const external = teamMembers.filter((member) => member.type === 'external').length;
+      const inactive = teamMembers.filter(
+        (member) => member.type === 'inactive' || member.status === 'inactive'
+      ).length;
+
+      return [
+        { label: 'Total', value: total },
+        { label: 'Internal', value: internal },
+        { label: 'External', value: external },
+        { label: 'Inactive', value: inactive },
+      ];
+    }
+
+    return [];
+  }, [selectedView, projects, clients, teamMembers]);
 
   const handleFormSubmit = (values: EntityFormValues) => {
     if (!formState) return;
@@ -266,6 +306,7 @@ const Workspaces: React.FC = () => {
             name: payload.name,
             email: payload.email,
             role: payload.role,
+            type: payload.type,
             status: payload.status,
             phone: payload.phone,
             city: payload.city,
@@ -277,6 +318,7 @@ const Workspaces: React.FC = () => {
             name: payload.name,
             email: payload.email,
             role: payload.role,
+            type: payload.type,
             status: payload.status,
             phone: payload.phone,
             city: payload.city,

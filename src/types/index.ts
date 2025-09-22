@@ -70,6 +70,7 @@ export interface TeamMember {
   name: string;
   email: string;
   role: 'manager' | 'employee' | 'contractor';
+  type: 'internal' | 'external' | 'inactive';
   avatar?: string;
   skills: string[];
   projectIds: string[];
