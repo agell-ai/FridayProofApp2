@@ -4,6 +4,7 @@ import { useClients } from '../hooks/useClients';
 import { useProjects } from '../hooks/useProjects';
 import { useTeam } from '../hooks/useTeam';
 import { useAuth } from '../hooks/useAuth';
+import type { ViewComponentProps } from '../types/navigation';
 import {
   EntityFormModal,
   EntityFormValues,
@@ -160,7 +161,8 @@ const formatMetricLabel = (value: string) =>
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(' ');
 
-const Workspaces: React.FC = () => {
+const Workspaces: React.FC<ViewComponentProps> = ({ onNavigate }) => {
+  void onNavigate;
   const {
     clients,
     isLoading: loadingClients,

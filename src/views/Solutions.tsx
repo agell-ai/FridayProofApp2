@@ -17,6 +17,7 @@ import { ROI_METRIC_CONFIG, ROI_METRIC_KEYS } from '../types/roi';
 import type { ResourceOption, RoiMetricKey, RoiMetricRecord, RoiMetricUnit } from '../types/roi';
 import type { Client, ClientLibraryItem, ClientTemplate, Project, System } from '../types';
 import { isMarketplaceTemplateAsset, isTemplateAsset } from './solutionsFilters';
+import type { ViewComponentProps } from '../types/navigation';
 
 const hubViews = ['active', 'library', 'marketplace'] as const;
 
@@ -530,7 +531,8 @@ const ActiveDetailView: React.FC<ActiveDetailViewProps> = ({
   );
 };
 
-const Solutions: React.FC = () => {
+const Solutions: React.FC<ViewComponentProps> = ({ onNavigate }) => {
+  void onNavigate;
   const { tools, isLoading: loadingTools, createTool, updateTool } = useTools();
   const { projects, updateProject } = useProjects();
   const { clients, updateClient } = useClients();

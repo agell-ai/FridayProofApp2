@@ -9,6 +9,7 @@ interface StatsCardProps {
   change?: string;
   icon: LucideIcon;
   changeTone?: 'positive' | 'neutral' | 'warning' | 'critical';
+  onClick?: () => void;
 }
 
 const toneStyles = {
@@ -23,12 +24,16 @@ const StatsCard: React.FC<StatsCardProps> = ({
   value,
   change,
   icon: Icon,
-  changeTone = 'positive'
+  changeTone = 'positive',
+  onClick
 }) => {
+  const isInteractive = typeof onClick === 'function';
+
   return (
     <Card
-      glowOnHover={true}
-      className="p-6"
+      glowOnHover={isInteractive}
+      className={`p-6 ${isInteractive ? 'transition-transform duration-300 hover:-translate-y-0.5' : ''}`}
+      onClick={onClick}
     >
       <div className="flex items-center justify-between">
         <div>
