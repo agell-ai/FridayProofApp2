@@ -4,7 +4,6 @@ import { LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { NAVIGATION_ITEMS } from '../../lib/navigation';
 import type { ViewId } from '../../types/navigation';
-import { Logo } from '../Shared/Logo';
 
 interface SidebarProps {
   activeView: ViewId;
@@ -20,7 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, availablePages, onViewCha
   const menuItems = NAVIGATION_ITEMS.filter((item) => availablePages.includes(item.id));
 
   return (
-    <div className="w-64 bg-[var(--bg-start)] border-r border-[var(--border)] flex flex-col">
+    <div className="w-64 flex-shrink-0 bg-[var(--bg-start)] border-r border-[var(--border)] flex flex-col sticky top-20 h-[calc(100vh-5rem)]">
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
