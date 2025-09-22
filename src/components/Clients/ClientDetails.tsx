@@ -1,7 +1,15 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, Building2, MapPin, Globe, Linkedin, Mail, Phone, User, ExternalLink, Calendar, Users, FolderOpen, Wrench, BookOpen, BookTemplate as FileTemplate, FileText, Presentation as PresentationChart, BarChart3, DollarSign, Clock, X } from 'lucide-react';
-import { Client } from '../../types';
+import {
+  Client,
+  ClientInvoice,
+  ClientLibraryItem,
+  ClientProposal,
+  ClientTemplate,
+  Project,
+  TeamMember,
+} from '../../types';
+import { Tool } from '../../types/tools';
 import TeamMemberModal from './TeamMemberModal';
 import ProjectModal from '../Projects/ProjectModal';
 
@@ -28,13 +36,13 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack, onEdit })
   const { tools } = useTools();
   const { user } = useAuth();
   const assignedTeamMembers = getTeamMembersByIds(client.teamMemberIds);
-  const [selectedTeamMember, setSelectedTeamMember] = useState(null);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [selectedTool, setSelectedTool] = useState(null);
-  const [selectedLibraryItem, setSelectedLibraryItem] = useState(null);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+  const [selectedLibraryItem, setSelectedLibraryItem] = useState<ClientLibraryItem | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<ClientTemplate | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<ClientInvoice | null>(null);
+  const [selectedProposal, setSelectedProposal] = useState<ClientProposal | null>(null);
   const isReadOnlyAccount = user?.accountType === 'business';
 
   const handleEditClick = () => {

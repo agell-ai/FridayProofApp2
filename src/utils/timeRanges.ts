@@ -58,8 +58,15 @@ export const timeRangeOptions: TimeRangeOption[] = [
 export const DEFAULT_TIME_RANGE: TimeRangeKey = 'all';
 
 export const getTimeRangeStart = (value: TimeRangeKey): Date | null => {
-  const option = timeRangeOptions.find((item) => item.value === value);
-  return option ? option.getStartDate() : null;
+  return getTimeRangeOption(value).getStartDate();
+};
+
+export const getTimeRangeOption = (value: TimeRangeKey): TimeRangeOption => {
+  return (
+    timeRangeOptions.find((item) => item.value === value) ||
+    timeRangeOptions.find((item) => item.value === DEFAULT_TIME_RANGE) ||
+    timeRangeOptions[0]
+  );
 };
 
 export const isWithinTimeRange = (
