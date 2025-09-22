@@ -30,8 +30,8 @@ const generateMockNotifications = (accountType: string): Notification[] => {
       type: 'info',
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
       read: false,
-      actionUrl: 'team',
-      actionLabel: 'View Team'
+      actionUrl: 'workspaces',
+      actionLabel: 'View Workspaces'
     },
     {
       id: 'notif-3',
@@ -40,8 +40,8 @@ const generateMockNotifications = (accountType: string): Notification[] => {
       type: 'warning',
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
       read: true,
-      actionUrl: 'tools',
-      actionLabel: 'View Tools'
+      actionUrl: 'solutions',
+      actionLabel: 'View Solutions'
     },
     {
       id: 'notif-4',
@@ -50,8 +50,8 @@ const generateMockNotifications = (accountType: string): Notification[] => {
       type: 'success',
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(), // 6 hours ago
       read: true,
-      actionUrl: 'projects',
-      actionLabel: 'View Project'
+      actionUrl: 'dashboard',
+      actionLabel: 'View Dashboard'
     },
     {
       id: 'notif-5',
@@ -74,8 +74,8 @@ const generateMockNotifications = (accountType: string): Notification[] => {
       type: 'info',
       timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
       read: false,
-      actionUrl: 'clients',
-      actionLabel: 'View Clients'
+      actionUrl: 'dashboard',
+      actionLabel: 'View Dashboard'
     });
   }
 
