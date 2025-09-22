@@ -6,6 +6,7 @@ import { useTeam } from '../hooks/useTeam';
 import { useAuth } from '../hooks/useAuth';
 import WorkspaceCard, { WorkspaceCardData } from '../components/Workspaces/WorkspaceCard';
 import { EntityFormModal, EntityFormValues, ClientFormValues, ProjectFormValues, TeamFormValues } from '../components/Shared/EntityFormModal';
+import { Button } from '../components/Shared/Button';
 import { Client, Project, TeamMember } from '../types';
 
 const typeOrder = ['client', 'project', 'team'] as const;
@@ -255,18 +256,21 @@ const Workspaces: React.FC = () => {
               {typeOrder.map((type) => {
                 const isActive = activeTypes.includes(type);
                 return (
-                  <button
+                  <Button
                     key={type}
                     type="button"
+                    size="sm"
+                    variant={isActive ? 'gradient' : 'outline'}
                     onClick={() => toggleType(type)}
-                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                    aria-pressed={isActive}
+                    className={`rounded-lg py-2 text-sm font-medium ${
                       isActive
-                        ? 'border-transparent bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white'
-                        : 'border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] hover:text-[var(--fg)]'
+                        ? ''
+                        : 'bg-[var(--surface)] text-[var(--fg-muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)]'
                     }`}
                   >
                     {typeLabels[type]}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -300,14 +304,16 @@ const Workspaces: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="gradient"
                   onClick={() => setFormState({ type: createType, mode: 'create' })}
-                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                  className="gap-2 px-4 py-2 text-sm font-semibold"
                 >
                   <PlusCircle className="h-4 w-4" />
                   Add {typeLabels[createType]}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

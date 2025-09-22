@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { X, Building2, FolderOpen, Users, Wrench, Save, Sparkles, FileSignature } from 'lucide-react';
 import { Client, ClientProposal, Project, TeamMember } from '../../types';
 import { Tool } from '../../types/tools';
+import { Button } from './Button';
 
 export type EntityType = 'client' | 'project' | 'team' | 'tool' | 'proposal';
 export type FormMode = 'create' | 'edit';
@@ -234,20 +235,22 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode, initialData, onSubmit, on
       </Section>
 
       <div className="flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+          className="px-4 py-2 hover:bg-[var(--surface)]"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+          variant="gradient"
+          className="px-4 py-2 font-semibold gap-2"
         >
           <Save className="w-4 h-4" />
           {mode === 'create' ? 'Add Client' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -356,20 +359,22 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ mode, initialData, clients, t
       </Section>
 
       <div className="flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+          className="px-4 py-2 hover:bg-[var(--surface)]"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+          variant="gradient"
+          className="px-4 py-2 font-semibold gap-2"
         >
           <Save className="w-4 h-4" />
           {mode === 'create' ? 'Add Project' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -501,20 +506,22 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, initialData, onSubmit, onCanc
       </Section>
 
       <div className="flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+          className="px-4 py-2 hover:bg-[var(--surface)]"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+          variant="gradient"
+          className="px-4 py-2 font-semibold gap-2"
         >
           <Save className="w-4 h-4" />
           {mode === 'create' ? 'Add Team Member' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -791,20 +798,22 @@ const ToolForm: React.FC<ToolFormProps> = ({ mode, initialData, clients, project
       </Section>
 
       <div className="flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+          className="px-4 py-2 hover:bg-[var(--surface)]"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+          variant="gradient"
+          className="px-4 py-2 font-semibold gap-2"
         >
           <Sparkles className="w-4 h-4" />
           {mode === 'create' ? 'Create Tool' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -933,20 +942,22 @@ const ProposalForm: React.FC<ProposalFormProps> = ({ mode, initialData, onSubmit
       </Section>
 
       <div className="flex items-center justify-end gap-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--surface)] transition"
+          className="px-4 py-2 hover:bg-[var(--surface)]"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white font-semibold flex items-center gap-2"
+          variant="gradient"
+          className="px-4 py-2 font-semibold gap-2"
         >
           <Save className="w-4 h-4" />
           {mode === 'create' ? 'Create Proposal' : 'Save Changes'}
-        </button>
+        </Button>
       </div>
     </form>
   );

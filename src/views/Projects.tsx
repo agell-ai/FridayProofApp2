@@ -13,6 +13,7 @@ import {
 import ProjectCard from '../components/Projects/ProjectCard';
 import ProjectModal from '../components/Projects/ProjectModal';
 import { Card } from '../components/Shared/Card';
+import { Button } from '../components/Shared/Button';
 import { useProjects } from '../hooks/useProjects';
 import { Project } from '../types';
 import {
@@ -240,19 +241,21 @@ const Projects: React.FC = () => {
                 {timeRangeOptions.map((option) => {
                   const isActive = option.value === timeRange;
                   return (
-                    <button
+                    <Button
                       key={option.value}
                       type="button"
+                      size="xs"
+                      variant={isActive ? 'gradient' : 'outline'}
                       onClick={() => setTimeRange(option.value)}
                       aria-pressed={isActive}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-purple)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)] ${
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium focus-visible:ring-[var(--accent-purple)] focus-visible:ring-offset-[var(--card)] ${
                         isActive
-                          ? 'border-transparent bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white shadow-sm'
-                          : 'border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] hover:text-[var(--fg)]'
+                          ? ''
+                          : 'bg-[var(--surface)] text-[var(--fg-muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)]'
                       }`}
                     >
                       {option.label}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -276,13 +279,15 @@ const Projects: React.FC = () => {
               </select>
             </div>
 
-            <button
+            <Button
               type="button"
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+              size="sm"
+              variant="gradient"
+              className="gap-2 px-4 py-2 text-sm font-semibold"
             >
               <Plus className="h-4 w-4" />
               New Project
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -386,13 +391,15 @@ const Projects: React.FC = () => {
             </div>
           )}
 
-          <button
+          <Button
             type="button"
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+            size="sm"
+            variant="gradient"
+            className="mt-6 inline-flex gap-2 px-4 py-2 text-sm font-semibold"
           >
             <Plus className="h-4 w-4" />
             New Project
-          </button>
+          </Button>
         </div>
       )}
 
