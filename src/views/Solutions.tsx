@@ -874,7 +874,7 @@ const Solutions: React.FC = () => {
     }
   }, [filteredActiveItems, selectedActiveEntry]);
 
-  const filteredLibraryItems = useMemo(() => {
+  const filteredLibraryEntries = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return libraryEntries.filter(({ card }) => {
@@ -898,7 +898,7 @@ const Solutions: React.FC = () => {
     });
   }, [libraryEntries, searchTerm]);
 
-  const filteredMarketplaceItems = useMemo(() => {
+  const filteredMarketplaceEntries = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return marketplaceEntries.filter(({ card }) => {
@@ -921,6 +921,16 @@ const Solutions: React.FC = () => {
       return searchable.some((value) => value.includes(normalizedSearch));
     });
   }, [marketplaceEntries, searchTerm]);
+
+  const libraryViewEntries = useMemo(
+    () => filteredLibraryEntries.filter((entry) => entry.card.type === 'template'),
+    [filteredLibraryEntries],
+  );
+
+  const marketplaceViewEntries = useMemo(
+    () => filteredMarketplaceEntries.filter((entry) => entry.card.type === 'marketplace'),
+    [filteredMarketplaceEntries],
+  );
 
   const activeSummary = useMemo(
     () => [
@@ -1256,8 +1266,8 @@ const Solutions: React.FC = () => {
   const hasResults = isActiveView
     ? filteredActiveItems.length > 0
     : isLibraryView
-      ? filteredLibraryItems.length > 0
-      : filteredMarketplaceItems.length > 0;
+      ? libraryViewEntries.length > 0
+      : marketplaceViewEntries.length > 0;
 
   const emptyStateMessage = isActiveView
     ? 'No systems or tools found'
@@ -1395,7 +1405,7 @@ const Solutions: React.FC = () => {
             )
           ) : isLibraryView ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {filteredLibraryItems.map((entry) => (
+              {libraryViewEntries.map((entry) => (
                 <SolutionCard
                   key={`library-${entry.card.id}`}
                   data={entry.card}
@@ -1418,7 +1428,7 @@ const Solutions: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {filteredMarketplaceItems.map((entry) => (
+              {marketplaceViewEntries.map((entry) => (
                 <SolutionCard
                   key={`market-${entry.card.id}`}
                   data={entry.card}
