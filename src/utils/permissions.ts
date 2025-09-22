@@ -21,7 +21,7 @@ const CONTRACTOR_ALLOWED_PAGES: ViewId[] = [
   'workspaces',
   'tools',
   'solutions',
-  'archive',
+  'analytics',
 ];
 
 const CLIENT_ALLOWED_PAGES: ViewId[] = [
@@ -31,7 +31,7 @@ const CLIENT_ALLOWED_PAGES: ViewId[] = [
   'workspaces',
   'tools',
   'solutions',
-  'archive',
+  'analytics',
 ];
 
 const filterPages = (pages: ViewId[], allowed: ViewId[]): ViewId[] =>

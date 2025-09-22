@@ -7,7 +7,7 @@ import {
   PanelsTopLeft,
   Wrench,
   Share2,
-  Archive,
+  BarChart3,
 } from 'lucide-react';
 
 import type { NavigationItem, ViewId } from '../types/navigation';
@@ -21,7 +21,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: 'workspaces', label: 'Workspaces', icon: PanelsTopLeft },
   { id: 'tools', label: 'Tools', icon: Wrench },
   { id: 'solutions', label: 'Solutions Hub', icon: Share2 },
-  { id: 'archive', label: 'Archive', icon: Archive },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
-export const DEFAULT_VIEW_ID: ViewId = 'dashboard';
+export const DEFAULT_VIEW_ID: ViewId = NAVIGATION_ITEMS[0]?.id ?? 'dashboard';
