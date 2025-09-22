@@ -68,7 +68,7 @@ const typeConfig: Record<SolutionType, { label: string; icon: React.ComponentTyp
     badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20',
   },
   marketplace: {
-    label: 'Marketplace',
+    label: 'Marketplace Asset',
     icon: ShoppingBag,
     badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/20',
   },

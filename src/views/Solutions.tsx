@@ -731,13 +731,9 @@ const Solutions: React.FC = () => {
           title: tool.name,
           description: tool.description,
           status: tool.status,
-          owner: tool.clientName ? `Client • ${tool.clientName}` : undefined,
-          meta: tool.projectName ? `Project • ${tool.projectName}` : undefined,
-          tags: [tool.category.toLowerCase(), tool.projectName, tool.clientName].filter(Boolean) as string[],
-          metrics: [
-            { label: 'Usage', value: `${tool.stats.usage}%`, tone: 'positive' },
-            { label: 'Efficiency', value: `${tool.stats.efficiency}%`, tone: 'positive' },
-          ],
+          owner: tool.clientName ? `Client • ${tool.clientName}` : 'Internal',
+          tags: [],
+          metrics: [],
           roi: formatRoi(`tool-${tool.id}`),
         },
         meta: { kind: 'tool', tool },
@@ -753,12 +749,8 @@ const Solutions: React.FC = () => {
           description: system.description,
           status: system.status,
           owner: client ? `Client • ${client.companyName}` : 'Internal',
-          meta: `Project • ${project.name}`,
-          tags: [system.type, system.status, project.name],
-          metrics: [
-            { label: 'Components', value: String(system.components.length) },
-            { label: 'Connections', value: String(system.connections.length) },
-          ],
+          tags: [],
+          metrics: [],
           roi: formatRoi(`system-${system.id}`),
         },
         meta: { kind: 'system', system, project, client },
@@ -932,7 +924,7 @@ const Solutions: React.FC = () => {
 
   const activeSummary = useMemo(
     () => [
-      { label: 'Active (total)', value: activeItems.length, filter: 'all' as ActiveStatusFilter },
+      { label: 'Total', value: activeItems.length, filter: 'all' as ActiveStatusFilter },
       {
         label: 'Deployed',
         value: activeItems.filter(({ card }) => card.status === 'active').length,
@@ -1278,7 +1270,7 @@ const Solutions: React.FC = () => {
       <div className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <h1 className="text-2xl font-semibold text-[var(--fg)]">Systems Hub</h1>
+            <h1 className="text-2xl font-semibold text-[var(--fg)]">Solutions Hub</h1>
             <p className="text-sm text-[var(--fg-muted)]">
               Manage live systems, reusable templates, and marketplace listings from a single control center.
             </p>
