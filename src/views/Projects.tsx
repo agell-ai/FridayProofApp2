@@ -16,12 +16,12 @@ import { Card } from '../components/Shared/Card';
 import { useProjects } from '../hooks/useProjects';
 import { Project } from '../types';
 import {
-  DATE_RANGE_OPTIONS,
   DEFAULT_TIME_RANGE,
   DateRangeKey,
   getDateRange,
   getDateRangeLabel,
-  isDateWithinRange,
+  isWithinTimeRange,
+  timeRangeOptions,
 } from '../utils/timeRanges';
 
 type StatusFilterValue = 'all' | Project['status'];
@@ -135,8 +135,8 @@ const Projects: React.FC = () => {
         return false;
       }
 
-      const createdMatches = isDateWithinRange(project.createdAt, range);
-      const updatedMatches = isDateWithinRange(project.updatedAt, range);
+      const createdMatches = isWithinTimeRange(project.createdAt, range);
+      const updatedMatches = isWithinTimeRange(project.updatedAt, range);
 
       return createdMatches || updatedMatches;
     });
@@ -237,7 +237,7 @@ const Projects: React.FC = () => {
                   <CalendarClock className="h-3.5 w-3.5" />
                   Time range
                 </span>
-                {DATE_RANGE_OPTIONS.map((option) => {
+                {timeRangeOptions.map((option) => {
                   const isActive = option.value === timeRange;
                   return (
                     <button
