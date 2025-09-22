@@ -34,6 +34,7 @@ export interface SolutionCardData {
   metrics: SolutionMetric[];
   roi?: SolutionRoiSummary;
   access?: SolutionAccessInfo;
+  badges?: SolutionType[];
 }
 
 export interface SolutionAccessInfo {
@@ -49,6 +50,7 @@ interface SolutionCardProps {
   onListInMarketplace?: (data: SolutionCardData) => void;
   onSelect?: (data: SolutionCardData) => void;
   showTags?: boolean;
+  createTemplateLabel?: string;
 }
 
 const typeConfig: Record<SolutionType, { label: string; icon: React.ComponentType<{ className?: string }>; badgeClass: string }> = {
@@ -101,10 +103,15 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
   onListInMarketplace,
   onSelect,
   showTags = true,
+  createTemplateLabel = 'Create Template',
 }) => {
   const type = typeConfig[data.type];
   const StatusIcon = type.icon;
   const statusClass = data.status ? statusStyles[data.status] || 'border-[var(--border)] text-[var(--fg-muted)] bg-[var(--surface)]' : '';
+
+  const extraBadges = data.badges
+    ?.filter((badge) => badge !== data.type)
+    .filter((badge, index, array) => array.indexOf(badge) === index);
 
   const hasFooterActions = Boolean(onCreateTemplate || onListInMarketplace);
 
@@ -146,6 +153,20 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
               <span className={`text-[11px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${type.badgeClass}`}>
                 {type.label}
               </span>
+              {extraBadges?.map((badge) => {
+                const badgeConfig = typeConfig[badge];
+                if (!badgeConfig) {
+                  return null;
+                }
+                return (
+                  <span
+                    key={`${data.id}-${badge}`}
+                    className={`text-[11px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${badgeConfig.badgeClass}`}
+                  >
+                    {badgeConfig.label}
+                  </span>
+                );
+              })}
               {data.status && (
                 <span className={`text-[11px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${statusClass}`}>
                   {formatLabel(data.status)}
@@ -254,7 +275,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({
               onClick={handleCreateTemplateClick}
               className="text-[var(--fg-muted)] hover:text-[var(--fg)]"
             >
-              Create Template
+              {createTemplateLabel}
             </Button>
           )}
           {onListInMarketplace && (

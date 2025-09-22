@@ -162,6 +162,7 @@ export interface ClientLibraryItem {
   type: 'component' | 'template' | 'workflow';
   category: string;
   createdAt: string;
+  templateId?: string;
 }
 
 export interface ClientTemplate {

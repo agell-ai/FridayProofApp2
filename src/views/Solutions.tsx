@@ -62,6 +62,8 @@ type LibraryItemEntry = {
     template: ClientTemplate;
     client: Client;
     description: string;
+    isMarketplaceAsset: boolean;
+    marketplaceItem?: ClientLibraryItem;
   };
 };
 
@@ -577,6 +579,7 @@ const Solutions: React.FC = () => {
       clients.flatMap((client) =>
         client.templates.map((template) => {
           const key = `${client.id}-${template.id}`;
+          const marketplaceItem = client.library.find((item) => item.templateId === template.id);
           return {
             id: key,
             templateId: template.id,
@@ -587,6 +590,7 @@ const Solutions: React.FC = () => {
             category: template.category,
             usage: template.usage,
             lastModified: template.lastModified,
+            marketplaceItem,
           };
         })
       ),
@@ -771,6 +775,12 @@ const Solutions: React.FC = () => {
             return null;
           }
 
+          const isMarketplaceAsset = Boolean(item.marketplaceItem);
+          const marketplaceMeta =
+            item.marketplaceItem?.createdAt
+              ? `Marketplace asset • ${new Date(item.marketplaceItem.createdAt).toLocaleDateString()}`
+              : 'Marketplace asset';
+
           return {
             card: {
               id: item.id,
@@ -778,17 +788,22 @@ const Solutions: React.FC = () => {
               title: item.name,
               description: item.description,
               owner: `Client • ${client.companyName}`,
-              meta: `Last modified • ${new Date(item.lastModified).toLocaleDateString()}`,
+              meta: isMarketplaceAsset
+                ? marketplaceMeta
+                : `Last modified • ${new Date(item.lastModified).toLocaleDateString()}`,
               tags: [item.category.toLowerCase()],
               metrics: [
                 { label: 'Usage', value: `${item.usage} launches`, tone: 'positive' },
               ],
+              badges: isMarketplaceAsset ? ['marketplace'] : undefined,
             },
             meta: {
               kind: 'template',
               template,
               client,
               description: item.description,
+              isMarketplaceAsset,
+              marketplaceItem: item.marketplaceItem,
             },
           } satisfies LibraryItemEntry;
         })
@@ -807,6 +822,10 @@ const Solutions: React.FC = () => {
             return null;
           }
 
+          if (libraryItem.type !== 'template' && !libraryItem.templateId) {
+            return null;
+          }
+
           return {
             card: {
               id: item.id,
@@ -820,6 +839,7 @@ const Solutions: React.FC = () => {
                 { label: 'Downloads', value: formatNumber(item.downloads), tone: 'positive' },
                 { label: 'Rating', value: `${item.rating.toFixed(1)}/5`, tone: 'positive' },
               ],
+              badges: ['template'],
             },
             meta: {
               kind: 'marketplace',
@@ -1123,7 +1143,7 @@ const Solutions: React.FC = () => {
   };
 
   const handleMarketplaceSubmit = (values: MarketplaceFormValues) => {
-    const { itemId, clientId, name, type, category, description, downloads = 0, rating = 0 } = values;
+    const { itemId, clientId, name, type, category, description, downloads = 0, rating = 0, templateId } = values;
     const client = clients.find((candidate) => candidate.id === clientId);
 
     if (!client) {
@@ -1141,6 +1161,7 @@ const Solutions: React.FC = () => {
         type,
         category,
         createdAt: new Date().toISOString(),
+        ...(templateId ? { templateId } : {}),
       };
       updateClient(clientId, { library: [...client.library, newItem] });
       setMarketplaceDescriptions((prev) => ({
@@ -1153,7 +1174,15 @@ const Solutions: React.FC = () => {
       }));
     } else if (marketplaceFormState?.mode === 'edit' && itemId) {
       const updatedLibrary = client.library.map((item) =>
-        item.id === itemId ? { ...item, name, type, category } : item
+        item.id === itemId
+          ? {
+              ...item,
+              name,
+              type,
+              category,
+              ...(templateId !== undefined ? { templateId } : {}),
+            }
+          : item
       );
       updateClient(clientId, { library: updatedLibrary });
       setMarketplaceDescriptions((prev) => ({
@@ -1241,6 +1270,29 @@ const Solutions: React.FC = () => {
     }
   };
 
+  const handleUseTemplate = (entry: LibraryItemEntry) => {
+    const client = clients.find((candidate) => candidate.id === entry.meta.client.id);
+
+    if (!client) {
+      return;
+    }
+
+    const updatedTemplates = client.templates.map((template) => {
+      if (template.id !== entry.meta.template.id) {
+        return template;
+      }
+
+      const currentUsage = Number.isFinite(template.usage) ? template.usage : 0;
+
+      return {
+        ...template,
+        usage: currentUsage + 1,
+      };
+    });
+
+    updateClient(client.id, { templates: updatedTemplates });
+  };
+
   const handleListTemplateInMarketplace = (entry: LibraryItemEntry) => {
     if (!clients.length) {
       return;
@@ -1253,6 +1305,7 @@ const Solutions: React.FC = () => {
         type: 'template',
         category: entry.meta.template.category,
         description: `Marketplace listing for ${entry.meta.template.name}.`,
+        templateId: entry.meta.template.id,
       },
     });
   };
@@ -1422,7 +1475,11 @@ const Solutions: React.FC = () => {
                       },
                     })
                   }
-                  onListInMarketplace={() => handleListTemplateInMarketplace(entry)}
+                  onCreateTemplate={() => handleUseTemplate(entry)}
+                  createTemplateLabel="Use Template"
+                  onListInMarketplace={
+                    entry.meta.isMarketplaceAsset ? undefined : () => handleListTemplateInMarketplace(entry)
+                  }
                 />
               ))}
             </div>
@@ -1444,6 +1501,7 @@ const Solutions: React.FC = () => {
                         description: entry.meta.description,
                         downloads: entry.meta.downloads,
                         rating: entry.meta.rating,
+                        templateId: entry.meta.item.templateId,
                       },
                     })
                   }

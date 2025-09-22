@@ -83,6 +83,14 @@ const mockClients: Client[] = [
         type: 'workflow',
         category: 'Communication',
         createdAt: '2024-01-05'
+      },
+      {
+        id: 'lib-6',
+        name: 'Order Fulfillment Template',
+        type: 'template',
+        category: 'E-commerce',
+        createdAt: '2024-01-18',
+        templateId: 'temp-1'
       }
     ],
     templates: [
