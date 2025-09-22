@@ -10,6 +10,7 @@ import Company from './views/Company';
 import Dashboard from './views/Dashboard';
 import Workspaces from './views/Workspaces';
 import Solutions from './views/Solutions';
+import Analytics from './views/Analytics';
 import Clients from './views/Clients';
 import Projects from './views/Projects';
 import Team from './views/Team';
@@ -17,6 +18,18 @@ import Tools from './views/Tools';
 import { DEFAULT_VIEW_ID } from './lib/navigation';
 import { getAvailablePages } from './utils/permissions';
 import type { ViewId } from './types/navigation';
+
+const VIEW_COMPONENTS: Record<ViewId, React.ComponentType> = {
+  dashboard: Dashboard,
+  company: Company,
+  clients: Clients,
+  projects: Projects,
+  team: Team,
+  workspaces: Workspaces,
+  tools: Tools,
+  solutions: Solutions,
+  analytics: Analytics,
+};
 
 const AppContent: React.FC = () => {
   const { user, account, isLoading } = useAuth();
@@ -53,28 +66,7 @@ const AppContent: React.FC = () => {
     );
   }
 
-  const renderContent = () => {
-    switch (activeView) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'company':
-        return <Company />;
-      case 'clients':
-        return <Clients />;
-      case 'projects':
-        return <Projects />;
-      case 'team':
-        return <Team />;
-      case 'workspaces':
-        return <Workspaces />;
-      case 'tools':
-        return <Tools />;
-      case 'solutions':
-        return <Solutions />;
-      default:
-        return <Dashboard />;
-    }
-  };
+  const ActiveViewComponent = VIEW_COMPONENTS[activeView] ?? VIEW_COMPONENTS[DEFAULT_VIEW_ID];
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-start)]">
@@ -82,7 +74,9 @@ const AppContent: React.FC = () => {
       <div className="flex-1 flex">
         <Sidebar activeView={activeView} availablePages={availablePages} onViewChange={setActiveView} />
         <div className="flex-1 flex flex-col">
-          <main className="flex-1 p-6 overflow-auto">{renderContent()}</main>
+          <main className="flex-1 p-6 overflow-auto">
+            <ActiveViewComponent />
+          </main>
         </div>
       </div>
       <Footer />

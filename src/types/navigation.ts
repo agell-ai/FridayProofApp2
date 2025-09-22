@@ -9,7 +9,7 @@ export type ViewId =
   | 'workspaces'
   | 'tools'
   | 'solutions'
-  | 'archive';
+  | 'analytics';
 
 export interface NavigationItem {
   id: ViewId;
