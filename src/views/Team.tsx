@@ -14,6 +14,10 @@ import {
   UserCheck,
 } from 'lucide-react';
 import TeamMemberModal from '../components/Clients/TeamMemberModal';
+import EntityFormModal, {
+  TeamFormValues,
+  FormMode,
+} from '../components/Shared/EntityFormModal';
 import { Card } from '../components/Shared/Card';
 import { Button } from '../components/Shared/Button';
 import { useTeam } from '../hooks/useTeam';
@@ -123,12 +127,21 @@ const formatDate = (value: string) => {
 };
 
 const Team: React.FC = () => {
-  const { teamMembers, isLoading } = useTeam();
+  const { teamMembers, isLoading, createTeamMember } = useTeam();
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilterValue>('all');
   const [activeMetric, setActiveMetric] = useState<MetricKey>('total');
   const [timeRange, setTimeRange] = useState<DateRangeKey>(DEFAULT_TIME_RANGE);
+  const [formModalState, setFormModalState] = useState<{
+    isOpen: boolean;
+    mode: FormMode;
+    member: TeamMember | null;
+  }>({
+    isOpen: false,
+    mode: 'create',
+    member: null,
+  });
 
   const normalizedSearch = useMemo(
     () => normalizeSearchValue(searchTerm.trim()),
@@ -246,6 +259,32 @@ const Team: React.FC = () => {
     setActiveMetric((previous) => (previous === key && key !== 'total' ? 'total' : key));
   };
 
+  const handleOpenCreateModal = () => {
+    setFormModalState({
+      isOpen: true,
+      mode: 'create',
+      member: null,
+    });
+  };
+
+  const handleCloseModal = () => {
+    setFormModalState({
+      isOpen: false,
+      mode: 'create',
+      member: null,
+    });
+  };
+
+  const handleModalSubmit = (values: TeamFormValues) => {
+    createTeamMember({
+      ...values,
+      phone: values.phone?.trim() || undefined,
+      city: values.city?.trim() || undefined,
+      state: values.state?.trim() || undefined,
+    });
+    handleCloseModal();
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -328,6 +367,7 @@ const Team: React.FC = () => {
               size="sm"
               variant="gradient"
               className="gap-2 px-4 py-2 text-sm font-semibold"
+              onClick={handleOpenCreateModal}
             >
               <Plus className="h-4 w-4" />
               Add Team Member
@@ -550,12 +590,23 @@ const Team: React.FC = () => {
             size="sm"
             variant="gradient"
             className="mt-6 inline-flex gap-2 px-4 py-2 text-sm font-semibold"
+            onClick={handleOpenCreateModal}
           >
             <Plus className="h-4 w-4" />
             Add Team Member
           </Button>
         </div>
       )}
+
+      <EntityFormModal
+        isOpen={formModalState.isOpen}
+        type="team"
+        mode={formModalState.mode}
+        initialData={formModalState.member}
+        teamMembers={teamMembers}
+        onClose={handleCloseModal}
+        onSubmit={(values) => handleModalSubmit(values as TeamFormValues)}
+      />
 
       {selectedTeamMember && (
         <TeamMemberModal
