@@ -1,10 +1,11 @@
-interface Theme {
+export interface Theme {
   bgStart: string;
   bgEnd: string;
   fg: string;
   fgMuted: string;
   border: string;
   surface: string;
+  surfaceElevated: string;
   card: string;
   accentStart: string;
   accentMid: string;
@@ -25,6 +26,7 @@ export const themes: Record<string, Theme> = {
     fgMuted: 'rgba(10,10,11,0.70)',
     border: 'rgba(0,0,0,0.12)',
     surface: 'rgba(0,0,0,0.04)',
+    surfaceElevated: '#FFFFFF',
     card: '#FFFFFF',
     accentStart: '#EEB647',
     accentMid: '#FFB44D',
@@ -43,6 +45,7 @@ export const themes: Record<string, Theme> = {
     fgMuted: 'rgba(255,255,255,0.70)',
     border: 'rgba(255,255,255,0.12)',
     surface: 'rgba(255,255,255,0.08)',
+    surfaceElevated: '#1F1F24',
     card: '#2C2C2E',
     accentStart: '#EEB647',
     accentMid: '#FFB44D',
