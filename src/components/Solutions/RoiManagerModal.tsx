@@ -2,7 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, BarChart3, CheckCircle2, Upload, X } from 'lucide-react';
 import { Button } from '../Shared/Button';
 import { Card } from '../Shared/Card';
-import type { ResourceOption, RoiMetricRecord } from '../../types/roi';
+import { ROI_METRIC_CONFIG, ROI_METRIC_KEYS } from '../../types/roi';
+import type {
+  ResourceOption,
+  RoiMetricKey,
+  RoiMetricRecord,
+  RoiMetricUnit,
+  RoiMetricValue,
+} from '../../types/roi';
 
 interface RoiManagerModalProps {
   isOpen: boolean;
@@ -19,22 +26,21 @@ interface FeedbackState {
   tone: 'positive' | 'negative';
 }
 
+type RoiFormState = Record<`${RoiMetricKey}${'Pre' | 'Post'}`, string>;
+
 const REQUIRED_HEADERS = [
   'resourceKey',
-  'costSavings',
-  'hoursSaved',
-  'revenueGenerated',
-  'adoptionRate',
-  'efficiencyGain',
+  ...ROI_METRIC_KEYS.flatMap((key) => [`${key}Pre`, `${key}Post`]),
 ] as const;
 
-const createEmptyFormState = () => ({
-  costSavings: '',
-  hoursSaved: '',
-  revenueGenerated: '',
-  adoptionRate: '',
-  efficiencyGain: '',
-});
+const createEmptyFormState = (): RoiFormState => {
+  const state = {} as RoiFormState;
+  ROI_METRIC_KEYS.forEach((key) => {
+    state[`${key}Pre` as `${RoiMetricKey}Pre`] = '';
+    state[`${key}Post` as `${RoiMetricKey}Post`] = '';
+  });
+  return state;
+};
 
 const formatCurrency = (value: number) => {
   if (!value) return '$0';
@@ -49,6 +55,45 @@ const formatNumber = (value: number) => {
   return value.toLocaleString();
 };
 
+const formatMetricValue = (unit: RoiMetricUnit, value: number) => {
+  switch (unit) {
+    case 'currency':
+      return formatCurrency(value);
+    case 'hours':
+      return `${formatNumber(value)} hrs`;
+    case 'percentage': {
+      if (!Number.isFinite(value)) return '0%';
+      const bounded = Math.max(0, Math.min(100, value));
+      return Number.isInteger(bounded) ? `${bounded}%` : `${bounded.toFixed(1)}%`;
+    }
+    default:
+      return formatNumber(value);
+  }
+};
+
+const formatDeltaValue = (unit: RoiMetricUnit, delta: number) => {
+  if (!delta) {
+    return 'No change';
+  }
+
+  const sign = delta > 0 ? '+' : '-';
+  const magnitude = Math.abs(delta);
+
+  switch (unit) {
+    case 'currency':
+      return `${sign}${formatCurrency(magnitude)}`;
+    case 'hours':
+      return `${sign}${formatNumber(magnitude)} hrs`;
+    case 'percentage': {
+      const rounded = Math.round(magnitude * 10) / 10;
+      const valueText = Number.isInteger(rounded) ? `${rounded}` : `${rounded.toFixed(1)}`;
+      return `${sign}${valueText} pts`;
+    }
+    default:
+      return `${sign}${formatNumber(magnitude)}`;
+  }
+};
+
 const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
   isOpen,
   onClose,
@@ -59,7 +104,7 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
   defaultKey,
 }) => {
   const [selectedKey, setSelectedKey] = useState<string>('');
-  const [formValues, setFormValues] = useState(createEmptyFormState);
+  const [formValues, setFormValues] = useState<RoiFormState>(() => createEmptyFormState());
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
   const optionMap = useMemo(() => {
@@ -71,6 +116,36 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
   const selectedMetrics = selectedKey ? metricsMap[selectedKey] : undefined;
   const selectedOption = selectedKey ? optionMap.get(selectedKey) : undefined;
   const hasResources = resourceOptions.length > 0;
+  const snapshotMetrics = useMemo(() => {
+    if (!selectedMetrics) {
+      return [] as Array<{
+        key: RoiMetricKey;
+        label: string;
+        deltaText: string;
+        baselineText: string;
+        tone: 'positive' | 'negative' | 'neutral';
+      }>;
+    }
+
+    return ROI_METRIC_KEYS.map((key) => {
+      const metric = selectedMetrics[key];
+      const config = ROI_METRIC_CONFIG[key];
+      const delta = metric.post - metric.pre;
+      const tone: 'positive' | 'negative' | 'neutral' =
+        delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral';
+
+      return {
+        key,
+        label: config.label,
+        deltaText: formatDeltaValue(config.unit, delta),
+        baselineText: `Baseline ${formatMetricValue(config.unit, metric.pre)} → Current ${formatMetricValue(
+          config.unit,
+          metric.post,
+        )}`,
+        tone,
+      };
+    });
+  }, [selectedMetrics]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -107,13 +182,13 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
     if (!isOpen) return;
 
     if (selectedMetrics) {
-      setFormValues({
-        costSavings: String(selectedMetrics.costSavings || ''),
-        hoursSaved: String(selectedMetrics.hoursSaved || ''),
-        revenueGenerated: String(selectedMetrics.revenueGenerated || ''),
-        adoptionRate: String(selectedMetrics.adoptionRate || ''),
-        efficiencyGain: String(selectedMetrics.efficiencyGain || ''),
+      const next = createEmptyFormState();
+      ROI_METRIC_KEYS.forEach((key) => {
+        const metric = selectedMetrics[key];
+        next[`${key}Pre` as `${RoiMetricKey}Pre`] = String(metric?.pre ?? '');
+        next[`${key}Post` as `${RoiMetricKey}Post`] = String(metric?.post ?? '');
       });
+      setFormValues(next);
     } else {
       setFormValues(createEmptyFormState());
     }
@@ -139,12 +214,20 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
       return;
     }
 
+    const parsedMetrics = {} as Record<RoiMetricKey, RoiMetricValue>;
+    ROI_METRIC_KEYS.forEach((key) => {
+      parsedMetrics[key] = {
+        pre: Number(formValues[`${key}Pre` as `${RoiMetricKey}Pre`]) || 0,
+        post: Number(formValues[`${key}Post` as `${RoiMetricKey}Post`]) || 0,
+      };
+    });
+
     const metrics: RoiMetricRecord = {
-      costSavings: Number(formValues.costSavings) || 0,
-      hoursSaved: Number(formValues.hoursSaved) || 0,
-      revenueGenerated: Number(formValues.revenueGenerated) || 0,
-      adoptionRate: Number(formValues.adoptionRate) || 0,
-      efficiencyGain: Number(formValues.efficiencyGain) || 0,
+      costSavings: parsedMetrics.costSavings,
+      revenueGenerated: parsedMetrics.revenueGenerated,
+      hoursSaved: parsedMetrics.hoursSaved,
+      adoptionRate: parsedMetrics.adoptionRate,
+      efficiencyGain: parsedMetrics.efficiencyGain,
       lastUpdated: new Date().toISOString(),
     };
 
@@ -201,11 +284,26 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
         updates.push({
           key,
           metrics: {
-            costSavings: Number(record.costSavings) || 0,
-            hoursSaved: Number(record.hoursSaved) || 0,
-            revenueGenerated: Number(record.revenueGenerated) || 0,
-            adoptionRate: Number(record.adoptionRate) || 0,
-            efficiencyGain: Number(record.efficiencyGain) || 0,
+            costSavings: {
+              pre: Number(record.costSavingsPre) || 0,
+              post: Number(record.costSavingsPost) || 0,
+            },
+            revenueGenerated: {
+              pre: Number(record.revenueGeneratedPre) || 0,
+              post: Number(record.revenueGeneratedPost) || 0,
+            },
+            hoursSaved: {
+              pre: Number(record.hoursSavedPre) || 0,
+              post: Number(record.hoursSavedPost) || 0,
+            },
+            adoptionRate: {
+              pre: Number(record.adoptionRatePre) || 0,
+              post: Number(record.adoptionRatePost) || 0,
+            },
+            efficiencyGain: {
+              pre: Number(record.efficiencyGainPre) || 0,
+              post: Number(record.efficiencyGainPost) || 0,
+            },
             lastUpdated: new Date().toISOString(),
           },
         });
@@ -232,7 +330,7 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
     setFeedback(null);
   };
 
-  const handleInputChange = (field: keyof ReturnType<typeof createEmptyFormState>) =>
+  const handleInputChange = (field: keyof RoiFormState) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setFormValues((prev) => ({ ...prev, [field]: event.target.value }));
       setFeedback(null);
@@ -311,85 +409,85 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
                     </span>
                   )}
                 </div>
+                <p className="text-xs text-[var(--fg-muted)]">
+                  Capture baseline and post-implementation metrics to keep ROI deltas accurate.
+                </p>
                 <form className="space-y-4" onSubmit={handleManualSubmit}>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]" htmlFor="roi-costSavings">
-                        Cost savings ($)
-                      </label>
-                      <input
-                        id="roi-costSavings"
-                        type="number"
-                        min="0"
-                        step="any"
-                        className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                        value={formValues.costSavings}
-                        onChange={handleInputChange('costSavings')}
-                        disabled={!hasResources}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]" htmlFor="roi-hoursSaved">
-                        Hours saved
-                      </label>
-                      <input
-                        id="roi-hoursSaved"
-                        type="number"
-                        min="0"
-                        step="any"
-                        className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                        value={formValues.hoursSaved}
-                        onChange={handleInputChange('hoursSaved')}
-                        disabled={!hasResources}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]" htmlFor="roi-revenueGenerated">
-                        Revenue impact ($)
-                      </label>
-                      <input
-                        id="roi-revenueGenerated"
-                        type="number"
-                        min="0"
-                        step="any"
-                        className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                        value={formValues.revenueGenerated}
-                        onChange={handleInputChange('revenueGenerated')}
-                        disabled={!hasResources}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]" htmlFor="roi-adoptionRate">
-                        Adoption rate (%)
-                      </label>
-                      <input
-                        id="roi-adoptionRate"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="any"
-                        className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                        value={formValues.adoptionRate}
-                        onChange={handleInputChange('adoptionRate')}
-                        disabled={!hasResources}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]" htmlFor="roi-efficiencyGain">
-                        Efficiency gain (%)
-                      </label>
-                      <input
-                        id="roi-efficiencyGain"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="any"
-                        className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                        value={formValues.efficiencyGain}
-                        onChange={handleInputChange('efficiencyGain')}
-                        disabled={!hasResources}
-                      />
-                    </div>
+                  <div className="space-y-4">
+                    {ROI_METRIC_KEYS.map((key) => {
+                      const config = ROI_METRIC_CONFIG[key];
+                      const preField = `${key}Pre` as `${RoiMetricKey}Pre`;
+                      const postField = `${key}Post` as `${RoiMetricKey}Post`;
+                      const isPercentage = config.unit === 'percentage';
+                      const unitHint =
+                        config.unit === 'currency'
+                          ? '$'
+                          : config.unit === 'hours'
+                          ? 'hrs'
+                          : '%';
+
+                      return (
+                        <div key={key} className="space-y-2">
+                          <p className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">
+                            {config.label}
+                          </p>
+                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <div>
+                              <label
+                                className="text-[11px] font-medium uppercase tracking-wide text-[var(--fg-muted)]"
+                                htmlFor={`roi-${key}-pre`}
+                              >
+                                Pre-implementation ({unitHint})
+                              </label>
+                              <input
+                                id={`roi-${key}-pre`}
+                                type="number"
+                                min="0"
+                                max={isPercentage ? 100 : undefined}
+                                step="any"
+                                placeholder={
+                                  config.unit === 'currency'
+                                    ? 'Baseline impact before rollout'
+                                    : config.unit === 'hours'
+                                    ? 'Hours saved before automation'
+                                    : 'Adoption before rollout'
+                                }
+                                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
+                                value={formValues[preField]}
+                                onChange={handleInputChange(preField)}
+                                disabled={!hasResources}
+                              />
+                            </div>
+                            <div>
+                              <label
+                                className="text-[11px] font-medium uppercase tracking-wide text-[var(--fg-muted)]"
+                                htmlFor={`roi-${key}-post`}
+                              >
+                                Post-implementation ({unitHint})
+                              </label>
+                              <input
+                                id={`roi-${key}-post`}
+                                type="number"
+                                min="0"
+                                max={isPercentage ? 100 : undefined}
+                                step="any"
+                                placeholder={
+                                  config.unit === 'currency'
+                                    ? 'Measured impact after rollout'
+                                    : config.unit === 'hours'
+                                    ? 'Hours saved with automation'
+                                    : 'Adoption after rollout'
+                                }
+                                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
+                                value={formValues[postField]}
+                                onChange={handleInputChange(postField)}
+                                disabled={!hasResources}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                   <Button
                     type="submit"
@@ -410,26 +508,24 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
                   <BarChart3 className="h-4 w-4" />
                   <span>ROI snapshot</span>
                 </div>
-                {selectedMetrics ? (
+                {snapshotMetrics.length > 0 ? (
                   <div className="grid grid-cols-1 gap-3 text-sm">
-                    <div>
-                      <p className="text-xs text-[var(--fg-muted)]">Cost savings</p>
-                      <p className="font-semibold text-[var(--fg)]">{formatCurrency(selectedMetrics.costSavings)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[var(--fg-muted)]">Hours saved</p>
-                      <p className="font-semibold text-[var(--fg)]">{formatNumber(selectedMetrics.hoursSaved)} hrs</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[var(--fg-muted)]">Revenue generated</p>
-                      <p className="font-semibold text-[var(--fg)]">{formatCurrency(selectedMetrics.revenueGenerated)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[var(--fg-muted)]">Adoption & efficiency</p>
-                      <p className="font-semibold text-[var(--fg)]">
-                        {selectedMetrics.adoptionRate}% · {selectedMetrics.efficiencyGain}%
-                      </p>
-                    </div>
+                    {snapshotMetrics.map((metric) => {
+                      const toneClass =
+                        metric.tone === 'positive'
+                          ? 'text-emerald-500 dark:text-emerald-400'
+                          : metric.tone === 'negative'
+                          ? 'text-rose-500 dark:text-rose-400'
+                          : 'text-[var(--fg)]';
+
+                      return (
+                        <div key={metric.key} className="space-y-1">
+                          <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">{metric.label}</p>
+                          <p className={`text-sm font-semibold ${toneClass}`}>{metric.deltaText}</p>
+                          <p className="text-xs text-[var(--fg-muted)]">{metric.baselineText}</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-sm text-[var(--fg-muted)]">
@@ -442,7 +538,8 @@ const RoiManagerModal: React.FC<RoiManagerModalProps> = ({
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-[var(--fg)]">Bulk import</p>
                   <p className="text-xs text-[var(--fg-muted)]">
-                    Upload a CSV export to refresh multiple assets at once. Column order can vary as long as headers match.
+                    Upload a CSV to refresh multiple assets at once. Provide both pre- and post-implementation columns (e.g.,
+                    costSavingsPre, costSavingsPost) for each metric.
                   </p>
                 </div>
                 <div className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)]/40 p-4 text-xs text-[var(--fg-muted)]">
