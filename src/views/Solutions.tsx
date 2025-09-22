@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Search, Filter, PlusCircle, Upload } from 'lucide-react';
+import { BarChart3, Filter, PlusCircle, Search } from 'lucide-react';
 import { useTools } from '../hooks/useTools';
 import { useProjects } from '../hooks/useProjects';
 import { useClients } from '../hooks/useClients';
@@ -7,6 +7,10 @@ import { useTeam } from '../hooks/useTeam';
 import SolutionCard, { SolutionCardData } from '../components/Solutions/SolutionCard';
 import { EntityFormModal, ToolFormValues } from '../components/Shared/EntityFormModal';
 import { Tool } from '../types/tools';
+import { Button } from '../components/Shared/Button';
+import { Card } from '../components/Shared/Card';
+import RoiManagerModal from '../components/Solutions/RoiManagerModal';
+import type { ResourceOption, RoiMetricRecord } from '../types/roi';
 
 const solutionTypes = ['tool', 'system', 'template', 'marketplace'] as const;
 
@@ -16,20 +20,6 @@ type ToolFormState = {
   mode: 'create' | 'edit';
   tool?: Tool;
 };
-
-interface RoiMetricRecord {
-  costSavings: number;
-  hoursSaved: number;
-  revenueGenerated: number;
-  adoptionRate: number;
-  efficiencyGain: number;
-  lastUpdated: string;
-}
-
-interface ResourceOption {
-  key: string;
-  label: string;
-}
 
 const typeLabels: Record<SolutionType, string> = {
   tool: 'Tools',
@@ -70,16 +60,8 @@ const Solutions: React.FC = () => {
   const [activeTypes, setActiveTypes] = useState<SolutionType[]>([...solutionTypes]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roiMetrics, setRoiMetrics] = useState<Record<string, RoiMetricRecord>>({});
-  const [selectedResourceKey, setSelectedResourceKey] = useState<string>('');
-  const [manualMetrics, setManualMetrics] = useState({
-    costSavings: '',
-    hoursSaved: '',
-    revenueGenerated: '',
-    adoptionRate: '',
-    efficiencyGain: '',
-  });
-  const [importFeedback, setImportFeedback] = useState<string>('');
   const [toolFormState, setToolFormState] = useState<ToolFormState | null>(null);
+  const [isRoiManagerOpen, setIsRoiManagerOpen] = useState(false);
 
   const systems = useMemo(() => {
     return projects.flatMap((project) =>
@@ -168,31 +150,6 @@ const Solutions: React.FC = () => {
     return [...toolOptions, ...systemOptions];
   }, [tools, systems]);
 
-  useEffect(() => {
-    if (resourceOptions.length === 0) {
-      setSelectedResourceKey('');
-      return;
-    }
-
-    if (!resourceOptions.some((option) => option.key === selectedResourceKey)) {
-      setSelectedResourceKey(resourceOptions[0].key);
-    }
-  }, [resourceOptions, selectedResourceKey]);
-
-  const selectedMetrics = selectedResourceKey ? roiMetrics[selectedResourceKey] : undefined;
-
-  useEffect(() => {
-    if (selectedMetrics) {
-      setManualMetrics({
-        costSavings: String(selectedMetrics.costSavings || ''),
-        hoursSaved: String(selectedMetrics.hoursSaved || ''),
-        revenueGenerated: String(selectedMetrics.revenueGenerated || ''),
-        adoptionRate: String(selectedMetrics.adoptionRate || ''),
-        efficiencyGain: String(selectedMetrics.efficiencyGain || ''),
-      });
-    }
-  }, [selectedMetrics, selectedResourceKey]);
-
   const formatRoi = useCallback(
     (key: string): SolutionCardData['roi'] => {
       const metrics = roiMetrics[key];
@@ -245,6 +202,11 @@ const Solutions: React.FC = () => {
           { label: 'Connections', value: String(system.connections.length) },
         ],
         roi: formatRoi(`system-${system.id}`),
+        access: {
+          mode: 'read-only',
+          label: 'Managed in Projects workspace',
+          description: `Update ${system.name} within the ${project.name} project.`,
+        },
       });
     });
 
@@ -260,6 +222,11 @@ const Solutions: React.FC = () => {
         metrics: [
           { label: 'Usage', value: `${template.usage} launches`, tone: 'positive' },
         ],
+        access: {
+          mode: 'read-only',
+          label: `${template.owner} managed template`,
+          description: 'Templates sync automatically from the client workspace.',
+        },
       });
     });
 
@@ -276,6 +243,11 @@ const Solutions: React.FC = () => {
           { label: 'Downloads', value: formatNumber(item.downloads), tone: 'positive' },
           { label: 'Rating', value: `${item.rating}/5`, tone: 'positive' },
         ],
+        access: {
+          mode: 'read-only',
+          label: 'Curated marketplace asset',
+          description: `Request updates through ${item.owner}.`,
+        },
       });
     });
 
@@ -322,96 +294,32 @@ const Solutions: React.FC = () => {
     { label: 'Marketplace Assets', value: marketplaceItems.length },
   ], [tools.length, systems.length, templates.length, marketplaceItems.length]);
 
-  const handleManualSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!selectedResourceKey) return;
+  const handleManualRoiUpdate = useCallback(
+    (key: string, metrics: RoiMetricRecord) => {
+      if (!key) return;
 
-    const updatedMetrics: RoiMetricRecord = {
-      costSavings: Number(manualMetrics.costSavings) || 0,
-      hoursSaved: Number(manualMetrics.hoursSaved) || 0,
-      revenueGenerated: Number(manualMetrics.revenueGenerated) || 0,
-      adoptionRate: Number(manualMetrics.adoptionRate) || 0,
-      efficiencyGain: Number(manualMetrics.efficiencyGain) || 0,
-      lastUpdated: new Date().toISOString(),
-    };
+      setRoiMetrics((prev) => ({
+        ...prev,
+        [key]: metrics,
+      }));
 
-    setRoiMetrics((prev) => ({
-      ...prev,
-      [selectedResourceKey]: updatedMetrics,
-    }));
-
-    if (selectedResourceKey.startsWith('tool-')) {
-      const toolId = selectedResourceKey.replace('tool-', '');
-      updateTool(toolId, {
-        stats: {
-          costSavings: updatedMetrics.costSavings,
-          usage: updatedMetrics.adoptionRate,
-          efficiency: updatedMetrics.efficiencyGain,
-        },
-      });
-    }
-
-    setImportFeedback('');
-  };
-
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (loadEvent) => {
-      const text = loadEvent.target?.result?.toString();
-      if (!text) {
-        setImportFeedback('Unable to read file contents.');
-        return;
-      }
-
-      const lines = text.trim().split(/\r?\n/).filter(Boolean);
-      if (lines.length <= 1) {
-        setImportFeedback('No data rows found in the import file.');
-        return;
-      }
-
-      const [headerLine, ...rows] = lines;
-      const headers = headerLine.split(',').map((header) => header.trim());
-      const requiredHeaders = ['resourceKey', 'costSavings', 'hoursSaved', 'revenueGenerated', 'adoptionRate', 'efficiencyGain'];
-
-      if (!requiredHeaders.every((header) => headers.includes(header))) {
-        setImportFeedback('Invalid column headers. Expected: resourceKey, costSavings, hoursSaved, revenueGenerated, adoptionRate, efficiencyGain.');
-        return;
-      }
-
-      const updates: Array<{ key: string; metrics: RoiMetricRecord }> = [];
-
-      rows.forEach((row) => {
-        const values = row.split(',');
-        if (values.length < headers.length) return;
-
-        const record: Record<string, string> = {};
-        headers.forEach((header, index) => {
-          record[header] = values[index]?.trim() || '';
-        });
-
-        const key = record.resourceKey;
-        if (!key) return;
-
-        updates.push({
-          key,
-          metrics: {
-            costSavings: Number(record.costSavings) || 0,
-            hoursSaved: Number(record.hoursSaved) || 0,
-            revenueGenerated: Number(record.revenueGenerated) || 0,
-            adoptionRate: Number(record.adoptionRate) || 0,
-            efficiencyGain: Number(record.efficiencyGain) || 0,
-            lastUpdated: new Date().toISOString(),
+      if (key.startsWith('tool-')) {
+        const toolId = key.replace('tool-', '');
+        updateTool(toolId, {
+          stats: {
+            costSavings: metrics.costSavings,
+            usage: metrics.adoptionRate,
+            efficiency: metrics.efficiencyGain,
           },
         });
-      });
-
-      if (updates.length === 0) {
-        setImportFeedback('No valid rows found to import.');
-        return;
       }
+    },
+    [updateTool],
+  );
+
+  const handleBulkRoiImport = useCallback(
+    (updates: Array<{ key: string; metrics: RoiMetricRecord }>) => {
+      if (!updates.length) return;
 
       setRoiMetrics((prev) => {
         const next = { ...prev };
@@ -433,13 +341,9 @@ const Solutions: React.FC = () => {
           });
         }
       });
-
-      setImportFeedback(`Imported ROI metrics for ${updates.length} resource${updates.length === 1 ? '' : 's'}.`);
-    };
-
-    reader.readAsText(file);
-    event.target.value = '';
-  };
+    },
+    [updateTool],
+  );
 
   const handleToolSubmit = (values: ToolFormValues) => {
     if (!toolFormState) return;
@@ -501,28 +405,29 @@ const Solutions: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
               {solutionTypes.map((type) => {
                 const isActive = activeTypes.includes(type);
                 return (
-                  <button
+                  <Button
                     key={type}
-                    type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => toggleType(type)}
-                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                    className={`min-w-[140px] ${
                       isActive
-                        ? 'border-transparent bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white'
-                        : 'border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] hover:text-[var(--fg)]'
+                        ? 'border-[var(--accent-purple)] bg-[var(--surface)] text-[var(--fg)] shadow-sm'
+                        : 'border-[var(--border)]/80 text-[var(--fg-muted)] hover:text-[var(--fg)]'
                     }`}
                   >
                     {typeLabels[type]}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="relative">
                 <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
                 <select
@@ -539,27 +444,36 @@ const Solutions: React.FC = () => {
                 </select>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setToolFormState({ mode: 'create' })}
-                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm"
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsRoiManagerOpen(true)}
+                disabled={resourceOptions.length === 0}
+                className="gap-2 text-[var(--fg-muted)] hover:text-[var(--fg)]"
               >
-                <PlusCircle className="h-4 w-4" />
+                <BarChart3 className="h-4 w-4" />
+                Manage ROI
+              </Button>
+
+              <Button
+                variant="primary"
+                size="sm"
+                glowOnHover
+                onClick={() => setToolFormState({ mode: 'create' })}
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
                 Add Tool
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {summaryStats.map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/60 px-4 py-3"
-            >
+            <Card key={stat.label} glowOnHover className="p-4">
               <p className="text-xs uppercase tracking-wide text-[var(--fg-muted)]">{stat.label}</p>
               <p className="mt-1 text-2xl font-semibold text-[var(--fg)]">{stat.value}</p>
-            </div>
+            </Card>
           ))}
         </div>
       </div>
@@ -590,98 +504,6 @@ const Solutions: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)]/60 p-6">
-          <h2 className="text-lg font-semibold text-[var(--fg)]">Manual ROI Update</h2>
-          <p className="text-sm text-[var(--fg-muted)]">
-            Capture the latest impact metrics when you have verified numbers from finance or operations teams.
-          </p>
-          <form onSubmit={handleManualSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--fg-muted)]">Resource</label>
-              <select
-                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                value={selectedResourceKey}
-                onChange={(event) => setSelectedResourceKey(event.target.value)}
-              >
-                {resourceOptions.map((option) => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-[var(--fg-muted)]">Cost Savings ($)</label>
-                <input
-                  className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                  value={manualMetrics.costSavings}
-                  onChange={(event) => setManualMetrics((prev) => ({ ...prev, costSavings: event.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--fg-muted)]">Hours Saved</label>
-                <input
-                  className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                  value={manualMetrics.hoursSaved}
-                  onChange={(event) => setManualMetrics((prev) => ({ ...prev, hoursSaved: event.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--fg-muted)]">Revenue Generated ($)</label>
-                <input
-                  className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                  value={manualMetrics.revenueGenerated}
-                  onChange={(event) => setManualMetrics((prev) => ({ ...prev, revenueGenerated: event.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--fg-muted)]">Adoption Rate (%)</label>
-                <input
-                  className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                  value={manualMetrics.adoptionRate}
-                  onChange={(event) => setManualMetrics((prev) => ({ ...prev, adoptionRate: event.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--fg-muted)]">Efficiency Gain (%)</label>
-                <input
-                  className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                  value={manualMetrics.efficiencyGain}
-                  onChange={(event) => setManualMetrics((prev) => ({ ...prev, efficiencyGain: event.target.value }))}
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white"
-            >
-              Save Metrics
-            </button>
-          </form>
-        </div>
-
-        <div className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)]/60 p-6">
-          <h2 className="text-lg font-semibold text-[var(--fg)]">Bulk ROI Import</h2>
-          <p className="text-sm text-[var(--fg-muted)]">
-            Drop in CSV exports from your BI platform to update cost savings, hours saved, revenue, adoption, and efficiency in one shot.
-          </p>
-          <div className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)]/40 p-5 text-sm text-[var(--fg-muted)]">
-            <p className="font-medium text-[var(--fg)]">Expected columns</p>
-            <p className="mt-1">resourceKey, costSavings, hoursSaved, revenueGenerated, adoptionRate, efficiencyGain</p>
-          </div>
-          <label className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)]/60 px-4 py-6 text-sm font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]">
-            <Upload className="h-5 w-5" />
-            Upload CSV
-            <input type="file" accept=".csv" className="hidden" onChange={handleImport} />
-          </label>
-          {importFeedback && <p className="text-sm text-[var(--fg-muted)]">{importFeedback}</p>}
-        </div>
-      </div>
-
       <EntityFormModal
         isOpen={Boolean(toolFormState)}
         type="tool"
@@ -692,6 +514,15 @@ const Solutions: React.FC = () => {
         teamMembers={teamMembers}
         onClose={() => setToolFormState(null)}
         onSubmit={handleToolSubmit}
+      />
+
+      <RoiManagerModal
+        isOpen={isRoiManagerOpen}
+        onClose={() => setIsRoiManagerOpen(false)}
+        resourceOptions={resourceOptions}
+        metricsMap={roiMetrics}
+        onManualUpdate={handleManualRoiUpdate}
+        onBulkImport={handleBulkRoiImport}
       />
     </div>
   );

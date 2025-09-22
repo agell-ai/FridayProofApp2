@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Layers, ShoppingBag, Sparkles, Pencil, BarChart3, FileText } from 'lucide-react';
+import { Activity, Layers, ShoppingBag, Sparkles, Pencil, BarChart3, FileText, Lock } from 'lucide-react';
 import { Card } from '../Shared/Card';
 
 type SolutionType = 'tool' | 'system' | 'template' | 'marketplace';
@@ -32,6 +32,13 @@ export interface SolutionCardData {
   tags: string[];
   metrics: SolutionMetric[];
   roi?: SolutionRoiSummary;
+  access?: SolutionAccessInfo;
+}
+
+export interface SolutionAccessInfo {
+  mode: 'editable' | 'read-only';
+  label: string;
+  description?: string;
 }
 
 interface SolutionCardProps {
@@ -138,6 +145,22 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ data, onEdit }) => {
               <p className={`text-sm font-semibold ${toneStyles[metric.tone || 'default']}`}>{metric.value}</p>
             </div>
           ))}
+        </div>
+      )}
+
+      {data.access?.mode === 'read-only' && (
+        <div className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface)]/70 p-3">
+          <div className="flex items-start gap-3 text-sm">
+            <div className="rounded-full bg-[var(--surface)] p-1.5">
+              <Lock className="h-4 w-4 text-[var(--fg-muted)]" />
+            </div>
+            <div>
+              <p className="font-medium text-[var(--fg)]">{data.access.label}</p>
+              {data.access.description && (
+                <p className="mt-1 text-xs text-[var(--fg-muted)]">{data.access.description}</p>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
