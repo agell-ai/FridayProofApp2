@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarRange, ChevronDown, Plus, Search } from 'lucide-react';
 import ClientCard from '../components/Clients/ClientCard';
 import ClientDetails from '../components/Clients/ClientDetails';
@@ -33,7 +33,7 @@ type ClientFormState = {
 const Clients: React.FC = () => {
   const { clients, isLoading, createClient, updateClient } = useClients();
   const { user } = useAuth();
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMetric, setSelectedMetric] = useState<MetricFilter>('total');
   const [timeRange, setTimeRange] = useState<TimeRangeKey>(DEFAULT_TIME_RANGE);
@@ -41,6 +41,20 @@ const Clients: React.FC = () => {
 
   const isBusinessAccount = user?.accountType === 'business';
   const canManageClients = !isBusinessAccount;
+
+  const selectedClient = useMemo(() => {
+    if (!selectedClientId) {
+      return null;
+    }
+
+    return clients.find((client) => client.id === selectedClientId) ?? null;
+  }, [clients, selectedClientId]);
+
+  useEffect(() => {
+    if (selectedClientId && !selectedClient) {
+      setSelectedClientId(null);
+    }
+  }, [selectedClientId, selectedClient]);
 
   const rangeStart = useMemo(() => getTimeRangeStart(timeRange), [timeRange]);
 
@@ -166,78 +180,72 @@ const Clients: React.FC = () => {
 
   const filteredClients = clientsByMetric[selectedMetric] ?? [];
 
+  const hasFilters =
+    normalizedSearch.length > 0 ||
+    selectedMetric !== 'total' ||
+    timeRange !== DEFAULT_TIME_RANGE;
+
   const isClientModalOpen = clientFormState !== null;
   const clientModalMode = clientFormState?.mode ?? 'create';
   const clientModalInitialData = clientFormState?.client ?? null;
 
-  const handleOpenCreateClient = () => {
+  const handleOpenCreateClient = useCallback(() => {
     if (!canManageClients) {
       return;
     }
 
     setClientFormState({ mode: 'create', client: null });
-  };
+  }, [canManageClients]);
 
-  const handleEditClient = (client: Client) => {
-    if (!canManageClients) {
-      return;
-    }
+  const handleEditClient = useCallback(
+    (client: Client) => {
+      if (!canManageClients) {
+        return;
+      }
 
-    setClientFormState({ mode: 'edit', client });
-  };
+      setClientFormState({ mode: 'edit', client });
+    },
+    [canManageClients]
+  );
 
-  const handleClientModalClose = () => {
+  const handleClientModalClose = useCallback(() => {
     setClientFormState(null);
-  };
+  }, []);
 
-  const handleClientSubmit = (values: ClientFormValues) => {
-    if (!clientFormState || !canManageClients) {
-      return;
-    }
+  const handleClientSubmit = useCallback(
+    (values: ClientFormValues) => {
+      if (!clientFormState || !canManageClients) {
+        return;
+      }
 
-    if (clientFormState.mode === 'edit' && clientFormState.client) {
-      updateClient(clientFormState.client.id, {
-        companyName: values.companyName,
-        industry: values.industry,
-        location: values.location,
-        status: values.status,
-        website: values.website,
-        linkedinUrl: values.linkedinUrl,
-      });
-
-      setSelectedClient((previous) => {
-        if (!previous || previous.id !== clientFormState.client?.id) {
-          return previous;
-        }
-
-        return {
-          ...previous,
+      if (clientFormState.mode === 'edit' && clientFormState.client) {
+        updateClient(clientFormState.client.id, {
           companyName: values.companyName,
           industry: values.industry,
           location: values.location,
           status: values.status,
           website: values.website,
           linkedinUrl: values.linkedinUrl,
-          updatedAt: new Date().toISOString(),
-        };
-      });
-    } else {
-      const createdClient = createClient({
-        companyName: values.companyName,
-        industry: values.industry,
-        location: values.location,
-        status: values.status,
-        website: values.website,
-        linkedinUrl: values.linkedinUrl,
-      });
+        });
+      } else {
+        const createdClient = createClient({
+          companyName: values.companyName,
+          industry: values.industry,
+          location: values.location,
+          status: values.status,
+          website: values.website,
+          linkedinUrl: values.linkedinUrl,
+        });
 
-      if (createdClient) {
-        setSelectedClient(createdClient);
+        if (createdClient) {
+          setSelectedClientId(createdClient.id);
+        }
       }
-    }
 
-    setClientFormState(null);
-  };
+      setClientFormState(null);
+    },
+    [canManageClients, clientFormState, createClient, updateClient]
+  );
 
   const clientFormModal = (
     <EntityFormModal
@@ -250,19 +258,23 @@ const Clients: React.FC = () => {
     />
   );
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setSearchTerm('');
     setSelectedMetric('total');
     setTimeRange(DEFAULT_TIME_RANGE);
-  };
+  }, []);
+
+  const handleBackToList = useCallback(() => {
+    setSelectedClientId(null);
+  }, []);
 
   if (selectedClient) {
     return (
       <>
         <ClientDetails
           client={selectedClient}
-          onBack={() => setSelectedClient(null)}
-          onEdit={handleEditClient}
+          onBack={handleBackToList}
+          onEdit={canManageClients ? handleEditClient : undefined}
         />
         {clientFormModal}
       </>
@@ -374,18 +386,18 @@ const Clients: React.FC = () => {
             <ClientCard
               key={client.id}
               client={client}
-              onClick={() => setSelectedClient(client)}
+              onClick={() => setSelectedClientId(client.id)}
             />
           ))}
         </div>
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)]/60 py-12 text-center">
           {canManageClients ? (
-            <>
-              <p className="mb-4 text-[var(--fg-muted)]">
+            <div className="space-y-4">
+              <p className="text-[var(--fg-muted)]">
                 {hasClients ? 'No clients match your filters.' : 'No clients found'}
               </p>
-              {hasClients ? (
+              {hasClients && hasFilters ? (
                 <button
                   type="button"
                   onClick={handleResetFilters}
@@ -396,13 +408,16 @@ const Clients: React.FC = () => {
               ) : (
                 <button
                   type="button"
-                  className="mx-auto flex items-center justify-center gap-2 rounded-lg bg-sunset-orange px-4 py-2 font-semibold text-white transition-opacity hover:opacity-90"
+                  onClick={handleOpenCreateClient}
+                  disabled={!canManageClients}
+                  aria-disabled={!canManageClients}
+                  className="mx-auto flex items-center justify-center gap-2 rounded-lg bg-sunset-orange px-4 py-2 font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Plus className="h-5 w-5" />
                   <span>Add Your First Client</span>
                 </button>
               )}
-            </>
+            </div>
           ) : (
             <div className="mx-auto max-w-xl space-y-3 px-4">
               <p className="text-base font-medium text-[var(--fg)]">

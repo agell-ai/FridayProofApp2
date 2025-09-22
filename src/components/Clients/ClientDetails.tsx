@@ -8,6 +8,7 @@ import ProjectModal from '../Projects/ProjectModal';
 import { useTeam } from '../../hooks/useTeam';
 import { useProjects } from '../../hooks/useProjects';
 import { useTools } from '../../hooks/useTools';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ClientDetailsProps {
   client: Client;
@@ -25,6 +26,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack, onEdit })
   const { getTeamMembersByIds } = useTeam();
   const { projects } = useProjects();
   const { tools } = useTools();
+  const { user } = useAuth();
   const assignedTeamMembers = getTeamMembersByIds(client.teamMemberIds);
   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
@@ -33,10 +35,19 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack, onEdit })
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [selectedProposal, setSelectedProposal] = useState(null);
+  const isReadOnlyAccount = user?.accountType === 'business';
+
+  const handleEditClick = () => {
+    if (isReadOnlyAccount) {
+      return;
+    }
+
+    onEdit?.(client);
+  };
 
   // Get actual project data for client projects
   const clientProjects = projects.filter(project => project.clientId === client.id);
-  
+
   // Get actual tools data for client tools
   const clientTools = tools.filter(tool => tool.clientId === client.id);
   
@@ -269,19 +280,45 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack, onEdit })
           <div className="bg-glass-gradient-light dark:bg-glass-gradient-dark border border-glass-border-light dark:border-glass-border-dark rounded-xl p-6 backdrop-blur-md shadow-lg">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Actions</h3>
             <div className="space-y-3">
-              <button className="w-full bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
+              <button
+                type="button"
+                disabled={isReadOnlyAccount}
+                aria-disabled={isReadOnlyAccount}
+                className={`w-full bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg transition-opacity ${
+                  isReadOnlyAccount ? 'cursor-not-allowed opacity-60' : 'hover:opacity-90'
+                }`}
+              >
                 New Project
               </button>
               <button
-                className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm"
-                onClick={() => onEdit?.(client)}
+                type="button"
+                disabled={isReadOnlyAccount || !onEdit}
+                aria-disabled={isReadOnlyAccount || !onEdit}
+                className={`w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg backdrop-blur-sm transition-colors ${
+                  isReadOnlyAccount || !onEdit
+                    ? 'cursor-not-allowed opacity-60'
+                    : 'hover:bg-white/40 dark:hover:bg-white/15'
+                }`}
+                onClick={handleEditClick}
               >
                 Edit Client
               </button>
-              <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm">
+              <button
+                type="button"
+                disabled={isReadOnlyAccount}
+                aria-disabled={isReadOnlyAccount}
+                className={`w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg backdrop-blur-sm transition-colors ${
+                  isReadOnlyAccount ? 'cursor-not-allowed opacity-60' : 'hover:bg-white/40 dark:hover:bg-white/15'
+                }`}
+              >
                 Add Contact
               </button>
             </div>
+            {isReadOnlyAccount && (
+              <p className="mt-4 text-xs text-gray-600 dark:text-gray-300">
+                Client management actions are disabled for business accounts.
+              </p>
+            )}
           </div>
         </div>
       </div>
