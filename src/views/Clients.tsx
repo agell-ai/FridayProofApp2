@@ -15,6 +15,8 @@ import {
 
 type MetricFilter = 'total' | 'active' | 'prospect' | 'new';
 
+type ClientsByMetric = Record<MetricFilter, Client[]>;
+
 interface MetricDefinition {
   key: MetricFilter;
   label: string;
@@ -35,6 +37,11 @@ const Clients: React.FC = () => {
 
   const rangeStart = useMemo(() => getTimeRangeStart(timeRange), [timeRange]);
 
+  const normalizedSearch = useMemo(
+    () => searchTerm.trim().toLowerCase(),
+    [searchTerm]
+  );
+
   const selectedRangeOption = useMemo(() => {
     return (
       timeRangeOptions.find((option) => option.value === timeRange) ??
@@ -54,32 +61,72 @@ const Clients: React.FC = () => {
     }
   }, [selectedRangeOption]);
 
-  const metricCounts = useMemo(() => {
-    let active = 0;
-    let prospects = 0;
-    let newClients = 0;
+  const { metricCounts, clientsByMetric } = useMemo(() => {
+    const counts: Record<MetricFilter, number> = {
+      total: 0,
+      active: 0,
+      prospect: 0,
+      new: 0
+    };
+
+    const grouped: ClientsByMetric = {
+      total: [],
+      active: [],
+      prospect: [],
+      new: []
+    };
+
+    const hasSearch = normalizedSearch.length > 0;
+
+    const includesSearch = (value: string | null | undefined) =>
+      String(value ?? '').toLowerCase().includes(normalizedSearch);
 
     clients.forEach((client) => {
-      if (client.status === 'active') {
-        active += 1;
+      const matchesSearch =
+        !hasSearch ||
+        [
+          client.companyName,
+          client.industry,
+          client.location,
+          client.status,
+          client.website ?? '',
+          client.linkedinUrl ?? ''
+        ].some((value) => includesSearch(value)) ||
+        client.contacts.some((contact) =>
+          [
+            contact.name,
+            contact.title,
+            contact.email ?? '',
+            contact.phone ?? '',
+            contact.linkedinUrl ?? ''
+          ].some((value) => includesSearch(value))
+        );
+
+      if (!matchesSearch) {
+        return;
       }
 
-      if (client.status === 'prospect') {
-        prospects += 1;
+      if (isWithinTimeRange(client.updatedAt, rangeStart)) {
+        grouped.total.push(client);
+        counts.total += 1;
+
+        if (client.status === 'active') {
+          grouped.active.push(client);
+          counts.active += 1;
+        } else if (client.status === 'prospect') {
+          grouped.prospect.push(client);
+          counts.prospect += 1;
+        }
       }
 
       if (isWithinTimeRange(client.createdAt, rangeStart)) {
-        newClients += 1;
+        grouped.new.push(client);
+        counts.new += 1;
       }
     });
 
-    return {
-      total: clients.length,
-      active,
-      prospects,
-      new: newClients
-    };
-  }, [clients, rangeStart]);
+    return { metricCounts: counts, clientsByMetric: grouped };
+  }, [clients, normalizedSearch, rangeStart]);
 
   const metrics = useMemo<MetricDefinition[]>(() => {
     return [
@@ -99,7 +146,7 @@ const Clients: React.FC = () => {
         key: 'prospect',
         label: 'Prospects',
         description: 'Sales pipeline',
-        value: metricCounts.prospects
+        value: metricCounts.prospect
       },
       {
         key: 'new',
@@ -110,50 +157,7 @@ const Clients: React.FC = () => {
     ];
   }, [metricCounts, newMetricDescription]);
 
-  const filteredClients = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-
-    return clients.filter((client) => {
-      const matchesSearch =
-        normalizedSearch.length === 0 ||
-        [
-          client.companyName,
-          client.industry,
-          client.location,
-          client.status,
-          client.website ?? '',
-          client.linkedinUrl ?? ''
-        ].some((value) => value.toLowerCase().includes(normalizedSearch)) ||
-        client.contacts.some((contact) =>
-          [
-            contact.name,
-            contact.title,
-            contact.email ?? '',
-            contact.phone ?? '',
-            contact.linkedinUrl ?? ''
-          ]
-            .map((value) => value.toLowerCase())
-            .some((value) => value.includes(normalizedSearch))
-        );
-
-      if (!matchesSearch) {
-        return false;
-      }
-
-      switch (selectedMetric) {
-        case 'total':
-          return true;
-        case 'active':
-          return client.status === 'active';
-        case 'prospect':
-          return client.status === 'prospect';
-        case 'new':
-          return isWithinTimeRange(client.createdAt, rangeStart);
-        default:
-          return true;
-      }
-    });
-  }, [clients, rangeStart, searchTerm, selectedMetric]);
+  const filteredClients = clientsByMetric[selectedMetric] ?? [];
 
   const handleResetFilters = () => {
     setSearchTerm('');
@@ -188,7 +192,7 @@ const Clients: React.FC = () => {
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
               <input
                 className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] disabled:cursor-not-allowed disabled:opacity-60"
-                placeholder="Search clients by name, industry, or location"
+                placeholder="Search clients by company, industry, location, or contact details"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 disabled={!canManageClients}
