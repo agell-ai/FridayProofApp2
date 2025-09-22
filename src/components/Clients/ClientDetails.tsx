@@ -18,6 +18,8 @@ interface ClientDetailsProps {
     proposalId: string,
     updates: Partial<Omit<ClientProposal, 'id'>>,
   ) => ClientProposal | null;
+  onEdit?: (client: Client) => void;
+  isReadOnly?: boolean;
 }
 
 const statusColors = {
@@ -31,6 +33,8 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
   onBack,
   onCreateProposal,
   onUpdateProposal,
+  onEdit,
+  isReadOnly = false,
 }) => {
   const { getTeamMembersByIds } = useTeam();
   const { projects } = useProjects();
@@ -46,6 +50,8 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [proposalFormMode, setProposalFormMode] = useState<FormMode>('create');
   const [proposalFormInitial, setProposalFormInitial] = useState<ClientProposal | null>(null);
+
+  const isReadOnlyMode = Boolean(isReadOnly);
 
   // Get actual project data for client projects
   const clientProjects = projects.filter(project => project.clientId === client.id);
@@ -160,16 +166,32 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
   };
 
   const openCreateProposalModal = () => {
+    if (isReadOnlyMode) {
+      return;
+    }
+
     setProposalFormMode('create');
     setProposalFormInitial(null);
     setIsProposalModalOpen(true);
   };
 
   const openEditProposalModal = (proposal: ClientProposal) => {
+    if (isReadOnlyMode) {
+      return;
+    }
+
     setSelectedProposal(null);
     setProposalFormMode('edit');
     setProposalFormInitial(proposal);
     setIsProposalModalOpen(true);
+  };
+
+  const handleEditClient = () => {
+    if (isReadOnlyMode || !onEdit) {
+      return;
+    }
+
+    onEdit(client);
   };
 
 
@@ -346,19 +368,33 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
                 glowOnHover
                 className="w-full"
                 onClick={openCreateProposalModal}
+                disabled={isReadOnlyMode}
               >
                 <div className="flex items-center justify-center gap-2">
                   <PresentationChart className="w-4 h-4" />
                   <span>Create Proposal</span>
                 </div>
               </Button>
-              <button className="w-full bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
+              <button
+                type="button"
+                disabled={isReadOnlyMode}
+                className="w-full bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 New Project
               </button>
-              <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm">
+              <button
+                type="button"
+                onClick={handleEditClient}
+                disabled={isReadOnlyMode || !onEdit}
+                className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 Edit Client
               </button>
-              <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm">
+              <button
+                type="button"
+                disabled={isReadOnlyMode}
+                className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 Add Contact
               </button>
             </div>
@@ -842,8 +878,10 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedProposal.title}</h2>
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={() => openEditProposalModal(selectedProposal)}
-                  className="px-3 py-1.5 rounded-lg bg-gradient-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                  disabled={isReadOnlyMode}
+                  className="px-3 py-1.5 rounded-lg bg-gradient-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Edit
                 </button>
