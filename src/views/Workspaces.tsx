@@ -1,153 +1,225 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Filter, PlusCircle } from 'lucide-react';
+import { Search, PlusCircle } from 'lucide-react';
 import { useClients } from '../hooks/useClients';
 import { useProjects } from '../hooks/useProjects';
 import { useTeam } from '../hooks/useTeam';
 import { useAuth } from '../hooks/useAuth';
-import WorkspaceCard, { WorkspaceCardData } from '../components/Workspaces/WorkspaceCard';
-import { EntityFormModal, EntityFormValues, ClientFormValues, ProjectFormValues, TeamFormValues } from '../components/Shared/EntityFormModal';
+import {
+  EntityFormModal,
+  EntityFormValues,
+  ClientFormValues,
+  ProjectFormValues,
+  TeamFormValues,
+  ProposalFormValues,
+} from '../components/Shared/EntityFormModal';
 import { Button } from '../components/Shared/Button';
-import { Client, Project, TeamMember } from '../types';
+import ProjectCard from '../components/Workspaces/ProjectCard';
+import ClientCard from '../components/Workspaces/ClientCard';
+import TeamMemberCard from '../components/Workspaces/TeamMemberCard';
+import ProjectDetails from '../components/Workspaces/ProjectDetails';
+import ClientDetails from '../components/Workspaces/ClientDetails';
+import TeamMemberDetailsModal from '../components/Workspaces/TeamMemberDetailsModal';
+import InvoiceFormModal, { InvoiceFormValues } from '../components/Workspaces/InvoiceFormModal';
+import { Client, ClientInvoice, ClientProposal, Project, System, TeamMember } from '../types';
 
-const typeOrder = ['client', 'project', 'team'] as const;
+type WorkspaceView = 'project' | 'client' | 'team';
 
-type WorkspaceType = (typeof typeOrder)[number];
-
-type FormState = {
-  type: WorkspaceType;
-  mode: 'create' | 'edit';
-  entity?: Client | Project | TeamMember;
+const viewLabels: Record<WorkspaceView, string> = {
+  project: 'Projects',
+  client: 'Clients',
+  team: 'Team',
 };
 
-const typeLabels: Record<WorkspaceType, string> = {
-  client: 'Client',
+const addLabels: Record<WorkspaceView, string> = {
   project: 'Project',
+  client: 'Client',
   team: 'Team Member',
 };
 
+const searchPlaceholders: Record<WorkspaceView, string> = {
+  project: 'Search projects by name, status, or client',
+  client: 'Search clients by name, industry, or status',
+  team: 'Search team members by name, company, or skill',
+};
+
+type FormState = {
+  type: WorkspaceView | 'proposal';
+  mode: 'create' | 'edit';
+  entity?: Client | Project | TeamMember | ClientProposal;
+  clientContext?: Client | null;
+};
+
+const buildSystemsFromNames = (names: string[], project: Project): System[] => {
+  const sanitized = Array.from(new Set(names.map((name) => name.trim()).filter(Boolean)));
+  const existingByName = new Map(project.systems.map((system) => [system.name.toLowerCase(), system]));
+  const usedIds = new Set<string>();
+  const results: System[] = [];
+
+  sanitized.forEach((name, index) => {
+    const lower = name.toLowerCase();
+    const matched = existingByName.get(lower);
+    if (matched) {
+      usedIds.add(matched.id);
+      results.push({ ...matched, name });
+      return;
+    }
+
+    const unusedExisting = project.systems.find((system) => !usedIds.has(system.id));
+    if (unusedExisting) {
+      usedIds.add(unusedExisting.id);
+      results.push({ ...unusedExisting, name });
+      return;
+    }
+
+    results.push({
+      id: `sys-${project.id}-${Date.now()}-${index}`,
+      name,
+      description: `${name} system for ${project.name}`,
+      type: 'workflow',
+      status: 'design',
+      projectId: project.id,
+      businessImpact: '',
+      components: [],
+      connections: [],
+      createdAt: new Date().toISOString(),
+    });
+  });
+
+  return results;
+};
+
 const Workspaces: React.FC = () => {
-  const { clients, isLoading: loadingClients, createClient, updateClient } = useClients();
+  const {
+    clients,
+    isLoading: loadingClients,
+    createClient,
+    updateClient,
+    createProposal,
+    updateProposal,
+  } = useClients();
   const { projects, isLoading: loadingProjects, createProject, updateProject } = useProjects();
   const { teamMembers, isLoading: loadingTeam, createTeamMember, updateTeamMember } = useTeam();
   const { user } = useAuth();
 
+  const availableViews = useMemo<WorkspaceView[]>(() => {
+    const views: WorkspaceView[] = ['project'];
+    if (user?.accountType === 'agency' || user?.accountType === 'consultant') {
+      views.push('client');
+    }
+    if (user?.accountType === 'agency' || user?.accountType === 'business') {
+      views.push('team');
+    }
+    return views;
+  }, [user?.accountType]);
+
+  const [selectedView, setSelectedView] = useState<WorkspaceView>('project');
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTypes, setActiveTypes] = useState<WorkspaceType[]>([...typeOrder]);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [formState, setFormState] = useState<FormState | null>(null);
-  const creationTypeOptions = useMemo<WorkspaceType[]>(
-    () => (user?.accountType === 'business' ? ['project', 'team'] : [...typeOrder]),
-    [user?.accountType]
-  );
-  const [createType, setCreateType] = useState<WorkspaceType>(() =>
-    user?.accountType === 'business' ? 'project' : 'client'
-  );
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
+  const [isInvoiceModalOpen, setInvoiceModalOpen] = useState(false);
 
   useEffect(() => {
-    if (creationTypeOptions.length > 0 && !creationTypeOptions.includes(createType)) {
-      setCreateType(creationTypeOptions[0]);
+    if (!availableViews.includes(selectedView) && availableViews.length > 0) {
+      setSelectedView(availableViews[0]);
     }
-  }, [createType, creationTypeOptions]);
+  }, [availableViews, selectedView]);
+
+  useEffect(() => {
+    if (selectedView !== 'project') {
+      setSelectedProject(null);
+    }
+    if (selectedView !== 'client') {
+      setSelectedClient(null);
+    }
+    if (selectedView !== 'team') {
+      setSelectedTeamMember(null);
+    }
+  }, [selectedView]);
+
+  useEffect(() => {
+    if (!selectedProject) return;
+    const updated = projects.find((project) => project.id === selectedProject.id);
+    if (updated && updated !== selectedProject) {
+      setSelectedProject(updated);
+    }
+  }, [projects, selectedProject]);
+
+  useEffect(() => {
+    if (!selectedClient) return;
+    const updated = clients.find((client) => client.id === selectedClient.id);
+    if (updated && updated !== selectedClient) {
+      setSelectedClient(updated);
+    }
+  }, [clients, selectedClient]);
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const projectResults = useMemo(() => {
+    if (!normalizedSearch) {
+      return projects;
+    }
+
+    return projects.filter((project) => {
+      const client = clients.find((item) => item.id === project.clientId);
+      const values = [
+        project.name,
+        project.status,
+        project.description,
+        client?.companyName ?? '',
+      ];
+      return values.some((value) => value.toLowerCase().includes(normalizedSearch));
+    });
+  }, [projects, clients, normalizedSearch]);
+
+  const clientResults = useMemo(() => {
+    if (!normalizedSearch) {
+      return clients;
+    }
+
+    return clients.filter((client) => {
+      const values = [client.companyName, client.status, client.industry, client.location];
+      return values.some((value) => value.toLowerCase().includes(normalizedSearch));
+    });
+  }, [clients, normalizedSearch]);
+
+  const teamResults = useMemo(() => {
+    if (!normalizedSearch) {
+      return teamMembers;
+    }
+
+    return teamMembers.filter((member) => {
+      const values = [
+        member.name,
+        member.email,
+        member.companyName,
+        member.role,
+        member.city ?? '',
+        member.state ?? '',
+        ...member.skills,
+      ];
+      return values.some((value) => value.toLowerCase().includes(normalizedSearch));
+    });
+  }, [teamMembers, normalizedSearch]);
 
   const isLoading = loadingClients || loadingProjects || loadingTeam;
 
-  const workspaceItems: WorkspaceCardData[] = useMemo(() => {
-    const formatCurrency = (value: number) => {
-      if (!value) return '$0';
-      if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-      if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
-      return `$${value.toLocaleString()}`;
-    };
+  const summaryStats = useMemo(() => {
+    const stats: { label: string; value: number }[] = [
+      { label: 'Projects', value: projects.length },
+    ];
 
-    const clientEntries: WorkspaceCardData[] = clients.map((client) => ({
-      id: client.id,
-      type: 'client',
-      title: client.companyName,
-      subtitle: client.industry,
-      status: client.status,
-      meta: `Updated ${new Date(client.updatedAt).toLocaleDateString()}`,
-      tags: [client.status, client.industry, client.location, ...client.contacts.map((contact) => contact.title)],
-      metrics: [
-        { label: 'Projects', value: String(client.projectIds.length) },
-        { label: 'Team', value: String(client.teamMemberIds.length) },
-        { label: 'Lifetime Revenue', value: formatCurrency(client.analytics.totalRevenue), tone: 'positive' },
-      ],
-    }));
+    if (availableViews.includes('client')) {
+      stats.push({ label: 'Clients', value: clients.length });
+    }
 
-    const projectEntries: WorkspaceCardData[] = projects.map((project) => {
-      const client = clients.find((item) => item.id === project.clientId);
-      return {
-        id: project.id,
-        type: 'project',
-        title: project.name,
-        subtitle: client ? `For ${client.companyName}` : 'Internal initiative',
-        status: project.status,
-        meta: `Updated ${new Date(project.updatedAt).toLocaleDateString()}`,
-        tags: [project.status, client?.industry || 'internal', ...project.systems.map((system) => system.type)],
-        metrics: [
-          { label: 'Systems', value: String(project.systems.length) },
-          { label: 'Assigned Team', value: String(project.assignedUsers.length) },
-        ],
-      };
-    });
+    if (availableViews.includes('team')) {
+      stats.push({ label: 'Team Members', value: teamMembers.length });
+    }
 
-    const teamEntries: WorkspaceCardData[] = teamMembers.map((member) => ({
-      id: member.id,
-      type: 'team',
-      title: member.name,
-      subtitle: `${member.role.charAt(0).toUpperCase() + member.role.slice(1)} · ${member.companyName}`,
-      status: member.status,
-      meta: member.city && member.state ? `${member.city}, ${member.state}` : member.city || member.state || 'Remote',
-      tags: [member.role, member.status, ...member.skills],
-      metrics: [
-        { label: 'Projects', value: String(member.projectIds.length) },
-        { label: 'Productivity', value: `${member.analytics.monthlyProductivity}%`, tone: 'positive' },
-      ],
-    }));
-
-    return [...clientEntries, ...projectEntries, ...teamEntries];
-  }, [clients, projects, teamMembers]);
-
-  const availableStatuses = useMemo(() => {
-    const statuses = new Set<string>();
-    workspaceItems.forEach((item) => {
-      if (item.status) statuses.add(item.status);
-    });
-    return Array.from(statuses);
-  }, [workspaceItems]);
-
-  const filteredItems = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-
-    return workspaceItems.filter((item) => {
-      const matchesType = activeTypes.includes(item.type as WorkspaceType);
-      if (!matchesType) return false;
-
-      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-      if (!matchesStatus) return false;
-
-      if (!normalizedSearch) return true;
-
-      const searchableValues = [
-        item.title,
-        item.subtitle,
-        item.meta,
-        ...(item.tags || []),
-        ...item.metrics.map((metric) => metric.label),
-        ...item.metrics.map((metric) => metric.value),
-      ]
-        .filter(Boolean)
-        .map((value) => value.toLowerCase());
-
-      return searchableValues.some((value) => value.includes(normalizedSearch));
-    });
-  }, [workspaceItems, activeTypes, statusFilter, searchTerm]);
-
-  const summaryStats = useMemo(() => [
-    { label: 'Clients', value: clients.length },
-    { label: 'Projects', value: projects.length },
-    { label: 'Team Members', value: teamMembers.length },
-  ], [clients.length, projects.length, teamMembers.length]);
+    return stats;
+  }, [projects.length, clients.length, teamMembers.length, availableViews]);
 
   const handleFormSubmit = (values: EntityFormValues) => {
     if (!formState) return;
@@ -171,22 +243,18 @@ const Workspaces: React.FC = () => {
       }
       case 'project': {
         const payload = values as ProjectFormValues;
+        const { systems, ...projectData } = payload;
         if (formState.mode === 'create') {
           createProject({
-            name: payload.name,
-            description: payload.description,
-            status: payload.status,
-            clientId: payload.clientId,
+            ...projectData,
             accountId: user?.accountId || 'acc-1',
-            assignedUsers: payload.assignedUsers,
           });
         } else if (formState.entity) {
-          updateProject((formState.entity as Project).id, {
-            name: payload.name,
-            description: payload.description,
-            status: payload.status,
-            clientId: payload.clientId,
-            assignedUsers: payload.assignedUsers,
+          const project = formState.entity as Project;
+          const updatedSystems = buildSystemsFromNames(systems, project);
+          updateProject(project.id, {
+            ...projectData,
+            systems: updatedSystems,
           });
         }
         break;
@@ -218,6 +286,20 @@ const Workspaces: React.FC = () => {
         }
         break;
       }
+      case 'proposal': {
+        const payload = values as ProposalFormValues;
+        const client = formState.clientContext ?? selectedClient;
+        if (!client) {
+          break;
+        }
+
+        if (formState.mode === 'create') {
+          createProposal(client.id, payload);
+        } else if (formState.entity) {
+          updateProposal(client.id, (formState.entity as ClientProposal).id, payload);
+        }
+        break;
+      }
       default:
         break;
     }
@@ -225,10 +307,152 @@ const Workspaces: React.FC = () => {
     setFormState(null);
   };
 
-  const toggleType = (type: WorkspaceType) => {
-    setActiveTypes((prev) =>
-      prev.includes(type) ? prev.filter((item) => item !== type) : [...prev, type]
+  const handleInvoiceSubmit = (values: InvoiceFormValues) => {
+    if (!selectedClient) {
+      return;
+    }
+
+    const newInvoice: ClientInvoice = {
+      id: `inv-${Date.now()}`,
+      number: values.number,
+      amount: values.amount,
+      status: values.status,
+      dueDate: values.dueDate,
+      ...(values.paidDate ? { paidDate: values.paidDate } : {}),
+    };
+
+    updateClient(selectedClient.id, {
+      invoices: [...selectedClient.invoices, newInvoice],
+    });
+
+    setSelectedClient((previous) =>
+      previous ? { ...previous, invoices: [...previous.invoices, newInvoice] } : previous
     );
+
+    setInvoiceModalOpen(false);
+  };
+
+  const activeClientForModal = formState?.type === 'proposal'
+    ? formState.clientContext ?? selectedClient ?? null
+    : null;
+
+  const renderProjects = () => {
+    if (selectedProject) {
+      const client = clients.find((item) => item.id === selectedProject.clientId) ?? null;
+      const assignedTeam = teamMembers.filter((member) => selectedProject.assignedUsers.includes(member.id));
+
+      return (
+        <ProjectDetails
+          project={selectedProject}
+          client={client}
+          teamMembers={assignedTeam}
+          onBack={() => setSelectedProject(null)}
+          onEdit={(project) => setFormState({ type: 'project', mode: 'edit', entity: project })}
+        />
+      );
+    }
+
+    if (projectResults.length === 0) {
+      return (
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/60 p-12 text-center text-[var(--fg-muted)]">
+          <p className="text-lg font-semibold text-[var(--fg)]">No projects found</p>
+          <p className="mt-2 text-sm">Try a different search or create a new project to get started.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {projectResults.map((project) => {
+          const client = clients.find((item) => item.id === project.clientId) ?? null;
+          return (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              client={client}
+              onOpen={setSelectedProject}
+              onEdit={(item) => setFormState({ type: 'project', mode: 'edit', entity: item })}
+            />
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderClients = () => {
+    if (selectedClient) {
+      const clientProjects = projects.filter((project) => project.clientId === selectedClient.id);
+
+      return (
+        <ClientDetails
+          client={selectedClient}
+          projects={clientProjects}
+          onBack={() => setSelectedClient(null)}
+          onEdit={(client) => setFormState({ type: 'client', mode: 'edit', entity: client })}
+          onCreateInvoice={() => setInvoiceModalOpen(true)}
+          onCreateProposal={() => setFormState({ type: 'proposal', mode: 'create', clientContext: selectedClient })}
+        />
+      );
+    }
+
+    if (clientResults.length === 0) {
+      return (
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/60 p-12 text-center text-[var(--fg-muted)]">
+          <p className="text-lg font-semibold text-[var(--fg)]">No clients found</p>
+          <p className="mt-2 text-sm">Adjust your search or add a new client to begin tracking engagements.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {clientResults.map((client) => (
+          <ClientCard
+            key={client.id}
+            client={client}
+            onOpen={setSelectedClient}
+            onEdit={(item) => setFormState({ type: 'client', mode: 'edit', entity: item })}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const renderTeam = () => {
+    if (teamResults.length === 0) {
+      return (
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/60 p-12 text-center text-[var(--fg-muted)]">
+          <p className="text-lg font-semibold text-[var(--fg)]">No team members found</p>
+          <p className="mt-2 text-sm">Invite collaborators or search for a different name or skill.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {teamResults.map((member) => (
+          <TeamMemberCard
+            key={member.id}
+            member={member}
+            onOpen={setSelectedTeamMember}
+            onEdit={(item) => setFormState({ type: 'team', mode: 'edit', entity: item })}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const renderContent = () => {
+    switch (selectedView) {
+      case 'project':
+        return renderProjects();
+      case 'client':
+        return renderClients();
+      case 'team':
+        return renderTeam();
+      default:
+        return null;
+    }
   };
 
   return (
@@ -238,13 +462,13 @@ const Workspaces: React.FC = () => {
           <div className="space-y-3">
             <h1 className="text-2xl font-semibold text-[var(--fg)]">Workspaces</h1>
             <p className="text-sm text-[var(--fg-muted)]">
-              Search and manage every client, project, and teammate from a unified view.
+              Navigate every project, client relationship, and teammate from a single command hub.
             </p>
             <div className="relative max-w-xl">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
               <input
                 className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                placeholder="Search by name, industry, status, or skill"
+                placeholder={searchPlaceholders[selectedView]}
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
@@ -253,73 +477,34 @@ const Workspaces: React.FC = () => {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
-              {typeOrder.map((type) => {
-                const isActive = activeTypes.includes(type);
-                return (
-                  <Button
-                    key={type}
-                    type="button"
-                    size="sm"
-                    variant={isActive ? 'gradient' : 'outline'}
-                    onClick={() => toggleType(type)}
-                    aria-pressed={isActive}
-                    className={`rounded-lg py-2 text-sm font-medium ${
-                      isActive
-                        ? ''
-                        : 'bg-[var(--surface)] text-[var(--fg-muted)] hover:bg-[var(--surface)] hover:text-[var(--fg)]'
-                    }`}
-                  >
-                    {typeLabels[type]}
-                  </Button>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
-                <select
-                  className="appearance-none rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-8 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                  value={statusFilter}
-                  onChange={(event) => setStatusFilter(event.target.value)}
-                >
-                  <option value="all">All statuses</option>
-                  {availableStatuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <select
-                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                  value={createType}
-                  onChange={(event) => setCreateType(event.target.value as WorkspaceType)}
-                >
-                  {creationTypeOptions.map((type) => (
-                    <option key={`create-${type}`} value={type}>
-                      {typeLabels[type]}
-                    </option>
-                  ))}
-                </select>
+              {availableViews.map((view) => (
                 <Button
+                  key={view}
                   type="button"
                   size="sm"
-                  variant="gradient"
-                  onClick={() => setFormState({ type: createType, mode: 'create' })}
-                  className="gap-2 px-4 py-2 text-sm font-semibold"
+                  variant={view === selectedView ? 'gradient' : 'outline'}
+                  onClick={() => setSelectedView(view)}
+                  className="rounded-lg px-4 py-2 text-sm font-medium"
                 >
-                  <PlusCircle className="h-4 w-4" />
-                  Add {typeLabels[createType]}
+                  {viewLabels[view]}
                 </Button>
-              </div>
+              ))}
             </div>
+
+            <Button
+              type="button"
+              size="sm"
+              variant="gradient"
+              onClick={() => setFormState({ type: selectedView, mode: 'create' })}
+              className="gap-2 px-4 py-2 text-sm font-semibold"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add {addLabels[selectedView]}
+            </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {summaryStats.map((stat) => (
             <div
               key={stat.label}
@@ -334,48 +519,35 @@ const Workspaces: React.FC = () => {
 
       {isLoading ? (
         <div className="flex h-48 items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-2 border-[var(--accent-orange)] border-t-transparent"></div>
-        </div>
-      ) : filteredItems.length === 0 ? (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/60 p-12 text-center text-[var(--fg-muted)]">
-          <p className="text-lg font-semibold text-[var(--fg)]">No matches found</p>
-          <p className="mt-2 text-sm">
-            Try adjusting your filters or search for a different keyword.
-          </p>
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-[var(--accent-orange)] border-t-transparent" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredItems.map((item) => (
-            <WorkspaceCard
-              key={item.id}
-              data={item}
-              onEdit={(data) => {
-                const entity =
-                  data.type === 'client'
-                    ? clients.find((client) => client.id === data.id)
-                    : data.type === 'project'
-                      ? projects.find((project) => project.id === data.id)
-                      : teamMembers.find((member) => member.id === data.id);
-
-                if (entity) {
-                  setFormState({ type: data.type, mode: 'edit', entity });
-                }
-              }}
-            />
-          ))}
-        </div>
+        renderContent()
       )}
 
       <EntityFormModal
         isOpen={Boolean(formState)}
-        type={formState?.type || 'client'}
-        mode={formState?.mode || 'create'}
+        type={(formState?.type ?? 'client') as FormState['type']}
+        mode={formState?.mode ?? 'create'}
         initialData={formState?.entity}
         clients={clients}
         projects={projects}
         teamMembers={teamMembers}
+        activeClient={activeClientForModal}
         onClose={() => setFormState(null)}
         onSubmit={handleFormSubmit}
+      />
+
+      <TeamMemberDetailsModal
+        member={selectedTeamMember}
+        projects={projects}
+        onClose={() => setSelectedTeamMember(null)}
+      />
+
+      <InvoiceFormModal
+        isOpen={isInvoiceModalOpen}
+        onClose={() => setInvoiceModalOpen(false)}
+        onSubmit={handleInvoiceSubmit}
       />
     </div>
   );
