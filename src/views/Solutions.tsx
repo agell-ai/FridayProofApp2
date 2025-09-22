@@ -15,6 +15,7 @@ import TemplateFormModal, { TemplateFormValues } from '../components/Solutions/T
 import MarketplaceFormModal, { MarketplaceFormValues } from '../components/Solutions/MarketplaceFormModal';
 import type { ResourceOption, RoiMetricRecord } from '../types/roi';
 import type { Client, ClientLibraryItem, ClientTemplate, Project, System } from '../types';
+import { isMarketplaceTemplateAsset, isTemplateAsset } from './solutionsFilters';
 
 const hubViews = ['active', 'library', 'marketplace'] as const;
 
@@ -516,7 +517,7 @@ const Solutions: React.FC = () => {
     setTemplateDescriptions((prev) => {
       const next = { ...prev };
       clients.forEach((client) => {
-        client.templates.forEach((template) => {
+        client.templates.filter(isTemplateAsset).forEach((template) => {
           const key = `${client.id}-${template.id}`;
           if (!next[key]) {
             next[key] = `${template.category} playbook maintained by ${client.companyName}.`;
@@ -577,7 +578,7 @@ const Solutions: React.FC = () => {
   const libraryItems = useMemo(
     () =>
       clients.flatMap((client) =>
-        client.templates.map((template) => {
+        client.templates.filter(isTemplateAsset).map((template) => {
           const key = `${client.id}-${template.id}`;
           const marketplaceItem = client.library.find((item) => item.templateId === template.id);
           return {
@@ -600,7 +601,7 @@ const Solutions: React.FC = () => {
   const marketplaceItems = useMemo(
     () =>
       clients.flatMap((client) =>
-        client.library.map((item) => {
+        client.library.filter(isMarketplaceTemplateAsset).map((item) => {
           const key = `${client.id}-${item.id}`;
           const metrics = marketplaceMetrics[key] || { downloads: 0, rating: 0 };
           return {
@@ -771,7 +772,7 @@ const Solutions: React.FC = () => {
           const client = clients.find((candidate) => candidate.id === item.clientId);
           const template = client?.templates.find((candidate) => candidate.id === item.templateId);
 
-          if (!client || !template) {
+          if (!client || !isTemplateAsset(template)) {
             return null;
           }
 
@@ -818,11 +819,7 @@ const Solutions: React.FC = () => {
           const client = clients.find((candidate) => candidate.id === item.clientId);
           const libraryItem = client?.library.find((candidate) => candidate.id === item.itemId);
 
-          if (!client || !libraryItem) {
-            return null;
-          }
-
-          if (libraryItem.type !== 'template' && !libraryItem.templateId) {
+          if (!client || !isMarketplaceTemplateAsset(libraryItem)) {
             return null;
           }
 
@@ -1120,6 +1117,7 @@ const Solutions: React.FC = () => {
         category,
         usage,
         lastModified: new Date().toISOString(),
+        isTemplate: true,
       };
       updateClient(clientId, { templates: [...client.templates, newTemplate] });
       setTemplateDescriptions((prev) => ({

@@ -99,7 +99,8 @@ const mockClients: Client[] = [
         name: 'Order Fulfillment Template',
         category: 'E-commerce',
         usage: 12,
-        lastModified: '2024-01-20'
+        lastModified: '2024-01-20',
+        isTemplate: true
       }
     ],
     invoices: [
@@ -199,7 +200,8 @@ const mockClients: Client[] = [
         name: 'Support Ticket Template',
         category: 'Customer Service',
         usage: 8,
-        lastModified: '2024-01-18'
+        lastModified: '2024-01-18',
+        isTemplate: true
       }
     ],
     invoices: [
@@ -308,7 +310,8 @@ const mockClients: Client[] = [
         name: 'Invoice Approval Workflow',
         category: 'Finance',
         usage: 15,
-        lastModified: '2024-01-22'
+        lastModified: '2024-01-22',
+        isTemplate: true
       }
     ],
     invoices: [
@@ -477,7 +480,8 @@ const mockClients: Client[] = [
         name: 'Appointment Reminder Template',
         category: 'Healthcare',
         usage: 25,
-        lastModified: '2024-01-10'
+        lastModified: '2024-01-10',
+        isTemplate: true
       }
     ],
     invoices: [

@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "./.test-build",
+    "moduleResolution": "node",
+    "module": "ESNext",
+    "target": "ES2020",
+    "allowImportingTsExtensions": false
+  },
+  "include": [
+    "src/types/**/*.ts",
+    "src/views/solutionsFilters.ts",
+    "src/views/__tests__/solutionsFilters.test.ts"
+  ]
+}

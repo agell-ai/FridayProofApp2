@@ -172,6 +172,7 @@ export interface ClientTemplate {
   category: string;
   usage: number;
   lastModified: string;
+  isTemplate: boolean;
 }
 
 export interface ClientInvoice {
