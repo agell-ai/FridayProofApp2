@@ -347,16 +347,16 @@ export const useTeam = () => {
       
       if (user?.accountType === 'business') {
         // For business accounts, show team members who work on business projects
-        filteredMembers = mockTeamMembers.filter(member => 
-          member.companyName === user.account?.name ||
+        filteredMembers = mockTeamMembers.filter(member =>
+          member.companyName === account?.name ||
           member.projectIds.some(projectId => ['6', '7'].includes(projectId)) // Business project IDs
         );
       }
-      
+
       setTeamMembers(filteredMembers);
       setIsLoading(false);
     }, 500);
-  }, [user]);
+  }, [user, account]);
 
   const getTeamMembersByIds = (ids: string[]): TeamMember[] => {
     return teamMembers.filter(member => ids.includes(member.id));
