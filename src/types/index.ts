@@ -87,6 +87,10 @@ export interface TeamMember {
   libraryItemIds: string[];
   templateIds: string[];
   marketplaceItemIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  lastActiveAt: string;
+  lastAssignedAt?: string;
 }
 
 export interface TeamMemberAnalytics {

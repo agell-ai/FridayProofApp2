@@ -11,7 +11,7 @@ const mockTeamMembers: TeamMember[] = [
     role: 'employee',
     skills: ['Machine Learning', 'Python', 'Data Analysis', 'API Development'],
     projectIds: ['proj-1', 'proj-5', 'proj-10'],
-    status: 'active',
+    status: 'inactive',
     phone: '+1 (555) 123-4567',
     linkedinUrl: 'https://linkedin.com/in/lisapark',
     city: 'San Francisco',
@@ -32,7 +32,11 @@ const mockTeamMembers: TeamMember[] = [
     toolIds: ['tool-1', 'tool-2', 'tool-3'],
     libraryItemIds: ['lib-1', 'lib-2', 'lib-3'],
     templateIds: ['temp-1', 'temp-2'],
-    marketplaceItemIds: ['mp-1', 'mp-2']
+    marketplaceItemIds: ['mp-1', 'mp-2'],
+    createdAt: '2023-04-12T14:32:00.000Z',
+    updatedAt: '2024-07-08T16:45:00.000Z',
+    lastActiveAt: '2024-07-11T09:15:00.000Z',
+    lastAssignedAt: '2024-07-05T13:00:00.000Z'
   },
   {
     id: 'tm-4',
@@ -62,7 +66,11 @@ const mockTeamMembers: TeamMember[] = [
     toolIds: ['tool-2', 'tool-4', 'tool-5'],
     libraryItemIds: ['lib-2', 'lib-4', 'lib-5'],
     templateIds: ['temp-2', 'temp-3', 'temp-4'],
-    marketplaceItemIds: ['mp-2', 'mp-3', 'mp-4']
+    marketplaceItemIds: ['mp-2', 'mp-3', 'mp-4'],
+    createdAt: '2022-11-03T18:20:00.000Z',
+    updatedAt: '2024-06-18T20:10:00.000Z',
+    lastActiveAt: '2024-06-20T17:05:00.000Z',
+    lastAssignedAt: '2024-06-19T15:30:00.000Z'
   },
   {
     id: 'tm-5',
@@ -92,7 +100,11 @@ const mockTeamMembers: TeamMember[] = [
     toolIds: ['tool-business-1', 'tool-business-2'],
     libraryItemIds: ['lib-business-1', 'lib-business-2'],
     templateIds: ['temp-business-1'],
-    marketplaceItemIds: ['mp-business-1']
+    marketplaceItemIds: ['mp-business-1'],
+    createdAt: '2024-06-15T12:00:00.000Z',
+    updatedAt: '2024-07-10T11:20:00.000Z',
+    lastActiveAt: '2024-07-09T10:45:00.000Z',
+    lastAssignedAt: '2024-06-30T08:30:00.000Z'
   },
   {
     id: 'tm-6',
@@ -122,7 +134,11 @@ const mockTeamMembers: TeamMember[] = [
     toolIds: ['tool-4', 'tool-5', 'tool-6'],
     libraryItemIds: ['lib-4', 'lib-5', 'lib-6'],
     templateIds: ['temp-4', 'temp-5'],
-    marketplaceItemIds: ['mp-3', 'mp-5', 'mp-6']
+    marketplaceItemIds: ['mp-3', 'mp-5', 'mp-6'],
+    createdAt: '2023-08-21T09:30:00.000Z',
+    updatedAt: '2024-07-07T18:55:00.000Z',
+    lastActiveAt: '2024-07-08T14:40:00.000Z',
+    lastAssignedAt: '2024-07-06T19:15:00.000Z'
   },
   {
     id: 'tm-7',
@@ -152,7 +168,11 @@ const mockTeamMembers: TeamMember[] = [
     toolIds: ['tool-1', 'tool-7', 'tool-8'],
     libraryItemIds: ['lib-1', 'lib-7'],
     templateIds: ['temp-1', 'temp-6'],
-    marketplaceItemIds: ['mp-1', 'mp-7']
+    marketplaceItemIds: ['mp-1', 'mp-7'],
+    createdAt: '2021-02-19T15:10:00.000Z',
+    updatedAt: '2024-06-29T16:05:00.000Z',
+    lastActiveAt: '2024-06-27T13:25:00.000Z',
+    lastAssignedAt: '2024-06-15T09:00:00.000Z'
   },
   {
     id: 'tm-8',
@@ -182,7 +202,11 @@ const mockTeamMembers: TeamMember[] = [
     toolIds: ['tool-2', 'tool-3'],
     libraryItemIds: ['lib-2', 'lib-3'],
     templateIds: ['temp-2', 'temp-3'],
-    marketplaceItemIds: ['mp-2']
+    marketplaceItemIds: ['mp-2'],
+    createdAt: '2022-06-07T13:45:00.000Z',
+    updatedAt: '2024-07-11T07:50:00.000Z',
+    lastActiveAt: '2024-07-10T16:20:00.000Z',
+    lastAssignedAt: '2024-07-09T18:05:00.000Z'
   },
   {
     id: 'tm-9',
@@ -212,7 +236,11 @@ const mockTeamMembers: TeamMember[] = [
     toolIds: ['tool-1', 'tool-6', 'tool-9'],
     libraryItemIds: ['lib-1', 'lib-6', 'lib-8'],
     templateIds: ['temp-1', 'temp-7', 'temp-8'],
-    marketplaceItemIds: ['mp-1', 'mp-8', 'mp-9']
+    marketplaceItemIds: ['mp-1', 'mp-8', 'mp-9'],
+    createdAt: '2021-12-01T10:00:00.000Z',
+    updatedAt: '2024-05-30T21:10:00.000Z',
+    lastActiveAt: '2024-05-24T12:35:00.000Z',
+    lastAssignedAt: '2024-05-20T14:45:00.000Z'
   },
   {
     id: 'tm-10',
@@ -242,7 +270,11 @@ const mockTeamMembers: TeamMember[] = [
     toolIds: ['tool-10', 'tool-11'],
     libraryItemIds: ['lib-9', 'lib-10'],
     templateIds: ['temp-9'],
-    marketplaceItemIds: ['mp-10', 'mp-11']
+    marketplaceItemIds: ['mp-10', 'mp-11'],
+    createdAt: '2023-09-03T08:20:00.000Z',
+    updatedAt: '2024-07-06T15:55:00.000Z',
+    lastActiveAt: '2024-07-05T17:40:00.000Z',
+    lastAssignedAt: '2024-07-05T11:30:00.000Z'
   },
   {
     id: 'tm-11',
@@ -272,7 +304,11 @@ const mockTeamMembers: TeamMember[] = [
     toolIds: ['tool-12', 'tool-13'],
     libraryItemIds: ['lib-11', 'lib-12'],
     templateIds: ['temp-10', 'temp-11'],
-    marketplaceItemIds: ['mp-12', 'mp-13']
+    marketplaceItemIds: ['mp-12', 'mp-13'],
+    createdAt: '2022-01-15T11:15:00.000Z',
+    updatedAt: '2024-06-02T10:30:00.000Z',
+    lastActiveAt: '2024-05-28T09:05:00.000Z',
+    lastAssignedAt: '2024-05-12T13:20:00.000Z'
   },
   {
     id: 'tm-12',
@@ -302,7 +338,11 @@ const mockTeamMembers: TeamMember[] = [
     toolIds: ['tool-business-3'],
     libraryItemIds: ['lib-business-3'],
     templateIds: ['temp-business-2'],
-    marketplaceItemIds: ['mp-business-2']
+    marketplaceItemIds: ['mp-business-2'],
+    createdAt: '2024-07-02T14:05:00.000Z',
+    updatedAt: '2024-07-09T16:45:00.000Z',
+    lastActiveAt: '2024-07-08T12:25:00.000Z',
+    lastAssignedAt: '2024-07-02T15:10:00.000Z'
   }
 ];
 
@@ -321,6 +361,10 @@ type TeamMemberInput = Pick<TeamMember, 'name' | 'email' | 'role' | 'status'> & 
   templateIds?: string[];
   marketplaceItemIds?: string[];
   analytics?: Partial<TeamMemberAnalytics>;
+  createdAt?: string;
+  updatedAt?: string;
+  lastActiveAt?: string;
+  lastAssignedAt?: string;
 };
 
 const defaultTeamAnalytics: TeamMemberAnalytics = {
@@ -367,6 +411,13 @@ export const useTeam = () => {
   };
 
   const createTeamMember = (memberData: TeamMemberInput) => {
+    const now = new Date().toISOString();
+    const createdAt = memberData.createdAt ?? now;
+    const lastActiveAt = memberData.lastActiveAt ?? now;
+    const updatedAt = memberData.updatedAt ?? now;
+    const lastAssignedAt =
+      memberData.lastAssignedAt ?? (memberData.projectIds && memberData.projectIds.length > 0 ? now : undefined);
+
     const newMember: TeamMember = {
       id: Date.now().toString(),
       name: memberData.name,
@@ -390,6 +441,10 @@ export const useTeam = () => {
       libraryItemIds: memberData.libraryItemIds || [],
       templateIds: memberData.templateIds || [],
       marketplaceItemIds: memberData.marketplaceItemIds || [],
+      createdAt,
+      updatedAt,
+      lastActiveAt,
+      lastAssignedAt,
     };
     setTeamMembers(prev => [...prev, newMember]);
     return newMember;
@@ -400,6 +455,10 @@ export const useTeam = () => {
       if (member.id !== id) {
         return member;
       }
+
+      const nextUpdatedAt = updates.updatedAt ?? new Date().toISOString();
+      const nextLastActiveAt = updates.lastActiveAt ?? member.lastActiveAt;
+      const nextLastAssignedAt = updates.lastAssignedAt ?? member.lastAssignedAt;
 
       return {
         ...member,
@@ -418,6 +477,9 @@ export const useTeam = () => {
         analytics: updates.analytics
           ? { ...member.analytics, ...updates.analytics }
           : member.analytics,
+        updatedAt: nextUpdatedAt,
+        lastActiveAt: nextLastActiveAt,
+        lastAssignedAt: nextLastAssignedAt,
       };
     }));
   };
