@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { CalendarRange, ChevronDown, Plus, Search } from 'lucide-react';
 import ClientCard from '../components/Clients/ClientCard';
 import ClientDetails from '../components/Clients/ClientDetails';
+import { EntityFormModal, ClientFormValues } from '../components/Shared/EntityFormModal';
 import { useClients } from '../hooks/useClients';
 import { useAuth } from '../hooks/useAuth';
 import { Client } from '../types';
@@ -24,13 +25,19 @@ interface MetricDefinition {
   value: number;
 }
 
+type ClientFormState = {
+  mode: 'create' | 'edit';
+  client: Client | null;
+};
+
 const Clients: React.FC = () => {
-  const { clients, isLoading } = useClients();
+  const { clients, isLoading, createClient, updateClient } = useClients();
   const { user } = useAuth();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMetric, setSelectedMetric] = useState<MetricFilter>('total');
   const [timeRange, setTimeRange] = useState<TimeRangeKey>(DEFAULT_TIME_RANGE);
+  const [clientFormState, setClientFormState] = useState<ClientFormState | null>(null);
 
   const isBusinessAccount = user?.accountType === 'business';
   const canManageClients = !isBusinessAccount;
@@ -159,6 +166,90 @@ const Clients: React.FC = () => {
 
   const filteredClients = clientsByMetric[selectedMetric] ?? [];
 
+  const isClientModalOpen = clientFormState !== null;
+  const clientModalMode = clientFormState?.mode ?? 'create';
+  const clientModalInitialData = clientFormState?.client ?? null;
+
+  const handleOpenCreateClient = () => {
+    if (!canManageClients) {
+      return;
+    }
+
+    setClientFormState({ mode: 'create', client: null });
+  };
+
+  const handleEditClient = (client: Client) => {
+    if (!canManageClients) {
+      return;
+    }
+
+    setClientFormState({ mode: 'edit', client });
+  };
+
+  const handleClientModalClose = () => {
+    setClientFormState(null);
+  };
+
+  const handleClientSubmit = (values: ClientFormValues) => {
+    if (!clientFormState || !canManageClients) {
+      return;
+    }
+
+    if (clientFormState.mode === 'edit' && clientFormState.client) {
+      updateClient(clientFormState.client.id, {
+        companyName: values.companyName,
+        industry: values.industry,
+        location: values.location,
+        status: values.status,
+        website: values.website,
+        linkedinUrl: values.linkedinUrl,
+      });
+
+      setSelectedClient((previous) => {
+        if (!previous || previous.id !== clientFormState.client?.id) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          companyName: values.companyName,
+          industry: values.industry,
+          location: values.location,
+          status: values.status,
+          website: values.website,
+          linkedinUrl: values.linkedinUrl,
+          updatedAt: new Date().toISOString(),
+        };
+      });
+    } else {
+      const createdClient = createClient({
+        companyName: values.companyName,
+        industry: values.industry,
+        location: values.location,
+        status: values.status,
+        website: values.website,
+        linkedinUrl: values.linkedinUrl,
+      });
+
+      if (createdClient) {
+        setSelectedClient(createdClient);
+      }
+    }
+
+    setClientFormState(null);
+  };
+
+  const clientFormModal = (
+    <EntityFormModal
+      isOpen={isClientModalOpen}
+      type="client"
+      mode={clientModalMode}
+      initialData={clientModalInitialData ?? undefined}
+      onClose={handleClientModalClose}
+      onSubmit={handleClientSubmit}
+    />
+  );
+
   const handleResetFilters = () => {
     setSearchTerm('');
     setSelectedMetric('total');
@@ -166,7 +257,16 @@ const Clients: React.FC = () => {
   };
 
   if (selectedClient) {
-    return <ClientDetails client={selectedClient} onBack={() => setSelectedClient(null)} />;
+    return (
+      <>
+        <ClientDetails
+          client={selectedClient}
+          onBack={() => setSelectedClient(null)}
+          onEdit={handleEditClient}
+        />
+        {clientFormModal}
+      </>
+    );
   }
 
   if (isLoading) {
@@ -180,8 +280,9 @@ const Clients: React.FC = () => {
   const hasClients = clients.length > 0;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
+    <>
+      <div className="space-y-6">
+        <div className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
             <h1 className="text-2xl font-semibold text-[var(--fg)]">Clients</h1>
@@ -221,6 +322,7 @@ const Clients: React.FC = () => {
             <button
               type="button"
               className="flex items-center justify-center gap-2 rounded-lg bg-sunset-orange px-4 py-2 font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleOpenCreateClient}
               disabled={!canManageClients}
               aria-disabled={!canManageClients}
               title={!canManageClients ? 'Client management is unavailable for business accounts' : undefined}
@@ -313,7 +415,9 @@ const Clients: React.FC = () => {
           )}
         </div>
       )}
-    </div>
+      </div>
+      {clientFormModal}
+    </>
   );
 };
 

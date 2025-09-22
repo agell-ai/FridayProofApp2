@@ -12,6 +12,7 @@ import { useTools } from '../../hooks/useTools';
 interface ClientDetailsProps {
   client: Client;
   onBack: () => void;
+  onEdit?: (client: Client) => void;
 }
 
 const statusColors = {
@@ -20,7 +21,7 @@ const statusColors = {
   prospect: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
 };
 
-const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
+const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack, onEdit }) => {
   const { getTeamMembersByIds } = useTeam();
   const { projects } = useProjects();
   const { tools } = useTools();
@@ -271,7 +272,10 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onBack }) => {
               <button className="w-full bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
                 New Project
               </button>
-              <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm">
+              <button
+                className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm"
+                onClick={() => onEdit?.(client)}
+              >
                 Edit Client
               </button>
               <button className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm">
