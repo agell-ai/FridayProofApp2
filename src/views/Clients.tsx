@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Building2,
@@ -90,6 +90,12 @@ const METRIC_BY_KEY = METRIC_DEFINITIONS.reduce<Record<MetricKey, MetricDefiniti
   {} as Record<MetricKey, MetricDefinition>,
 );
 
+const normalizeSearchValue = (value: string | null | undefined) =>
+  (value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
 const formatStatusLabel = (status: Client['status']) =>
   status.charAt(0).toUpperCase() + status.slice(1);
 
@@ -121,6 +127,13 @@ const Clients: React.FC = () => {
     [clients, selectedClientId],
   );
 
+  const normalizedSearchTerm = useMemo(
+    () => normalizeSearchValue(searchTerm.trim()),
+    [searchTerm],
+  );
+
+  const activeRange = useMemo(() => getDateRange(timeRange), [timeRange]);
+
   useEffect(() => {
     if (selectedClientId && !clients.some((clientItem) => clientItem.id === selectedClientId)) {
       setSelectedClientId(null);
@@ -136,38 +149,40 @@ const Clients: React.FC = () => {
     return statusOrder.filter((status) => statuses.has(status));
   }, [clients]);
 
-  const baseFilteredClients = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    const range = getDateRange(timeRange);
-
-    return clients.filter((client) => {
-      if (normalizedSearch) {
+  const baseFilteredClients = useMemo(() =>
+    clients.filter((client) => {
+      if (normalizedSearchTerm) {
         const ownFieldMatches = [client.companyName, client.industry, client.location]
           .filter(Boolean)
-          .some((value) => value.toLowerCase().includes(normalizedSearch));
+          .map((value) => normalizeSearchValue(value))
+          .some((value) => value.includes(normalizedSearchTerm));
 
         const contactMatches = client.contacts.some((contact) =>
-          [contact.name, contact.title, contact.email]
+          [contact.name, contact.title, contact.email, contact.phone]
             .filter(Boolean)
-            .some((value) => value.toLowerCase().includes(normalizedSearch)),
+            .map((value) => normalizeSearchValue(value))
+            .some((value) => value.includes(normalizedSearchTerm)),
         );
 
         const projectMatches = client.projects.some((project) =>
           [project.name, project.status]
             .filter(Boolean)
-            .some((value) => value.toLowerCase().includes(normalizedSearch)),
+            .map((value) => normalizeSearchValue(value))
+            .some((value) => value.includes(normalizedSearchTerm)),
         );
 
         const toolMatches = client.tools.some((tool) =>
           [tool.name, tool.type]
             .filter(Boolean)
-            .some((value) => value.toLowerCase().includes(normalizedSearch)),
+            .map((value) => normalizeSearchValue(value))
+            .some((value) => value.includes(normalizedSearchTerm)),
         );
 
         const libraryMatches = client.library.some((item) =>
           [item.name, item.category]
             .filter(Boolean)
-            .some((value) => value.toLowerCase().includes(normalizedSearch)),
+            .map((value) => normalizeSearchValue(value))
+            .some((value) => value.includes(normalizedSearchTerm)),
         );
 
         if (!ownFieldMatches && !contactMatches && !projectMatches && !toolMatches && !libraryMatches) {
@@ -179,13 +194,13 @@ const Clients: React.FC = () => {
         return false;
       }
 
-      if (!isWithinTimeRange(client.updatedAt, range) && !isWithinTimeRange(client.createdAt, range)) {
+      if (!isWithinTimeRange(client.updatedAt, activeRange) && !isWithinTimeRange(client.createdAt, activeRange)) {
         return false;
       }
 
       return true;
-    });
-  }, [clients, searchTerm, statusFilter, timeRange]);
+    }),
+  [activeRange, clients, normalizedSearchTerm, statusFilter]);
 
   const filteredClients = useMemo(() => {
     const definition = METRIC_BY_KEY[activeMetric];
@@ -242,63 +257,87 @@ const Clients: React.FC = () => {
     return chips;
   }, [searchTerm, statusFilter, activeMetric, timeRange]);
 
-  const handleMetricSelect = (key: MetricKey) => {
+  const handleMetricSelect = useCallback((key: MetricKey) => {
     setActiveMetric((previous) => (previous === key && key !== 'total' ? 'total' : key));
-  };
+  }, []);
 
-  const openCreateClientModal = () => {
+  const handleSearchChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(event.target.value);
+    },
+    [],
+  );
+
+  const handleStatusFilterChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      setStatusFilter(event.target.value as StatusFilterValue);
+    },
+    [],
+  );
+
+  const handleTimeRangeChange = useCallback((value: DateRangeKey) => {
+    setTimeRange(value);
+  }, []);
+
+  const openCreateClientModal = useCallback(() => {
     if (isBusinessAccount) {
       return;
     }
 
     setFormState({ mode: 'create', client: null });
-  };
+  }, [isBusinessAccount]);
 
-  const openEditClientModal = (client: Client) => {
-    if (isBusinessAccount) {
-      return;
-    }
-
-    setFormState({ mode: 'edit', client });
-  };
-
-  const handleClientFormSubmit = (values: ClientFormValues) => {
-    if (isBusinessAccount) {
-      setFormState(null);
-      return;
-    }
-
-    const payload = {
-      companyName: values.companyName.trim(),
-      industry: values.industry.trim(),
-      location: values.location.trim(),
-      status: values.status,
-      website: values.website?.trim() || undefined,
-      linkedinUrl: values.linkedinUrl?.trim() || undefined,
-    };
-
-    if (formState?.mode === 'create') {
-      const created = createClient(payload);
-      if (created) {
-        setSelectedClientId(created.id);
+  const openEditClientModal = useCallback(
+    (client: Client) => {
+      if (isBusinessAccount) {
+        return;
       }
-    } else if (formState?.mode === 'edit' && formState.client) {
-      updateClient(formState.client.id, payload);
-    }
 
+      setFormState({ mode: 'edit', client });
+    },
+    [isBusinessAccount],
+  );
+
+  const handleClientFormSubmit = useCallback(
+    (values: ClientFormValues) => {
+      if (isBusinessAccount) {
+        setFormState(null);
+        return;
+      }
+
+      const payload = {
+        companyName: values.companyName.trim(),
+        industry: values.industry.trim(),
+        location: values.location.trim(),
+        status: values.status,
+        website: values.website?.trim() || undefined,
+        linkedinUrl: values.linkedinUrl?.trim() || undefined,
+      };
+
+      if (formState?.mode === 'create') {
+        const created = createClient(payload);
+        if (created) {
+          setSelectedClientId(created.id);
+        }
+      } else if (formState?.mode === 'edit' && formState.client) {
+        updateClient(formState.client.id, payload);
+      }
+
+      setFormState(null);
+    },
+    [createClient, formState, isBusinessAccount, updateClient],
+  );
+
+  const handleModalClose = useCallback(() => {
     setFormState(null);
-  };
+  }, []);
 
-  const handleModalClose = () => {
-    setFormState(null);
-  };
-
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSearchTerm('');
     setStatusFilter('all');
     setActiveMetric('total');
     setTimeRange(DEFAULT_TIME_RANGE);
-  };
+  }, []);
 
   if (isBusinessAccount) {
     return (
@@ -355,7 +394,7 @@ const Clients: React.FC = () => {
                       className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
                       placeholder="Search by company, contact, project, or tool"
                       value={searchTerm}
-                      onChange={(event) => setSearchTerm(event.target.value)}
+                      onChange={handleSearchChange}
                     />
                   </div>
 
@@ -370,7 +409,7 @@ const Clients: React.FC = () => {
                         <button
                           key={option.value}
                           type="button"
-                          onClick={() => setTimeRange(option.value)}
+                          onClick={() => handleTimeRangeChange(option.value)}
                           aria-pressed={isActive}
                           className={`rounded-full border px-3 py-1.5 text-xs font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-purple)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)] ${
                             isActive
@@ -392,7 +431,7 @@ const Clients: React.FC = () => {
                   <select
                     className="appearance-none rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-8 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
                     value={statusFilter}
-                    onChange={(event) => setStatusFilter(event.target.value as StatusFilterValue)}
+                    onChange={handleStatusFilterChange}
                   >
                     <option value="all">All statuses</option>
                     {availableStatuses.map((status) => (
