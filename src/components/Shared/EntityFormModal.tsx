@@ -29,6 +29,7 @@ export interface TeamFormValues {
   name: string;
   email: string;
   role: TeamMember['role'];
+  type: TeamMember['type'];
   status: TeamMember['status'];
   phone?: string;
   city?: string;
@@ -412,7 +413,10 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, initialData, onSubmit, onCanc
     name: initialData?.name || '',
     email: initialData?.email || '',
     role: initialData?.role || 'employee',
-    status: initialData?.status || 'active',
+    type:
+      initialData?.type ?? (initialData?.status === 'inactive' ? 'inactive' : 'internal'),
+    status:
+      initialData?.status ?? (initialData?.type === 'inactive' ? 'inactive' : 'active'),
     phone: initialData?.phone || '',
     city: initialData?.city || '',
     state: initialData?.state || '',
@@ -425,7 +429,10 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, initialData, onSubmit, onCanc
       name: initialData?.name || '',
       email: initialData?.email || '',
       role: initialData?.role || 'employee',
-      status: initialData?.status || 'active',
+      type:
+        initialData?.type ?? (initialData?.status === 'inactive' ? 'inactive' : 'internal'),
+      status:
+        initialData?.status ?? (initialData?.type === 'inactive' ? 'inactive' : 'active'),
       phone: initialData?.phone || '',
       city: initialData?.city || '',
       state: initialData?.state || '',
@@ -481,13 +488,21 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, initialData, onSubmit, onCanc
             </select>
           </div>
           <div>
-            <label className={labelClassName}>Status</label>
+            <label className={labelClassName}>Type</label>
             <select
               className={inputClassName}
-              value={formValues.status}
-              onChange={(event) => setFormValues((prev) => ({ ...prev, status: event.target.value as TeamMember['status'] }))}
+              value={formValues.type}
+              onChange={(event) => {
+                const nextType = event.target.value as TeamMember['type'];
+                setFormValues((prev) => ({
+                  ...prev,
+                  type: nextType,
+                  status: nextType === 'inactive' ? 'inactive' : 'active',
+                }));
+              }}
             >
-              <option value="active">Active</option>
+              <option value="internal">Internal</option>
+              <option value="external">External</option>
               <option value="inactive">Inactive</option>
             </select>
           </div>

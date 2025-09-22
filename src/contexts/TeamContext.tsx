@@ -10,6 +10,7 @@ const mockTeamMembers: TeamMember[] = [
     name: 'Lisa Park',
     email: 'employee@demo.com',
     role: 'employee',
+    type: 'inactive',
     skills: ['Machine Learning', 'Python', 'Data Analysis', 'API Development'],
     projectIds: ['proj-1', 'proj-5', 'proj-10'],
     status: 'inactive',
@@ -44,6 +45,7 @@ const mockTeamMembers: TeamMember[] = [
     name: 'Alex Rivera',
     email: 'contractor@demo.com',
     role: 'contractor',
+    type: 'external',
     skills: ['UI/UX Design', 'Frontend Development', 'System Integration', 'Marketing Automation'],
     projectIds: ['proj-3', 'proj-6', 'proj-7'],
     status: 'active',
@@ -78,6 +80,7 @@ const mockTeamMembers: TeamMember[] = [
     name: 'Rachel Thompson',
     email: 'rachel.thompson@demo.com',
     role: 'employee',
+    type: 'internal',
     skills: ['Machine Learning', 'Natural Language Processing', 'Python', 'Healthcare Systems'],
     projectIds: ['6', '7'], // Business account projects
     status: 'active',
@@ -112,6 +115,7 @@ const mockTeamMembers: TeamMember[] = [
     name: 'Carlos Martinez',
     email: 'carlos.martinez@demo.com',
     role: 'contractor',
+    type: 'external',
     skills: ['Data Engineering', 'Cloud Architecture', 'ETL Pipelines', 'Financial Systems'],
     projectIds: ['proj-3', 'proj-4', 'proj-9'],
     status: 'active',
@@ -146,6 +150,7 @@ const mockTeamMembers: TeamMember[] = [
     name: 'Michael Torres',
     email: 'michael.torres@demo.com',
     role: 'employee',
+    type: 'internal',
     skills: ['Backend Development', 'Database Design', 'Cloud Architecture', 'E-commerce Systems'],
     projectIds: ['proj-1', 'proj-5', 'proj-10'],
     status: 'active',
@@ -180,6 +185,7 @@ const mockTeamMembers: TeamMember[] = [
     name: 'Emily Watson',
     email: 'emily.watson@demo.com',
     role: 'employee',
+    type: 'internal',
     skills: ['Quality Assurance', 'Test Automation', 'Performance Testing', 'System Integration'],
     projectIds: ['proj-3', 'proj-7', 'proj-11'],
     status: 'active',
@@ -214,6 +220,7 @@ const mockTeamMembers: TeamMember[] = [
     name: 'James Kim',
     email: 'james.kim@demo.com',
     role: 'contractor',
+    type: 'external',
     skills: ['DevOps', 'Security', 'Infrastructure Management', 'Multi-platform Integration'],
     projectIds: ['proj-1', 'proj-4', 'proj-6'],
     status: 'active',
@@ -248,6 +255,7 @@ const mockTeamMembers: TeamMember[] = [
     name: 'Nina Patel',
     email: 'nina.patel@demo.com',
     role: 'employee',
+    type: 'internal',
     skills: ['AI Research', 'Computer Vision', 'Deep Learning', 'Advanced Analytics'],
     projectIds: ['proj-3', 'proj-12', 'proj-13'],
     status: 'active',
@@ -282,6 +290,7 @@ const mockTeamMembers: TeamMember[] = [
     name: 'Jordan Lee',
     email: 'jordan.lee@demo.com',
     role: 'contractor',
+    type: 'external',
     skills: ['Automation Engineering', 'Process Optimization', 'Integration', 'Workflow Design'],
     projectIds: ['proj-4', 'proj-14', 'proj-15'],
     status: 'active',
@@ -316,6 +325,7 @@ const mockTeamMembers: TeamMember[] = [
     name: 'Priya Singh',
     email: 'priya.singh@demo.com',
     role: 'employee',
+    type: 'internal',
     skills: ['Business Analysis', 'Requirements Gathering', 'Documentation', 'Process Design'],
     projectIds: ['6', '7'], // Business account projects
     status: 'active',
@@ -347,7 +357,7 @@ const mockTeamMembers: TeamMember[] = [
   }
 ];
 
-export type TeamMemberInput = Pick<TeamMember, 'name' | 'email' | 'role' | 'status'> & {
+export type TeamMemberInput = Pick<TeamMember, 'name' | 'email' | 'role' | 'status' | 'type'> & {
   phone?: string;
   city?: string;
   state?: string;
@@ -447,12 +457,17 @@ export const TeamProvider = ({ children }: TeamProviderProps) => {
       const lastAssignedAt =
         memberData.lastAssignedAt ?? (memberData.projectIds && memberData.projectIds.length > 0 ? now : undefined);
 
+      const normalizedType =
+        memberData.type ?? (memberData.status === 'inactive' ? 'inactive' : 'internal');
+      const normalizedStatus = normalizedType === 'inactive' ? 'inactive' : memberData.status;
+
       const newMember: TeamMember = {
         id: Date.now().toString(),
         name: memberData.name,
         email: memberData.email,
         role: memberData.role,
-        status: memberData.status,
+        type: normalizedType,
+        status: normalizedStatus,
         phone: memberData.phone,
         linkedinUrl: memberData.linkedinUrl,
         city: memberData.city,
@@ -492,9 +507,17 @@ export const TeamProvider = ({ children }: TeamProviderProps) => {
         const nextLastActiveAt = updates.lastActiveAt ?? member.lastActiveAt;
         const nextLastAssignedAt = updates.lastAssignedAt ?? member.lastAssignedAt;
 
+        const nextType = updates.type ?? member.type;
+        const nextStatus =
+          nextType === 'inactive'
+            ? 'inactive'
+            : updates.status ?? (member.status === 'inactive' ? 'active' : member.status);
+
         return {
           ...member,
           ...updates,
+          type: nextType,
+          status: nextStatus,
           phone: updates.phone ?? member.phone,
           city: updates.city ?? member.city,
           state: updates.state ?? member.state,
