@@ -1,5 +1,6 @@
 import React from 'react';
 import { Activity, Layers, ShoppingBag, Sparkles, Pencil, BarChart3, FileText, Lock } from 'lucide-react';
+import { Button } from '../Shared/Button';
 import { Card } from '../Shared/Card';
 
 type SolutionType = 'tool' | 'system' | 'template' | 'marketplace';
@@ -44,6 +45,8 @@ export interface SolutionAccessInfo {
 interface SolutionCardProps {
   data: SolutionCardData;
   onEdit?: (data: SolutionCardData) => void;
+  onCreateTemplate?: (data: SolutionCardData) => void;
+  onListInMarketplace?: (data: SolutionCardData) => void;
 }
 
 const typeConfig: Record<SolutionType, { label: string; icon: React.ComponentType<{ className?: string }>; badgeClass: string }> = {
@@ -89,10 +92,17 @@ const formatLabel = (value: string) =>
     .replace(/-/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
-export const SolutionCard: React.FC<SolutionCardProps> = ({ data, onEdit }) => {
+export const SolutionCard: React.FC<SolutionCardProps> = ({
+  data,
+  onEdit,
+  onCreateTemplate,
+  onListInMarketplace,
+}) => {
   const type = typeConfig[data.type];
   const StatusIcon = type.icon;
   const statusClass = data.status ? statusStyles[data.status] || 'border-[var(--border)] text-[var(--fg-muted)] bg-[var(--surface)]' : '';
+
+  const hasFooterActions = Boolean(onCreateTemplate || onListInMarketplace);
 
   return (
     <Card glowOnHover className="p-6 h-full flex flex-col gap-5">
@@ -203,6 +213,31 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ data, onEdit }) => {
               {tag}
             </span>
           ))}
+        </div>
+      )}
+
+      {hasFooterActions && (
+        <div className="mt-auto flex flex-wrap gap-2 pt-2">
+          {onCreateTemplate && (
+            <Button
+              size="xs"
+              variant="outline"
+              onClick={() => onCreateTemplate(data)}
+              className="text-[var(--fg-muted)] hover:text-[var(--fg)]"
+            >
+              Create Template
+            </Button>
+          )}
+          {onListInMarketplace && (
+            <Button
+              size="xs"
+              variant="outline"
+              onClick={() => onListInMarketplace(data)}
+              className="text-[var(--fg-muted)] hover:text-[var(--fg)]"
+            >
+              List in Marketplace
+            </Button>
+          )}
         </div>
       )}
     </Card>
