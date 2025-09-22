@@ -22,8 +22,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, availablePages, onViewCha
   return (
     <div className="w-64 bg-[var(--bg-start)] border-r border-[var(--border)] flex flex-col">
       <nav className="flex-1 p-4">
-        <div className="flex items-center justify-between px-2 pb-6">
-          <Logo className="h-10 w-auto" showText />
         </div>
         <ul className="space-y-2">
           {menuItems.map((item) => {
