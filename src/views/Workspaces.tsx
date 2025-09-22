@@ -215,10 +215,10 @@ const Workspaces: React.FC = () => {
   const summaryStats = useMemo(() => {
     if (selectedView === 'project') {
       const statusOrder: Project['status'][] = [
-        'planning',
-        'development',
-        'testing',
         'deployed',
+        'testing',
+        'development',
+        'planning',
         'maintenance',
       ];
 
