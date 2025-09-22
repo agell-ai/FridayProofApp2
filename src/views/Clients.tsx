@@ -30,6 +30,8 @@ type ClientFormState = {
   client: Client | null;
 };
 
+const CLIENTS_PER_PAGE = 9;
+
 const Clients: React.FC = () => {
   const { clients, isLoading, createClient, updateClient } = useClients();
   const { user } = useAuth();
@@ -38,6 +40,7 @@ const Clients: React.FC = () => {
   const [selectedMetric, setSelectedMetric] = useState<MetricFilter>('total');
   const [timeRange, setTimeRange] = useState<TimeRangeKey>(DEFAULT_TIME_RANGE);
   const [clientFormState, setClientFormState] = useState<ClientFormState | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const isBusinessAccount = user?.accountType === 'business';
   const canManageClients = !isBusinessAccount;
@@ -178,7 +181,16 @@ const Clients: React.FC = () => {
     ];
   }, [metricCounts, newMetricDescription]);
 
-  const filteredClients = clientsByMetric[selectedMetric] ?? [];
+  const filteredClients = useMemo(
+    () => clientsByMetric[selectedMetric] ?? [],
+    [clientsByMetric, selectedMetric]
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / CLIENTS_PER_PAGE));
+
+  const paginatedClients = useMemo(() => {
+    const startIndex = (currentPage - 1) * CLIENTS_PER_PAGE;
+    return filteredClients.slice(startIndex, startIndex + CLIENTS_PER_PAGE);
+  }, [filteredClients, currentPage]);
 
   const hasFilters =
     normalizedSearch.length > 0 ||
@@ -189,6 +201,12 @@ const Clients: React.FC = () => {
   const clientModalMode = clientFormState?.mode ?? 'create';
   const clientModalInitialData = clientFormState?.client ?? null;
 
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   const handleOpenCreateClient = useCallback(() => {
     if (!canManageClients) {
       return;
@@ -196,6 +214,27 @@ const Clients: React.FC = () => {
 
     setClientFormState({ mode: 'create', client: null });
   }, [canManageClients]);
+
+  const handleSearchChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(event.target.value);
+      setCurrentPage(1);
+    },
+    []
+  );
+
+  const handleTimeRangeChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      setTimeRange(event.target.value as TimeRangeKey);
+      setCurrentPage(1);
+    },
+    []
+  );
+
+  const handleSelectMetric = useCallback((metric: MetricFilter) => {
+    setSelectedMetric(metric);
+    setCurrentPage(1);
+  }, []);
 
   const handleEditClient = useCallback(
     (client: Client) => {
@@ -262,6 +301,7 @@ const Clients: React.FC = () => {
     setSearchTerm('');
     setSelectedMetric('total');
     setTimeRange(DEFAULT_TIME_RANGE);
+    setCurrentPage(1);
   }, []);
 
   const handleBackToList = useCallback(() => {
@@ -307,7 +347,7 @@ const Clients: React.FC = () => {
                 className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] disabled:cursor-not-allowed disabled:opacity-60"
                 placeholder="Search clients by company, industry, location, or contact details"
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={handleSearchChange}
                 disabled={!canManageClients}
               />
             </div>
@@ -319,7 +359,7 @@ const Clients: React.FC = () => {
               <select
                 className="w-full appearance-none rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-10 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] disabled:cursor-not-allowed disabled:opacity-60"
                 value={timeRange}
-                onChange={(event) => setTimeRange(event.target.value as TimeRangeKey)}
+                onChange={handleTimeRangeChange}
                 disabled={!canManageClients}
               >
                 {timeRangeOptions.map((option) => (
@@ -352,7 +392,7 @@ const Clients: React.FC = () => {
               <button
                 key={metric.key}
                 type="button"
-                onClick={() => setSelectedMetric(metric.key)}
+                onClick={() => handleSelectMetric(metric.key)}
                 aria-pressed={isActive}
                 disabled={!canManageClients}
                 className={`rounded-xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] ${
@@ -381,15 +421,41 @@ const Clients: React.FC = () => {
       </div>
 
       {filteredClients.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredClients.map((client) => (
-            <ClientCard
-              key={client.id}
-              client={client}
-              onClick={() => setSelectedClientId(client.id)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {paginatedClients.map((client) => (
+              <ClientCard
+                key={client.id}
+                client={client}
+                onClick={() => setSelectedClientId(client.id)}
+              />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--accent-orange)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-[var(--fg-muted)]">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--accent-orange)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)]/60 py-12 text-center">
           {canManageClients ? (
