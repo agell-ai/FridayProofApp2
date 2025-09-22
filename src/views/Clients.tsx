@@ -20,12 +20,12 @@ import { useClients } from '../hooks/useClients';
 import { useAuth } from '../hooks/useAuth';
 import type { Client } from '../types';
 import {
-  DATE_RANGE_OPTIONS,
   DEFAULT_TIME_RANGE,
   DateRangeKey,
   getDateRange,
   getDateRangeLabel,
-  isDateWithinRange,
+  isWithinTimeRange,
+  timeRangeOptions,
 } from '../utils/timeRanges';
 
 type StatusFilterValue = 'all' | Client['status'];
@@ -179,7 +179,7 @@ const Clients: React.FC = () => {
         return false;
       }
 
-      if (!isDateWithinRange(client.updatedAt, range) && !isDateWithinRange(client.createdAt, range)) {
+      if (!isWithinTimeRange(client.updatedAt, range) && !isWithinTimeRange(client.createdAt, range)) {
         return false;
       }
 
@@ -364,7 +364,7 @@ const Clients: React.FC = () => {
                       <CalendarClock className="h-3.5 w-3.5" />
                       Time range
                     </span>
-                    {DATE_RANGE_OPTIONS.map((option) => {
+                    {timeRangeOptions.map((option) => {
                       const isActive = option.value === timeRange;
                       return (
                         <button
