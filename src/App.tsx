@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { TeamProvider } from './hooks/useTeam';
 import LoginForm from './components/Auth/LoginForm';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
@@ -88,7 +89,9 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppContent />
+        <TeamProvider>
+          <AppContent />
+        </TeamProvider>
       </AuthProvider>
     </ThemeProvider>
   );
