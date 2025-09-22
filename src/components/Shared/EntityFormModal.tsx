@@ -22,6 +22,7 @@ export interface ProjectFormValues {
   status: Project['status'];
   clientId: string;
   assignedUsers: string[];
+  systems: string[];
 }
 
 export interface TeamFormValues {
@@ -256,14 +257,19 @@ const ClientForm: React.FC<ClientFormProps> = ({ mode, initialData, onSubmit, on
   );
 };
 
+type ProjectFormState = Omit<ProjectFormValues, 'systems'>;
+
 const ProjectForm: React.FC<ProjectFormProps> = ({ mode, initialData, clients, teamMembers, onSubmit, onCancel }) => {
-  const [formValues, setFormValues] = useState<ProjectFormValues>({
+  const [formValues, setFormValues] = useState<ProjectFormState>({
     name: initialData?.name || '',
     description: initialData?.description || '',
     status: initialData?.status || 'planning',
     clientId: initialData?.clientId || (clients[0]?.id ?? ''),
     assignedUsers: initialData?.assignedUsers || [],
   });
+  const [systemsInput, setSystemsInput] = useState<string>(
+    (initialData?.systems || []).map((system) => system.name).join('\n')
+  );
 
   useEffect(() => {
     setFormValues({
@@ -273,6 +279,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ mode, initialData, clients, t
       clientId: initialData?.clientId || (clients[0]?.id ?? ''),
       assignedUsers: initialData?.assignedUsers || [],
     });
+    setSystemsInput((initialData?.systems || []).map((system) => system.name).join('\n'));
   }, [initialData, clients]);
 
   const toggleUser = (userId: string) => {
@@ -286,7 +293,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ mode, initialData, clients, t
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSubmit(formValues);
+    const systems = systemsInput
+      .split('\n')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    onSubmit({ ...formValues, systems });
   };
 
   return (
@@ -340,6 +352,21 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ mode, initialData, clients, t
             />
           </div>
         </div>
+      </Section>
+
+      <Section
+        title="Systems"
+        description="List the automations, workflows, or tools that belong to this project."
+      >
+        <textarea
+          className={`${inputClassName} min-h-[120px]`}
+          value={systemsInput}
+          onChange={(event) => setSystemsInput(event.target.value)}
+          placeholder={'System or Tool Name'}
+        />
+        <p className="text-xs text-[var(--fg-muted)]">
+          Enter one system per line to capture every component of this project.
+        </p>
       </Section>
 
       <Section title="Assigned Team" description="Choose collaborators responsible for delivery.">
