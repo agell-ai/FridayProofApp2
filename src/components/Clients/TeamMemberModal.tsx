@@ -1,5 +1,20 @@
 import React from 'react';
-import { X, Mail, Phone, Linkedin, MapPin, BarChart3, Users, FolderOpen, Wrench, BookOpen, BookTemplate as FileTemplate, ShoppingBag, User } from 'lucide-react';
+import {
+  X,
+  Mail,
+  Phone,
+  Linkedin,
+  MapPin,
+  BarChart3,
+  Users,
+  FolderOpen,
+  Wrench,
+  BookOpen,
+  BookTemplate as FileTemplate,
+  ShoppingBag,
+  User,
+  CalendarClock,
+} from 'lucide-react';
 import { TeamMember } from '../../types';
 import { useClients } from '../../hooks/useClients';
 import { useProjects } from '../../hooks/useProjects';
@@ -65,6 +80,42 @@ const TeamMemberModal: React.FC<TeamMemberModalProps> = ({ member, onClose }) =>
     downloads: Math.floor(Math.random() * 100) + 10,
     rating: (Math.random() * 2 + 3).toFixed(1)
   }));
+
+  const formatDate = (value?: string) => {
+    if (!value) {
+      return '—';
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return '—';
+    }
+
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const formatDateTime = (value?: string) => {
+    if (!value) {
+      return '—';
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return '—';
+    }
+
+    return date.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -156,6 +207,37 @@ const TeamMemberModal: React.FC<TeamMemberModalProps> = ({ member, onClose }) =>
                         {skill}
                       </span>
                     ))}
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/30 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-white/10">
+                    <CalendarClock className="h-5 w-5 text-[var(--accent-purple)]" />
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-300">Joined</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatDate(member.createdAt)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/30 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-white/10">
+                    <CalendarClock className="h-5 w-5 text-[var(--accent-purple)]" />
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-300">Last Active</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatDateTime(member.lastActiveAt)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/30 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-white/10">
+                    <CalendarClock className="h-5 w-5 text-[var(--accent-purple)]" />
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-300">Last Assignment</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatDateTime(member.lastAssignedAt)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-lg border border-white/20 bg-white/30 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-white/10">
+                    <CalendarClock className="h-5 w-5 text-[var(--accent-purple)]" />
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-300">Profile Updated</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatDateTime(member.updatedAt)}</p>
+                    </div>
                   </div>
                 </div>
               </div>
