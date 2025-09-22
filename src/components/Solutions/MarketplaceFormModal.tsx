@@ -12,6 +12,7 @@ export interface MarketplaceFormValues {
   description?: string;
   downloads?: number;
   rating?: number;
+  templateId?: string;
 }
 
 interface MarketplaceFormModalProps {
@@ -40,6 +41,7 @@ const MarketplaceFormModal: React.FC<MarketplaceFormModalProps> = ({
 
   const [formValues, setFormValues] = useState<MarketplaceFormValues>({
     itemId: initialValues?.itemId,
+    templateId: initialValues?.templateId,
     clientId: defaultClientId,
     name: initialValues?.name || '',
     type: initialValues?.type || 'template',
@@ -56,6 +58,7 @@ const MarketplaceFormModal: React.FC<MarketplaceFormModalProps> = ({
 
     setFormValues({
       itemId: initialValues?.itemId,
+      templateId: initialValues?.templateId,
       clientId: initialValues?.clientId || clients[0]?.id || '',
       name: initialValues?.name || '',
       type: initialValues?.type || 'template',
