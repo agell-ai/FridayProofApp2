@@ -378,28 +378,31 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
                   <span>Create Proposal</span>
                 </div>
               </Button>
-              <button
-                type="button"
+              <Button
+                variant="gradient"
+                size="md"
+                className="w-full font-semibold"
                 disabled={isReadOnlyMode}
-                className="w-full bg-sunset-orange text-white font-semibold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 New Project
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="outline"
+                size="md"
+                className="w-full font-semibold backdrop-blur-sm"
                 onClick={handleEditClient}
                 disabled={isReadOnlyMode || !onEdit}
-                className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Edit Client
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="outline"
+                size="md"
+                className="w-full font-semibold backdrop-blur-sm"
                 disabled={isReadOnlyMode}
-                className="w-full bg-white/30 dark:bg-white/10 text-gray-900 dark:text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/40 dark:hover:bg-white/15 transition-colors backdrop-blur-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Add Contact
-              </button>
+              </Button>
             </div>
           </div>
         </div>
