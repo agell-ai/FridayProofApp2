@@ -316,28 +316,6 @@ const Clients: React.FC = () => {
     );
   }
 
-  if (selectedClientId && activeClient) {
-    return (
-      <>
-        <ClientDetails
-          client={activeClient}
-          onBack={() => setSelectedClientId(null)}
-          onCreateProposal={(proposal) => createProposal(activeClient.id, proposal)}
-          onUpdateProposal={(proposalId, updates) => updateProposal(activeClient.id, proposalId, updates)}
-          onEdit={openEditClientModal}
-        />
-        <EntityFormModal
-          isOpen={Boolean(formState)}
-          type="client"
-          mode={formState?.mode ?? 'create'}
-          initialData={formState?.client ?? null}
-          onClose={handleModalClose}
-          onSubmit={(values) => handleClientFormSubmit(values as ClientFormValues)}
-        />
-      </>
-    );
-  }
-
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -346,200 +324,214 @@ const Clients: React.FC = () => {
     );
   }
 
+  const showClientDetails = Boolean(selectedClientId && activeClient);
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-3">
-            <div>
-              <h1 className="text-2xl font-semibold text-[var(--fg)]">Clients</h1>
-              <p className="text-sm text-[var(--fg-muted)]">
-                Track relationships, surface opportunities, and monitor delivery health.
-              </p>
-            </div>
+    <>
+      {showClientDetails ? (
+        <ClientDetails
+          client={activeClient}
+          onBack={() => setSelectedClientId(null)}
+          onCreateProposal={(proposal) => createProposal(activeClient.id, proposal)}
+          onUpdateProposal={(proposalId, updates) => updateProposal(activeClient.id, proposalId, updates)}
+          onEdit={openEditClientModal}
+        />
+      ) : (
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-3">
+                <div>
+                  <h1 className="text-2xl font-semibold text-[var(--fg)]">Clients</h1>
+                  <p className="text-sm text-[var(--fg-muted)]">
+                    Track relationships, surface opportunities, and monitor delivery health.
+                  </p>
+                </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="relative flex-1 max-w-xl">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
-                <input
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                  placeholder="Search by company, contact, project, or tool"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                />
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
-                  <CalendarClock className="h-3.5 w-3.5" />
-                  Time range
-                </span>
-                {DATE_RANGE_OPTIONS.map((option) => {
-                  const isActive = option.value === timeRange;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setTimeRange(option.value)}
-                      aria-pressed={isActive}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-purple)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)] ${
-                        isActive
-                          ? 'border-transparent bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white shadow-sm'
-                          : 'border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] hover:text-[var(--fg)]'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:self-end lg:self-start">
-            <div className="relative">
-              <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
-              <select
-                className="appearance-none rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-8 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value as StatusFilterValue)}
-              >
-                <option value="all">All statuses</option>
-                {availableStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {formatStatusLabel(status)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              type="button"
-              onClick={openCreateClientModal}
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-            >
-              <Plus className="h-4 w-4" />
-              New Client
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {METRIC_DEFINITIONS.map((definition) => {
-          const count = metricCounts[definition.key] ?? 0;
-          const isActive = activeMetric === definition.key;
-          const Icon = definition.icon;
-
-          return (
-            <button
-              key={definition.key}
-              type="button"
-              onClick={() => handleMetricSelect(definition.key)}
-              aria-pressed={isActive}
-              className="w-full rounded-2xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-purple)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)]"
-            >
-              <Card glowOnHover activeGlow={isActive} className="h-full p-5">
-                <div className="flex h-full flex-col justify-between gap-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
-                        {definition.label}
-                      </p>
-                      <p className="mt-2 text-3xl font-semibold text-[var(--fg)]">{count}</p>
-                      <p className="mt-1 text-xs text-[var(--fg-muted)]">{definition.description}</p>
-                    </div>
-                    <div
-                      className={`rounded-lg p-2 ${
-                        isActive ? 'bg-[var(--surface)]/80' : 'bg-[var(--surface)]/60'
-                      }`}
-                    >
-                      <Icon
-                        className={`h-5 w-5 ${
-                          isActive ? definition.accentClass : 'text-[var(--fg-muted)]'
-                        }`}
-                      />
-                    </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="relative flex-1 max-w-xl">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
+                    <input
+                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
+                      placeholder="Search by company, contact, project, or tool"
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                    />
                   </div>
-                  <div className="text-xs text-[var(--fg-muted)]">
-                    {isActive
-                      ? 'Click again to view all clients'
-                      : 'Click to filter client list'}
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
+                      <CalendarClock className="h-3.5 w-3.5" />
+                      Time range
+                    </span>
+                    {DATE_RANGE_OPTIONS.map((option) => {
+                      const isActive = option.value === timeRange;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setTimeRange(option.value)}
+                          aria-pressed={isActive}
+                          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-purple)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)] ${
+                            isActive
+                              ? 'border-transparent bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] text-white shadow-sm'
+                              : 'border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] hover:text-[var(--fg)]'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              </Card>
-            </button>
-          );
-        })}
-      </div>
+              </div>
 
-      {activeFilterChips.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--fg-muted)]">
-          {activeFilterChips.map((chip) => (
-            <span
-              key={chip}
-              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 font-medium text-[var(--fg)]"
-            >
-              {chip}
-            </span>
-          ))}
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="text-[var(--accent-purple)] font-semibold transition hover:underline"
-          >
-            Reset filters
-          </button>
-        </div>
-      )}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:self-end lg:self-start">
+                <div className="relative">
+                  <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
+                  <select
+                    className="appearance-none rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-8 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value as StatusFilterValue)}
+                  >
+                    <option value="all">All statuses</option>
+                    {availableStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {formatStatusLabel(status)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-[var(--fg-muted)]">
-        <span>
-          Showing{' '}
-          <span className="font-medium text-[var(--fg)]">{filteredClients.length}</span>{' '}
-          of {metricCounts.total ?? baseFilteredClients.length} clients
-        </span>
-        {activeMetric !== 'total' && (
-          <button
-            type="button"
-            onClick={() => setActiveMetric('total')}
-            className="text-xs font-semibold text-[var(--accent-purple)] transition hover:underline"
-          >
-            Clear metric filter
-          </button>
-        )}
-      </div>
-
-      {filteredClients.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {filteredClients.map((client) => (
-            <ClientCard
-              key={client.id}
-              client={client}
-              onClick={() => setSelectedClientId(client.id)}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/60 p-12 text-center">
-          <p className="text-lg font-semibold text-[var(--fg)]">
-            {clients.length === 0 ? 'You haven\'t added any clients yet' : 'No clients match your filters'}
-          </p>
-          <p className="mt-2 text-sm text-[var(--fg-muted)]">
-            {clients.length === 0
-              ? 'Create your first client record to start tracking relationships.'
-              : 'Try adjusting your search, filters, or metric selection.'}
-          </p>
-          <div className="mt-6 flex justify-center">
-            <button
-              type="button"
-              onClick={openCreateClientModal}
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-            >
-              <Plus className="h-4 w-4" />
-              Add Client
-            </button>
+                <button
+                  type="button"
+                  onClick={openCreateClientModal}
+                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Client
+                </button>
+              </div>
+            </div>
           </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {METRIC_DEFINITIONS.map((definition) => {
+              const count = metricCounts[definition.key] ?? 0;
+              const isActive = activeMetric === definition.key;
+              const Icon = definition.icon;
+
+              return (
+                <button
+                  key={definition.key}
+                  type="button"
+                  onClick={() => handleMetricSelect(definition.key)}
+                  aria-pressed={isActive}
+                  className="w-full rounded-2xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-purple)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--card)]"
+                >
+                  <Card glowOnHover activeGlow={isActive} className="h-full p-5">
+                    <div className="flex h-full flex-col justify-between gap-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
+                            {definition.label}
+                          </p>
+                          <p className="mt-2 text-3xl font-semibold text-[var(--fg)]">{count}</p>
+                          <p className="mt-1 text-xs text-[var(--fg-muted)]">{definition.description}</p>
+                        </div>
+                        <div
+                          className={`rounded-lg p-2 ${
+                            isActive ? 'bg-[var(--surface)]/80' : 'bg-[var(--surface)]/60'
+                          }`}
+                        >
+                          <Icon
+                            className={`h-5 w-5 ${
+                              isActive ? definition.accentClass : 'text-[var(--fg-muted)]'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-xs text-[var(--fg-muted)]">
+                        {isActive
+                          ? 'Click again to view all clients'
+                          : 'Click to filter client list'}
+                      </div>
+                    </div>
+                  </Card>
+                </button>
+              );
+            })}
+          </div>
+
+          {activeFilterChips.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--fg-muted)]">
+              {activeFilterChips.map((chip) => (
+                <span
+                  key={chip}
+                  className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 font-medium text-[var(--fg)]"
+                >
+                  {chip}
+                </span>
+              ))}
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="text-[var(--accent-purple)] font-semibold transition hover:underline"
+              >
+                Reset filters
+              </button>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-[var(--fg-muted)]">
+            <span>
+              Showing{' '}
+              <span className="font-medium text-[var(--fg)]">{filteredClients.length}</span>{' '}
+              of {metricCounts.total ?? baseFilteredClients.length} clients
+            </span>
+            {activeMetric !== 'total' && (
+              <button
+                type="button"
+                onClick={() => setActiveMetric('total')}
+                className="text-xs font-semibold text-[var(--accent-purple)] transition hover:underline"
+              >
+                Clear metric filter
+              </button>
+            )}
+          </div>
+
+          {filteredClients.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {filteredClients.map((client) => (
+                <ClientCard
+                  key={client.id}
+                  client={client}
+                  onClick={() => setSelectedClientId(client.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/60 p-12 text-center">
+              <p className="text-lg font-semibold text-[var(--fg)]">
+                {clients.length === 0 ? 'You haven\'t added any clients yet' : 'No clients match your filters'}
+              </p>
+              <p className="mt-2 text-sm text-[var(--fg-muted)]">
+                {clients.length === 0
+                  ? 'Create your first client record to start tracking relationships.'
+                  : 'Try adjusting your search, filters, or metric selection.'}
+              </p>
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={openCreateClientModal}
+                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[var(--accent-orange)] via-[var(--accent-pink)] to-[var(--accent-purple)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Client
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -551,7 +543,7 @@ const Clients: React.FC = () => {
         onClose={handleModalClose}
         onSubmit={(values) => handleClientFormSubmit(values as ClientFormValues)}
       />
-    </div>
+    </>
   );
 };
 
