@@ -731,13 +731,9 @@ const Solutions: React.FC = () => {
           title: tool.name,
           description: tool.description,
           status: tool.status,
-          owner: tool.clientName ? `Client • ${tool.clientName}` : undefined,
-          meta: tool.projectName ? `Project • ${tool.projectName}` : undefined,
-          tags: [tool.category.toLowerCase(), tool.projectName, tool.clientName].filter(Boolean) as string[],
-          metrics: [
-            { label: 'Usage', value: `${tool.stats.usage}%`, tone: 'positive' },
-            { label: 'Efficiency', value: `${tool.stats.efficiency}%`, tone: 'positive' },
-          ],
+          owner: tool.clientName ? `Client • ${tool.clientName}` : 'Internal',
+          tags: [],
+          metrics: [],
           roi: formatRoi(`tool-${tool.id}`),
         },
         meta: { kind: 'tool', tool },
@@ -753,12 +749,8 @@ const Solutions: React.FC = () => {
           description: system.description,
           status: system.status,
           owner: client ? `Client • ${client.companyName}` : 'Internal',
-          meta: `Project • ${project.name}`,
-          tags: [system.type, system.status, project.name],
-          metrics: [
-            { label: 'Components', value: String(system.components.length) },
-            { label: 'Connections', value: String(system.connections.length) },
-          ],
+          tags: [],
+          metrics: [],
           roi: formatRoi(`system-${system.id}`),
         },
         meta: { kind: 'system', system, project, client },
@@ -882,7 +874,7 @@ const Solutions: React.FC = () => {
     }
   }, [filteredActiveItems, selectedActiveEntry]);
 
-  const filteredLibraryItems = useMemo(() => {
+  const filteredLibraryEntries = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return libraryEntries.filter(({ card }) => {
@@ -906,7 +898,7 @@ const Solutions: React.FC = () => {
     });
   }, [libraryEntries, searchTerm]);
 
-  const filteredMarketplaceItems = useMemo(() => {
+  const filteredMarketplaceEntries = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return marketplaceEntries.filter(({ card }) => {
@@ -930,9 +922,19 @@ const Solutions: React.FC = () => {
     });
   }, [marketplaceEntries, searchTerm]);
 
+  const libraryViewEntries = useMemo(
+    () => filteredLibraryEntries.filter((entry) => entry.card.type === 'template'),
+    [filteredLibraryEntries],
+  );
+
+  const marketplaceViewEntries = useMemo(
+    () => filteredMarketplaceEntries.filter((entry) => entry.card.type === 'marketplace'),
+    [filteredMarketplaceEntries],
+  );
+
   const activeSummary = useMemo(
     () => [
-      { label: 'Active (total)', value: activeItems.length, filter: 'all' as ActiveStatusFilter },
+      { label: 'Total', value: activeItems.length, filter: 'all' as ActiveStatusFilter },
       {
         label: 'Deployed',
         value: activeItems.filter(({ card }) => card.status === 'active').length,
@@ -1264,8 +1266,8 @@ const Solutions: React.FC = () => {
   const hasResults = isActiveView
     ? filteredActiveItems.length > 0
     : isLibraryView
-      ? filteredLibraryItems.length > 0
-      : filteredMarketplaceItems.length > 0;
+      ? libraryViewEntries.length > 0
+      : marketplaceViewEntries.length > 0;
 
   const emptyStateMessage = isActiveView
     ? 'No systems or tools found'
@@ -1278,7 +1280,7 @@ const Solutions: React.FC = () => {
       <div className="space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <h1 className="text-2xl font-semibold text-[var(--fg)]">Systems Hub</h1>
+            <h1 className="text-2xl font-semibold text-[var(--fg)]">Solutions Hub</h1>
             <p className="text-sm text-[var(--fg-muted)]">
               Manage live systems, reusable templates, and marketplace listings from a single control center.
             </p>
@@ -1403,7 +1405,7 @@ const Solutions: React.FC = () => {
             )
           ) : isLibraryView ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {filteredLibraryItems.map((entry) => (
+              {libraryViewEntries.map((entry) => (
                 <SolutionCard
                   key={`library-${entry.card.id}`}
                   data={entry.card}
@@ -1426,7 +1428,7 @@ const Solutions: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {filteredMarketplaceItems.map((entry) => (
+              {marketplaceViewEntries.map((entry) => (
                 <SolutionCard
                   key={`market-${entry.card.id}`}
                   data={entry.card}
