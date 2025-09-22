@@ -385,10 +385,10 @@ export const useTeam = () => {
 
   useEffect(() => {
     // Simulate API call
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       // Filter team members based on user's account and projects
       let filteredMembers = mockTeamMembers;
-      
+
       if (user?.accountType === 'business') {
         // For business accounts, show team members who work on business projects
         filteredMembers = mockTeamMembers.filter(member =>
@@ -400,6 +400,10 @@ export const useTeam = () => {
       setTeamMembers(filteredMembers);
       setIsLoading(false);
     }, 500);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [user, account]);
 
   const getTeamMembersByIds = (ids: string[]): TeamMember[] => {
