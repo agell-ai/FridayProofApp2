@@ -13,7 +13,8 @@ import RoiManagerModal from '../components/Solutions/RoiManagerModal';
 import SystemFormModal, { SystemFormValues } from '../components/Solutions/SystemFormModal';
 import TemplateFormModal, { TemplateFormValues } from '../components/Solutions/TemplateFormModal';
 import MarketplaceFormModal, { MarketplaceFormValues } from '../components/Solutions/MarketplaceFormModal';
-import type { ResourceOption, RoiMetricRecord } from '../types/roi';
+import { ROI_METRIC_CONFIG, ROI_METRIC_KEYS } from '../types/roi';
+import type { ResourceOption, RoiMetricKey, RoiMetricRecord, RoiMetricUnit } from '../types/roi';
 import type { Client, ClientLibraryItem, ClientTemplate, Project, System } from '../types';
 
 const hubViews = ['active', 'library', 'marketplace'] as const;
@@ -92,6 +93,71 @@ const formatNumber = (value: number) => {
   return value.toLocaleString();
 };
 
+const formatMetricValue = (unit: RoiMetricUnit, value: number) => {
+  switch (unit) {
+    case 'currency':
+      return formatCurrency(value);
+    case 'hours':
+      return `${formatNumber(value)} hrs`;
+    case 'percentage': {
+      if (!Number.isFinite(value)) return '0%';
+      const bounded = Math.max(0, Math.min(100, value));
+      return Number.isInteger(bounded) ? `${bounded}%` : `${bounded.toFixed(1)}%`;
+    }
+    default:
+      return formatNumber(value);
+  }
+};
+
+const formatDeltaValue = (unit: RoiMetricUnit, delta: number) => {
+  if (!delta) {
+    return 'No change';
+  }
+
+  const sign = delta > 0 ? '+' : '-';
+  const magnitude = Math.abs(delta);
+
+  switch (unit) {
+    case 'currency':
+      return `${sign}${formatCurrency(magnitude)}`;
+    case 'hours':
+      return `${sign}${formatNumber(magnitude)} hrs`;
+    case 'percentage': {
+      const rounded = Math.round(magnitude * 10) / 10;
+      const valueText = Number.isInteger(rounded) ? `${rounded}` : `${rounded.toFixed(1)}`;
+      return `${sign}${valueText} pts`;
+    }
+    default:
+      return `${sign}${formatNumber(magnitude)}`;
+  }
+};
+
+const createMetricRange = (
+  post: number,
+  ratio = 0.6,
+  { min = 0, max }: { min?: number; max?: number } = {},
+) => {
+  if (!Number.isFinite(post)) {
+    return { pre: min, post: min };
+  }
+
+  const limitedPost = max !== undefined ? Math.min(Math.max(post, min), max) : Math.max(post, min);
+  const baseline = limitedPost * ratio;
+  const limitedPre = max !== undefined ? Math.min(Math.max(baseline, min), limitedPost) : Math.min(Math.max(baseline, min), limitedPost);
+
+  const roundedPost = Math.round(limitedPost);
+  const roundedPre = Math.round(limitedPre);
+
+  if (roundedPre > roundedPost) {
+    return { pre: roundedPost, post: roundedPost };
+  }
+
+  return { pre: roundedPre, post: roundedPost };
+};
+
+const createPercentageRange = (post: number, ratio = 0.6) =>
+  createMetricRange(post, ratio, { min: 0, max: 100 });
+
 const deterministicNumber = (seed: string, min: number, max: number) => {
   let hash = 0;
   for (let index = 0; index < seed.length; index += 1) {
@@ -146,32 +212,29 @@ const ActiveDetailView: React.FC<ActiveDetailViewProps> = ({
   roiAvailable,
 }) => {
   const isTool = entry.meta.kind === 'tool';
-  const roi = {
-    costSavings: roiMetrics?.costSavings ?? 0,
-    hoursSaved: roiMetrics?.hoursSaved ?? 0,
-    revenueGenerated: roiMetrics?.revenueGenerated ?? 0,
-    adoptionRate: roiMetrics?.adoptionRate ?? 0,
-    efficiencyGain: roiMetrics?.efficiencyGain ?? 0,
-    lastUpdated: roiMetrics?.lastUpdated,
-  };
+  const emptyMetricValue = { pre: 0, post: 0 } as const;
 
-  const roiBarData = [
-    {
-      label: 'Cost Savings',
-      display: formatCurrency(roi.costSavings),
-      percent: (roi.costSavings / 150000) * 100,
-    },
-    {
-      label: 'Revenue Impact',
-      display: formatCurrency(roi.revenueGenerated),
-      percent: (roi.revenueGenerated / 200000) * 100,
-    },
-    {
-      label: 'Hours Saved',
-      display: `${formatNumber(roi.hoursSaved)} hrs`,
-      percent: (roi.hoursSaved / 2000) * 100,
-    },
-  ];
+  const roiEntries = ROI_METRIC_KEYS.map((key) => {
+    const metric = roiMetrics?.[key] ?? emptyMetricValue;
+    const config = ROI_METRIC_CONFIG[key];
+    const delta = metric.post - metric.pre;
+    const tone: 'positive' | 'negative' | 'neutral' =
+      delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral';
+
+    return {
+      key,
+      label: config.label,
+      delta,
+      tone,
+      deltaText: formatDeltaValue(config.unit, delta),
+      baselineText: `Baseline ${formatMetricValue(config.unit, metric.pre)} → Current ${formatMetricValue(
+        config.unit,
+        metric.post
+      )}`,
+    };
+  });
+
+  const roiLastUpdated = roiMetrics?.lastUpdated;
 
   const detailItems = isTool
     ? [
@@ -325,40 +388,38 @@ const ActiveDetailView: React.FC<ActiveDetailViewProps> = ({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-base font-semibold text-[var(--fg)]">ROI Overview</h3>
-            <p className="text-sm text-[var(--fg-muted)]">Financial and efficiency signals for this resource.</p>
+            <p className="text-sm text-[var(--fg-muted)]">
+              Baseline versus post-implementation impact across every metric.
+            </p>
           </div>
           <p className="text-xs text-[var(--fg-muted)]">
-            Last updated {roi.lastUpdated ? formatDate(roi.lastUpdated) : 'not yet recorded'}
+            Last updated {roiLastUpdated ? formatDate(roiLastUpdated) : 'not yet recorded'}
           </p>
         </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {roiEntries.map((metric) => {
+            const toneClass =
+              metric.tone === 'positive'
+                ? 'text-emerald-500 dark:text-emerald-400'
+                : metric.tone === 'negative'
+                ? 'text-rose-500 dark:text-rose-400'
+                : 'text-[var(--fg)]';
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {roiBarData.map((metric) => (
-            <div key={metric.label} className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--fg-muted)]">{metric.label}</span>
-                <span className="font-semibold text-[var(--fg)]">{metric.display}</span>
+            return (
+              <div
+                key={metric.key}
+                className="space-y-1 rounded-lg border border-[var(--border)] bg-[var(--surface)]/60 p-4"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-[11px] uppercase tracking-wide text-[var(--fg-muted)]">
+                    {metric.label}
+                  </span>
+                  <span className={`text-sm font-semibold ${toneClass}`}>{metric.deltaText}</span>
+                </div>
+                <p className="text-xs text-[var(--fg-muted)]">{metric.baselineText}</p>
               </div>
-              {renderProgress(metric.percent)}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-[var(--fg-muted)]">Adoption Rate</span>
-              <span className="font-semibold text-[var(--fg)]">{`${clampPercent(roi.adoptionRate)}%`}</span>
-            </div>
-            {renderProgress(roi.adoptionRate)}
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-[var(--fg-muted)]">Efficiency Gain</span>
-              <span className="font-semibold text-[var(--fg)]">{`${clampPercent(roi.efficiencyGain)}%`}</span>
-            </div>
-            {renderProgress(roi.efficiencyGain)}
-          </div>
+            );
+          })}
         </div>
       </Card>
 
@@ -628,12 +689,18 @@ const Solutions: React.FC = () => {
       tools.forEach((tool) => {
         const key = `tool-${tool.id}`;
         if (!next[key]) {
+          const costSavingsPost = tool.stats.costSavings;
+          const revenuePost = Math.round(costSavingsPost * 1.5);
+          const hoursPost = Math.max(40, Math.round(tool.stats.totalRuns / 50));
+          const adoptionPost = tool.stats.usage;
+          const efficiencyPost = tool.stats.efficiency;
+
           next[key] = {
-            costSavings: tool.stats.costSavings,
-            hoursSaved: Math.max(40, Math.round(tool.stats.totalRuns / 50)),
-            revenueGenerated: Math.round(tool.stats.costSavings * 1.5),
-            adoptionRate: tool.stats.usage,
-            efficiencyGain: tool.stats.efficiency,
+            costSavings: createMetricRange(costSavingsPost, 0.55),
+            revenueGenerated: createMetricRange(revenuePost, 0.5),
+            hoursSaved: createMetricRange(hoursPost, 0.6),
+            adoptionRate: createPercentageRange(adoptionPost, 0.65),
+            efficiencyGain: createPercentageRange(efficiencyPost, 0.6),
             lastUpdated: tool.updatedAt,
           };
         }
@@ -642,12 +709,18 @@ const Solutions: React.FC = () => {
       systems.forEach(({ system, project }) => {
         const key = `system-${system.id}`;
         if (!next[key]) {
+          const costSavingsPost = deterministicNumber(system.id, 15000, 60000);
+          const hoursPost = deterministicNumber(`${system.id}-hours`, 200, 1400);
+          const revenuePost = deterministicNumber(`${system.id}-revenue`, 25000, 120000);
+          const adoptionPost = deterministicNumber(`${system.id}-adoption`, 60, 95);
+          const efficiencyPost = deterministicNumber(`${system.id}-efficiency`, 55, 90);
+
           next[key] = {
-            costSavings: deterministicNumber(system.id, 15000, 60000),
-            hoursSaved: deterministicNumber(`${system.id}-hours`, 200, 1400),
-            revenueGenerated: deterministicNumber(`${system.id}-revenue`, 25000, 120000),
-            adoptionRate: deterministicNumber(`${system.id}-adoption`, 60, 95),
-            efficiencyGain: deterministicNumber(`${system.id}-efficiency`, 55, 90),
+            costSavings: createMetricRange(costSavingsPost, 0.55),
+            hoursSaved: createMetricRange(hoursPost, 0.6),
+            revenueGenerated: createMetricRange(revenuePost, 0.5),
+            adoptionRate: createPercentageRange(adoptionPost, 0.6),
+            efficiencyGain: createPercentageRange(efficiencyPost, 0.6),
             lastUpdated: project.updatedAt,
           };
         }
@@ -673,13 +746,22 @@ const Solutions: React.FC = () => {
     (key: string): SolutionCardData['roi'] => {
       const metrics = roiMetrics[key];
       if (!metrics) return undefined;
+      const getDelta = (metricKey: RoiMetricKey) => {
+        const metric = metrics[metricKey];
+        const config = ROI_METRIC_CONFIG[metricKey];
+        return formatDeltaValue(config.unit, metric.post - metric.pre);
+      };
       return {
-        costSavings: formatCurrency(metrics.costSavings),
-        hoursSaved: `${formatNumber(metrics.hoursSaved)} hrs`,
-        revenueGenerated: formatCurrency(metrics.revenueGenerated),
-        adoptionRate: `${metrics.adoptionRate}%`,
-        efficiencyGain: `${metrics.efficiencyGain}%`,
-        lastUpdated: new Date(metrics.lastUpdated).toLocaleDateString(),
+        costSavings: getDelta('costSavings'),
+        hoursSaved: getDelta('hoursSaved'),
+        revenueGenerated: getDelta('revenueGenerated'),
+        adoptionRate: getDelta('adoptionRate'),
+        efficiencyGain: getDelta('efficiencyGain'),
+        lastUpdated: (() => {
+          if (!metrics.lastUpdated) return undefined;
+          const formatted = formatDate(metrics.lastUpdated);
+          return formatted === '—' ? undefined : formatted;
+        })(),
       };
     },
     [roiMetrics]
@@ -987,9 +1069,9 @@ const Solutions: React.FC = () => {
         const toolId = key.replace('tool-', '');
         updateTool(toolId, {
           stats: {
-            costSavings: metrics.costSavings,
-            usage: metrics.adoptionRate,
-            efficiency: metrics.efficiencyGain,
+            costSavings: metrics.costSavings.post,
+            usage: metrics.adoptionRate.post,
+            efficiency: metrics.efficiencyGain.post,
           },
         });
       }
@@ -1014,9 +1096,9 @@ const Solutions: React.FC = () => {
           const toolId = key.replace('tool-', '');
           updateTool(toolId, {
             stats: {
-              costSavings: metrics.costSavings,
-              usage: metrics.adoptionRate,
-              efficiency: metrics.efficiencyGain,
+              costSavings: metrics.costSavings.post,
+              usage: metrics.adoptionRate.post,
+              efficiency: metrics.efficiencyGain.post,
             },
           });
         }
