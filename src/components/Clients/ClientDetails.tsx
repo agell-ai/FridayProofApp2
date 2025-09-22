@@ -9,6 +9,7 @@ import { EntityFormModal, ProposalFormValues, FormMode } from '../Shared/EntityF
 import { useTeam } from '../../hooks/useTeam';
 import { useProjects } from '../../hooks/useProjects';
 import { useTools } from '../../hooks/useTools';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ClientDetailsProps {
   client: Client;
@@ -36,6 +37,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
   onEdit,
   isReadOnly = false,
 }) => {
+  const { user } = useAuth();
   const { getTeamMembersByIds } = useTeam();
   const { projects } = useProjects();
   const { tools } = useTools();
@@ -51,7 +53,8 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
   const [proposalFormMode, setProposalFormMode] = useState<FormMode>('create');
   const [proposalFormInitial, setProposalFormInitial] = useState<ClientProposal | null>(null);
 
-  const isReadOnlyMode = Boolean(isReadOnly);
+  const canManageClients = Boolean(user && ['owner', 'manager'].includes(user.role));
+  const isReadOnlyMode = Boolean(isReadOnly || !canManageClients);
 
   // Get actual project data for client projects
   const clientProjects = projects.filter(project => project.clientId === client.id);
