@@ -639,14 +639,14 @@ const Workspaces: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="flex flex-wrap gap-4 sm:flex-nowrap">
           {summaryStats.map((stat) => (
             <button
               key={stat.label}
               type="button"
               onClick={() => handleSummaryCardClick(stat.filterKey)}
               aria-pressed={stat.isActive}
-              className={`rounded-xl border bg-[var(--surface)]/60 px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] ${
+              className={`basis-full min-w-0 rounded-xl border bg-[var(--surface)]/60 px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] sm:flex-1 sm:basis-0 ${
                 stat.isActive
                   ? 'border-[var(--accent-purple)] bg-[var(--accent-purple)]/10 shadow-sm'
                   : 'border-[var(--border)] hover:border-[var(--accent-purple)]/40 hover:bg-[var(--surface)]/80'
