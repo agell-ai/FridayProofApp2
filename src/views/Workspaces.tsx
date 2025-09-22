@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, PlusCircle } from 'lucide-react';
 import { useClients } from '../hooks/useClients';
 import { useProjects } from '../hooks/useProjects';
@@ -21,6 +21,64 @@ import ClientDetails from '../components/Workspaces/ClientDetails';
 import TeamMemberDetailsModal from '../components/Workspaces/TeamMemberDetailsModal';
 import InvoiceFormModal, { InvoiceFormValues } from '../components/Workspaces/InvoiceFormModal';
 import { Client, ClientInvoice, ClientProposal, Project, System, TeamMember } from '../types';
+
+interface DetailsOverlayProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}
+
+const DetailsOverlay: React.FC<DetailsOverlayProps> = ({ isOpen, onClose, title, children }) => {
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    const id = requestAnimationFrame(() => {
+      panelRef.current?.focus({ preventScroll: true });
+    });
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      cancelAnimationFrame(id);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-40 flex justify-end bg-[var(--fg)]/20 backdrop-blur-sm"
+      role="presentation"
+      onClick={onClose}
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
+        className="h-full w-full max-w-4xl overflow-y-auto border-l border-[var(--border)] bg-[var(--card)] shadow-2xl focus:outline-none"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="h-full overflow-y-auto p-6 sm:p-8">{children}</div>
+      </div>
+    </div>
+  );
+};
 
 type WorkspaceView = 'project' | 'client' | 'team';
 
@@ -136,6 +194,8 @@ const Workspaces: React.FC = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
   const [isInvoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const projectGridRef = useRef<HTMLDivElement | null>(null);
+  const clientGridRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!availableViews.includes(selectedView) && availableViews.length > 0) {
@@ -471,22 +531,42 @@ const Workspaces: React.FC = () => {
     ? formState.clientContext ?? selectedClient ?? null
     : null;
 
-  const renderProjects = () => {
-    if (selectedProject) {
-      const client = clients.find((item) => item.id === selectedProject.clientId) ?? null;
-      const assignedTeam = teamMembers.filter((member) => selectedProject.assignedUsers.includes(member.id));
-
-      return (
-        <ProjectDetails
-          project={selectedProject}
-          client={client}
-          teamMembers={assignedTeam}
-          onBack={() => setSelectedProject(null)}
-          onEdit={(project) => setFormState({ type: 'project', mode: 'edit', entity: project })}
-        />
-      );
+  const activeProjectClient = useMemo(() => {
+    if (!selectedProject) {
+      return null;
     }
+    return clients.find((item) => item.id === selectedProject.clientId) ?? null;
+  }, [clients, selectedProject]);
 
+  const activeProjectTeam = useMemo<TeamMember[]>(() => {
+    if (!selectedProject) {
+      return [];
+    }
+    return teamMembers.filter((member) => selectedProject.assignedUsers.includes(member.id));
+  }, [selectedProject, teamMembers]);
+
+  const activeClientProjects = useMemo<Project[]>(() => {
+    if (!selectedClient) {
+      return [];
+    }
+    return projects.filter((project) => project.clientId === selectedClient.id);
+  }, [projects, selectedClient]);
+
+  const handleProjectDetailsClose = useCallback(() => {
+    setSelectedProject(null);
+    requestAnimationFrame(() => {
+      projectGridRef.current?.focus({ preventScroll: true });
+    });
+  }, []);
+
+  const handleClientDetailsClose = useCallback(() => {
+    setSelectedClient(null);
+    requestAnimationFrame(() => {
+      clientGridRef.current?.focus({ preventScroll: true });
+    });
+  }, []);
+
+  const renderProjects = () => {
     if (projectResults.length === 0) {
       return (
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/60 p-12 text-center text-[var(--fg-muted)]">
@@ -497,7 +577,12 @@ const Workspaces: React.FC = () => {
     }
 
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div
+        ref={projectGridRef}
+        tabIndex={-1}
+        aria-label="Project cards grid"
+        className="grid grid-cols-1 gap-4 focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] md:grid-cols-2 xl:grid-cols-3"
+      >
         {projectResults.map((project) => {
           const client = clients.find((item) => item.id === project.clientId) ?? null;
           return (
@@ -515,21 +600,6 @@ const Workspaces: React.FC = () => {
   };
 
   const renderClients = () => {
-    if (selectedClient) {
-      const clientProjects = projects.filter((project) => project.clientId === selectedClient.id);
-
-      return (
-        <ClientDetails
-          client={selectedClient}
-          projects={clientProjects}
-          onBack={() => setSelectedClient(null)}
-          onEdit={(client) => setFormState({ type: 'client', mode: 'edit', entity: client })}
-          onCreateInvoice={() => setInvoiceModalOpen(true)}
-          onCreateProposal={() => setFormState({ type: 'proposal', mode: 'create', clientContext: selectedClient })}
-        />
-      );
-    }
-
     if (clientResults.length === 0) {
       return (
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/60 p-12 text-center text-[var(--fg-muted)]">
@@ -540,7 +610,12 @@ const Workspaces: React.FC = () => {
     }
 
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div
+        ref={clientGridRef}
+        tabIndex={-1}
+        aria-label="Client cards grid"
+        className="grid grid-cols-1 gap-4 focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] md:grid-cols-2 xl:grid-cols-3"
+      >
         {clientResults.map((client) => (
           <ClientCard
             key={client.id}
@@ -697,6 +772,41 @@ const Workspaces: React.FC = () => {
         onClose={() => setInvoiceModalOpen(false)}
         onSubmit={handleInvoiceSubmit}
       />
+
+      <DetailsOverlay
+        isOpen={Boolean(selectedProject)}
+        onClose={handleProjectDetailsClose}
+        title="Project details"
+      >
+        {selectedProject && (
+          <ProjectDetails
+            project={selectedProject}
+            client={activeProjectClient}
+            teamMembers={activeProjectTeam}
+            onBack={handleProjectDetailsClose}
+            onEdit={(project) => setFormState({ type: 'project', mode: 'edit', entity: project })}
+          />
+        )}
+      </DetailsOverlay>
+
+      <DetailsOverlay
+        isOpen={Boolean(selectedClient)}
+        onClose={handleClientDetailsClose}
+        title="Client details"
+      >
+        {selectedClient && (
+          <ClientDetails
+            client={selectedClient}
+            projects={activeClientProjects}
+            onBack={handleClientDetailsClose}
+            onEdit={(client) => setFormState({ type: 'client', mode: 'edit', entity: client })}
+            onCreateInvoice={() => setInvoiceModalOpen(true)}
+            onCreateProposal={() =>
+              setFormState({ type: 'proposal', mode: 'create', clientContext: selectedClient })
+            }
+          />
+        )}
+      </DetailsOverlay>
     </div>
   );
 };
