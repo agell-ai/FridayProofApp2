@@ -55,7 +55,7 @@ export const timeRangeOptions: TimeRangeOption[] = [
   }
 ];
 
-export const DEFAULT_TIME_RANGE: TimeRangeKey = '30d';
+export const DEFAULT_TIME_RANGE: TimeRangeKey = 'all';
 
 export const getTimeRangeStart = (value: TimeRangeKey): Date | null => {
   const option = timeRangeOptions.find((item) => item.value === value);
