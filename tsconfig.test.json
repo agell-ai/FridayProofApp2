@@ -11,6 +11,8 @@
   "include": [
     "src/types/**/*.ts",
     "src/views/solutionsFilters.ts",
-    "src/views/__tests__/solutionsFilters.test.ts"
+    "src/views/dashboardCategories.ts",
+    "src/views/__tests__/solutionsFilters.test.ts",
+    "src/views/__tests__/dashboardCategories.test.ts"
   ]
 }

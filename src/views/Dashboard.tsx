@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
 import {
   Handshake,
   FolderOpen,
@@ -19,6 +18,12 @@ import { useTeam } from '../hooks/useTeam';
 import { useTools } from '../hooks/useTools';
 import type { Client, Project, TeamMember } from '../types';
 import type { Tool } from '../types/tools';
+import {
+  CATEGORY_METADATA,
+  CATEGORY_ORDER,
+  type MetricCategory,
+  type MetricCategoryMetadata,
+} from './dashboardCategories';
 
 const ACTIVE_PROJECT_STATUSES = new Set(['planning', 'development', 'testing', 'maintenance']);
 const METRIC_STORAGE_KEY = 'friday-dashboard-metric-selections';
@@ -33,48 +38,6 @@ const TONE_CLASSES = {
 
 type MetricTone = keyof typeof TONE_CLASSES;
 
-type MetricCategoryMetadata = {
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  accent: string;
-};
-
-type CategoryMetadataRecord = {
-  clients: MetricCategoryMetadata;
-  projects: MetricCategoryMetadata;
-  team: MetricCategoryMetadata;
-  automation: MetricCategoryMetadata;
-};
-
-const CATEGORY_METADATA: CategoryMetadataRecord = {
-  clients: {
-    title: 'Client Success',
-    description: 'Pipeline health, relationships, and commercial momentum.',
-    icon: Handshake,
-    accent: 'from-sky-500/10 via-sky-500/5 to-transparent',
-  },
-  projects: {
-    title: 'Delivery Operations',
-    description: 'Monitor how projects move from planning through deployment.',
-    icon: FolderOpen,
-    accent: 'from-purple-500/10 via-purple-500/5 to-transparent',
-  },
-  team: {
-    title: 'Team Performance',
-    description: 'Utilization, output, and collaboration across your crew.',
-    icon: Users,
-    accent: 'from-emerald-500/10 via-emerald-500/5 to-transparent',
-  },
-  automation: {
-    title: 'Automation Footprint',
-    description: 'Tool coverage, run health, and cost impact.',
-    icon: Wrench,
-    accent: 'from-amber-500/10 via-amber-500/5 to-transparent',
-  },
-};
-
-type MetricCategory = keyof typeof CATEGORY_METADATA;
 
 type MetricDetailStat = {
   label: string;
@@ -1264,7 +1227,7 @@ const sanitizeCategorySelection = (selection: string[], category: MetricCategory
 const sanitizeSelections = (
   selections: Partial<Record<MetricCategory, string[]>>
 ): Record<MetricCategory, string[]> => {
-  return (Object.keys(CATEGORY_METADATA) as MetricCategory[]).reduce((acc, category) => {
+  return CATEGORY_ORDER.reduce((acc, category) => {
     const current = selections[category] ?? DEFAULT_METRIC_SELECTIONS[category];
     acc[category] = sanitizeCategorySelection(current, category);
     return acc;
@@ -2021,7 +1984,7 @@ const Dashboard: React.FC = () => {
       </section>
 
       <div className="space-y-6">
-        {(Object.keys(CATEGORY_METADATA) as MetricCategory[]).map((category) => {
+        {CATEGORY_ORDER.map((category) => {
           const metadata = CATEGORY_METADATA[category];
           const SectionIcon = metadata.icon;
           const selections = selectedMetrics[category] ?? DEFAULT_METRIC_SELECTIONS[category];
