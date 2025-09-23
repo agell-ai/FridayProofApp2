@@ -86,17 +86,26 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const userAccountType = user?.accountType;
+  const userId = user?.id;
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      if (user) {
-        const mockNotifications = generateMockNotifications(user.accountType);
+    setIsLoading(true);
+
+    const timeoutId = window.setTimeout(() => {
+      if (userAccountType && userId) {
+        const mockNotifications = generateMockNotifications(userAccountType);
         setNotifications(mockNotifications);
+      } else {
+        setNotifications([]);
       }
       setIsLoading(false);
     }, 500);
-  }, [user]);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [userAccountType, userId]);
 
   const markAsRead = (notificationId: string) => {
     setNotifications(prev => 

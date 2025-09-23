@@ -12,17 +12,27 @@ interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const getStoredMode = (): ThemeMode => {
+  if (typeof window === 'undefined') {
+    return 'system';
+  }
+
+  const stored = window.localStorage.getItem('theme');
+  return (stored as ThemeMode) ?? 'system';
+};
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    const stored = localStorage.getItem('theme') as ThemeMode;
-    return stored || 'system';
-  });
+  const [mode, setMode] = useState<ThemeMode>(getStoredMode);
 
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const root = window.document.documentElement;
-    
+
     const updateTheme = () => {
       let newResolvedTheme: 'light' | 'dark';
       
@@ -100,7 +110,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const handleSetMode = (newMode: ThemeMode) => {
     setMode(newMode);
-    localStorage.setItem('theme', newMode);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('theme', newMode);
+    }
   };
 
   const theme = themes[resolvedTheme];
