@@ -362,27 +362,35 @@ export const useProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const userAccountId = user?.accountId;
+  const userAccountType = user?.accountType;
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      // Filter projects based on user's account
-      let filteredProjects = mockProjects;
-      
-      if (user?.accountType === 'business') {
-        // For business accounts, show only projects assigned to their account (no clientId)
-        filteredProjects = mockProjects.filter(project => 
-          project.accountId === user.accountId && !project.clientId
-        );
-      } else {
-        // For agency/consultant accounts, show all projects
-        filteredProjects = mockProjects;
+    setIsLoading(true);
+
+    const timeoutId = window.setTimeout(() => {
+      if (!userAccountId) {
+        setProjects([]);
+        setIsLoading(false);
+        return;
       }
-      
+
+      let filteredProjects = mockProjects.filter(
+        (project) => project.accountId === userAccountId,
+      );
+
+      if (userAccountType === 'business') {
+        filteredProjects = filteredProjects.filter((project) => !project.clientId);
+      }
+
       setProjects(filteredProjects);
       setIsLoading(false);
     }, 1000);
-  }, [user]);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [userAccountId, userAccountType]);
 
   const createProject = (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'systems'>) => {
     const newProject: Project = {
