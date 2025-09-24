@@ -196,6 +196,7 @@ const Workspaces: React.FC<ViewComponentProps> = ({ onNavigate }) => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
   const [isInvoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const isDetailViewOpen = Boolean(selectedProject || selectedClient);
   const projectGridRef = useRef<HTMLDivElement | null>(null);
   const clientGridRef = useRef<HTMLDivElement | null>(null);
 
@@ -669,78 +670,80 @@ const Workspaces: React.FC<ViewComponentProps> = ({ onNavigate }) => {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-3">
-            <h1 className="text-2xl font-semibold text-[var(--fg)]">Workspaces</h1>
-            <p className="text-sm text-[var(--fg-muted)]">
-              Navigate every project, client relationship, and teammate from a single command hub.
-            </p>
-            <div className="relative max-w-xl">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
-              <input
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
-                placeholder={searchPlaceholders[selectedView]}
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
+      {!isDetailViewOpen && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-3">
+              <h1 className="text-2xl font-semibold text-[var(--fg)]">Workspaces</h1>
+              <p className="text-sm text-[var(--fg-muted)]">
+                Navigate every project, client relationship, and teammate from a single command hub.
+              </p>
+              <div className="relative max-w-xl">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--fg-muted)]" />
+                <input
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--fg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)]"
+                  placeholder={searchPlaceholders[selectedView]}
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2">
+                {availableViews.map((view) => (
+                  <Button
+                    key={view}
+                    type="button"
+                    size="sm"
+                    variant={view === selectedView ? 'gradient' : 'outline'}
+                    onClick={() => setSelectedView(view)}
+                    className="rounded-lg px-4 py-2 text-sm font-medium"
+                  >
+                    {viewLabels[view]}
+                  </Button>
+                ))}
+              </div>
+
+              <Button
+                type="button"
+                size="sm"
+                variant="gradient"
+                onClick={() => setFormState({ type: selectedView, mode: 'create' })}
+                className="gap-2 px-4 py-2 text-sm font-semibold"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Add {addLabels[selectedView]}
+              </Button>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-2">
-              {availableViews.map((view) => (
-                <Button
-                  key={view}
-                  type="button"
-                  size="sm"
-                  variant={view === selectedView ? 'gradient' : 'outline'}
-                  onClick={() => setSelectedView(view)}
-                  className="rounded-lg px-4 py-2 text-sm font-medium"
-                >
-                  {viewLabels[view]}
-                </Button>
-              ))}
-            </div>
-
-            <Button
-              type="button"
-              size="sm"
-              variant="gradient"
-              onClick={() => setFormState({ type: selectedView, mode: 'create' })}
-              className="gap-2 px-4 py-2 text-sm font-semibold"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Add {addLabels[selectedView]}
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-4 sm:flex-nowrap">
-          {summaryStats.map((stat) => (
-            <button
-              key={stat.label}
-              type="button"
-              onClick={() => handleSummaryCardClick(stat.filterKey)}
-              aria-pressed={stat.isActive}
-              className={`basis-full min-w-0 rounded-xl border bg-[var(--surface)]/60 px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] sm:flex-1 sm:basis-0 ${
-                stat.isActive
-                  ? 'border-[var(--accent-purple)] bg-[var(--accent-purple)]/10 shadow-sm'
-                  : 'border-[var(--border)] hover:border-[var(--accent-purple)]/40 hover:bg-[var(--surface)]/80'
-              }`}
-            >
-              <p
-                className={`text-xs uppercase tracking-wide ${
-                  stat.isActive ? 'text-[var(--accent-purple)]' : 'text-[var(--fg-muted)]'
+          <div className="flex flex-wrap gap-4 sm:flex-nowrap">
+            {summaryStats.map((stat) => (
+              <button
+                key={stat.label}
+                type="button"
+                onClick={() => handleSummaryCardClick(stat.filterKey)}
+                aria-pressed={stat.isActive}
+                className={`basis-full min-w-0 rounded-xl border bg-[var(--surface)]/60 px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-[var(--accent-purple)] sm:flex-1 sm:basis-0 ${
+                  stat.isActive
+                    ? 'border-[var(--accent-purple)] bg-[var(--accent-purple)]/10 shadow-sm'
+                    : 'border-[var(--border)] hover:border-[var(--accent-purple)]/40 hover:bg-[var(--surface)]/80'
                 }`}
               >
-                {stat.label}
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-[var(--fg)]">{stat.value}</p>
-            </button>
-          ))}
+                <p
+                  className={`text-xs uppercase tracking-wide ${
+                    stat.isActive ? 'text-[var(--accent-purple)]' : 'text-[var(--fg-muted)]'
+                  }`}
+                >
+                  {stat.label}
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-[var(--fg)]">{stat.value}</p>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {isLoading ? (
         <div className="flex h-48 items-center justify-center">
