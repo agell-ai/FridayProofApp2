@@ -66,7 +66,7 @@ const AppContent: React.FC = () => {
   const ActiveViewComponent = VIEW_COMPONENTS[activeView] ?? VIEW_COMPONENTS[DEFAULT_VIEW_ID];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg-start)]">
+    <div className="h-screen overflow-hidden flex flex-col bg-[var(--bg-start)]">
       <Header />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar activeView={activeView} availablePages={availablePages} onViewChange={setActiveView} />
