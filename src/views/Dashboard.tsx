@@ -4,7 +4,7 @@ import { Check, FolderOpen, Handshake, SlidersHorizontal, Users, Wrench, X } fro
 import StatsCard from '../components/Dashboard/StatsCard';
 import { Card } from '../components/Shared/Card';
 import { useAuth } from '../hooks/useAuth';
-import type { ViewComponentProps } from '../types/navigation';
+import type { ViewComponentProps, ViewId } from '../types/navigation';
 import {
   CATEGORY_METADATA,
   CATEGORY_ORDER,
@@ -30,6 +30,13 @@ const DEFAULT_METRIC_SELECTIONS: Record<MetricCategory, string[]> = {
   projects: ['projects-in-flight', 'deployment-rate', 'automation-density'],
   team: ['active-collaborators', 'team-utilization', 'delivery-output'],
   automation: ['active-automation', 'automation-usage', 'automation-savings'],
+};
+
+const CATEGORY_VIEW_IDS: Record<MetricCategory, ViewId> = {
+  clients: 'clients-metrics',
+  projects: 'projects-metrics',
+  team: 'team-metrics',
+  automation: 'systems-metrics',
 };
 
 const sanitizeCategorySelection = (selection: string[], category: MetricCategory): string[] => {
@@ -413,7 +420,6 @@ const Dashboard: React.FC<ViewComponentProps> = ({ onNavigate }) => {
         change: `${clientAnalytics.prospectClients.length} prospects`,
         icon: Handshake,
         changeTone: clientAnalytics.prospectClients.length > 0 ? ('positive' as const) : ('neutral' as const),
-        viewId: 'clients-metrics' as const,
       },
       {
         title: 'Projects in Motion',
@@ -421,7 +427,6 @@ const Dashboard: React.FC<ViewComponentProps> = ({ onNavigate }) => {
         change: `${projectAnalytics.deployedProjects.length} deployed`,
         icon: FolderOpen,
         changeTone: projectAnalytics.deployedProjects.length > 0 ? ('positive' as const) : ('neutral' as const),
-        viewId: 'projects-metrics' as const,
       },
       {
         title: 'Team Utilization',
@@ -429,7 +434,6 @@ const Dashboard: React.FC<ViewComponentProps> = ({ onNavigate }) => {
         change: `${formatDecimal(teamAnalytics.avgSatisfaction, 1)}/5 satisfaction`,
         icon: Users,
         changeTone: teamAnalytics.avgProductivity >= 80 ? ('positive' as const) : ('neutral' as const),
-        viewId: 'team-metrics' as const,
       },
       {
         title: 'Automation Savings',
@@ -437,7 +441,6 @@ const Dashboard: React.FC<ViewComponentProps> = ({ onNavigate }) => {
         change: `${formatPercent(automationAnalytics.avgEfficiency, 0)} efficiency`,
         icon: Wrench,
         changeTone: automationAnalytics.totalCostSavings > 0 ? ('positive' as const) : ('neutral' as const),
-        viewId: 'systems-metrics' as const,
       },
     ],
     [
@@ -482,7 +485,6 @@ const Dashboard: React.FC<ViewComponentProps> = ({ onNavigate }) => {
             change={card.change}
             icon={card.icon}
             changeTone={card.changeTone}
-            onClick={onNavigate ? () => onNavigate(card.viewId) : undefined}
           />
         ))}
       </section>
@@ -492,9 +494,14 @@ const Dashboard: React.FC<ViewComponentProps> = ({ onNavigate }) => {
           const metadata = CATEGORY_METADATA[category];
           const SectionIcon = metadata.icon;
           const selections = selectedMetrics[category] ?? DEFAULT_METRIC_SELECTIONS[category];
+          const viewId = CATEGORY_VIEW_IDS[category];
           return (
             <section key={category}>
-              <Card className="relative overflow-hidden border-[var(--border)] bg-[var(--surface)]" glowOnHover>
+              <Card
+                className="relative overflow-hidden border-[var(--border)] bg-[var(--surface)]"
+                glowOnHover
+                onClick={onNavigate && viewId ? () => onNavigate(viewId) : undefined}
+              >
                 <div className={`pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-br ${metadata.accent}`} />
                 <div className="relative space-y-6 p-6">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -507,8 +514,14 @@ const Dashboard: React.FC<ViewComponentProps> = ({ onNavigate }) => {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setCustomizingCategory(category)}
-                      className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setCustomizingCategory(category);
+                      }}
+                      className={[
+                        'inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)]',
+                        'px-3 py-2 text-sm font-medium text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]',
+                      ].join(' ')}
                     >
                       <SlidersHorizontal className="h-4 w-4" />
                       Customize
