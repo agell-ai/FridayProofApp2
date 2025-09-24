@@ -16,7 +16,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, availablePages, onViewCha
 
   if (!user || !account) return null;
 
-  const menuItems = NAVIGATION_ITEMS.filter((item) => availablePages.includes(item.id));
+  const menuItems = NAVIGATION_ITEMS.filter(
+    (item) => item.showInSidebar !== false && availablePages.includes(item.id),
+  );
 
   return (
     <div className="w-64 flex-shrink-0 bg-[var(--bg-start)] border-r border-[var(--border)] flex flex-col sticky top-20 h-[calc(100vh-5rem)]">

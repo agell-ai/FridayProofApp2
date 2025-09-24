@@ -17,4 +17,9 @@ export interface NavigationItem {
   id: ViewId;
   label: string;
   icon: LucideIcon;
+  /**
+   * Controls whether the item should render in the sidebar navigation. Defaults to true when
+   * omitted so existing entries continue to appear unless explicitly hidden.
+   */
+  showInSidebar?: boolean;
 }
