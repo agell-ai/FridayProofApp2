@@ -21,8 +21,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, availablePages, onViewCha
   );
 
   return (
-    <div className="w-72 flex-shrink-0 sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto flex flex-col bg-[var(--bg)]">
-      <nav className="flex-1 p-4">
+    <div className="w-72 flex-shrink-0 flex flex-col bg-[var(--bg)]">
+      <nav className="flex-1 px-4 pt-2 pb-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
