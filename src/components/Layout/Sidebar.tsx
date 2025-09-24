@@ -21,7 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, availablePages, onViewCha
   );
 
   return (
-    <div className="h-full flex flex-col bg-[var(--bg)]">
+    <div className="w-72 flex-shrink-0 sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto flex flex-col bg-[var(--bg)]">
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
